@@ -12,22 +12,22 @@
 		"(1)":
 			{"type":"act->point->val","representation":"simpletree","minimize":1,"regressor":
 				{
-                    "1":
+                    "α":
                         {"var": 0,"bound":5.0,
                             "low": 10.0,
                             "high": 6.0
                         },
-                    "2":
+                    "β":
                         {"var": 1,"bound":2.5,
                             "low":
-                                {"var": 0,"bound":4.0,
-                                    "low":3.0,
+                                {"var": 0,"bound":6.0,
+                                    "low":7.0,
                                     "high":0.0
                                 },
                             "high": 13.0
                         },
-                    "3": 
-                        {"var": 0,"bound":2.5,
+                    "γ": 
+                        {"var": 0,"bound":3.5,
                             "low":
                                 3.0,
                             "high":
@@ -38,17 +38,17 @@
         "(2)":
             {"type":"act->point->val","representation":"simpletree","minimize":1,"regressor":
 				{
-                    "1":
+                    "α":
                         {"var": 0,"bound":5.0,
                             "low": 10.0,
                             "high": 6.0
                         },
-                    "2":
+                    "β":
                         {"var": 1,"bound":2.5,
                             "low": 2.0,
                             "high": 13.0
                         },
-                    "3": 
+                    "γ": 
                         {"var": 0,"bound":2.5,
                             "low": 3.0,
                             "high": 4.0
