@@ -33,7 +33,10 @@ class State:
             '{}: [{},{}]'.format(var, self.min[var], self.max[var])
             for var in self.variables
         ]
-        return ', '.join(ranges)
+        return f"State({', '.join(ranges)})"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Node:
@@ -114,9 +117,9 @@ class Node:
 
 
 class Leaf:
-    def __init__(self, val, action=None, state=None):
-        self.val = val if isinstance(val, list) else [val]
-        self.action = action if isinstance(action, list) else [action]
+    def __init__(self, cost, action=None, state=None):
+        self.cost = cost
+        self.action = action
         self.state = state
         self.visits = 0
 
@@ -140,10 +143,13 @@ class Leaf:
             new_state.greater_than(var, max(s1.min[var], s2.min[var]))
 
         return Leaf(
-            self.val + other.val,
+            self.cost + other.cost,
             self.action + other.action,
             state=new_state
         )
 
     def __str__(self):
-        return f'{self.state} -> Leaf({",".join(list(map(str, self.action)))})'
+        return f'Leaf(action: {self.action}, cost: {self.cost}, {self.state})'
+
+    def __repr__(self):
+        return self.__str__()

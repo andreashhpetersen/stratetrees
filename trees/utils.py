@@ -76,7 +76,7 @@ def plot_clusters(data, k=4):
 
 def _draw_graph(graph, tree, n):
     if isinstance(tree, Leaf):
-        label = f'Cost: {round(tree.val[0], 2)}'
+        label = f'Cost: {round(tree.cost, 2)}'
         if hasattr(tree, 'ratio'):
             label += f'\nFreq: {round(tree.ratio * 100, 2)}'
         if hasattr(tree, 'best_ratio'):
@@ -166,11 +166,11 @@ def add_stats(trees, stats, variables, max_ts, step_sz):
             # increase visited
             visited = sorted(
                 [tree.get_leaf(state) for tree in trees],
-                key=lambda x: x.val[0]
+                key=lambda x: x.cost
             )
             best = visited[0]
             visited[0].best += 1
-            actions[visited[0].action[0]] += 1
+            actions[visited[0].action] += 1
 
             for l in visited:
                 l.visits += 1
@@ -256,7 +256,7 @@ def cut_leaf(l1, l2):
 
             new_state = s1.copy()
             new_state.less_than(s2.min[var])
-            nodes[len(nodes)-1].low = Leaf(l1.val[0], action=l1.action[0], state=new_state)
+            nodes[len(nodes)-1].low = Leaf(l1.cost, action=l1.action, state=new_state)
 
         if s1.min[var] < s2.max[var] < s1.max[var]:
             pass
