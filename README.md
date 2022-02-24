@@ -11,7 +11,7 @@ actually drawing the graph).
 Then, you can run the following command
 
 ```
-python draw_trees <path/to/strategy.json> -o output.png
+python draw_tree.py <path/to/strategy.json> -o output.png
 ```
 
 which will load the strategy in `strategy.json` and draw it as a graph which is
