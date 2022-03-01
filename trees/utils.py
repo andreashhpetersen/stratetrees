@@ -74,9 +74,12 @@ def plot_clusters(data, k=4):
     plt.tight_layout()
     plt.show()
 
-def _draw_graph(graph, tree, n):
+def _draw_graph(graph, tree, n, print_action=False):
     if isinstance(tree, Leaf):
-        label = f'Cost: {round(tree.cost, 2)}'
+        label = ''
+        if print_action:
+            label += f'Action: {tree.action}\n'
+        label += f'Cost: {round(tree.cost, 2)}'
         if hasattr(tree, 'ratio'):
             label += f'\nFreq: {round(tree.ratio * 100, 2)}'
         if hasattr(tree, 'best_ratio'):
@@ -87,8 +90,8 @@ def _draw_graph(graph, tree, n):
         graph.add_node(node)
         return node, n
 
-    low_node, low_n = _draw_graph(graph, tree.low, n)
-    high_node, high_n = _draw_graph(graph, tree.high, low_n + 1)
+    low_node, low_n = _draw_graph(graph, tree.low, n, print_action=print_action)
+    high_node, high_n = _draw_graph(graph, tree.high, low_n + 1, print_action=print_action)
 
     new_n = high_n + 1
     label = f'{tree.variable}: {round(tree.bound, 2)}'
@@ -100,14 +103,14 @@ def _draw_graph(graph, tree, n):
     graph.add_edge(pydot.Edge(str(new_n), str(high_n), label='high'))
     return node, new_n
 
-def draw_graph(trees, labels=None, out_fp='graph_drawing.png'):
+def draw_graph(trees, labels=None, out_fp='graph_drawing.png', print_action=False):
     graph = pydot.Dot(graph_type='digraph')
     root = pydot.Node('root')
     iterator = zip(labels, trees) if labels is not None else enumerate(trees)
 
     n = 0
     for label, tree in iterator:
-        node, n = _draw_graph(graph, tree, n)
+        node, n = _draw_graph(graph, tree, n, print_action=print_action)
         graph.add_edge(pydot.Edge('actions', str(n), label=label))
         n += 1
 
