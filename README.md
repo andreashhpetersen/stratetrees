@@ -31,10 +31,10 @@ which will load the strategy in `strategy.json` and draw it as a graph which is
 written to the file `output.png`. If `strategy.json` has more than one
 `regressor`, then the program will ask you to choose just one of them to plot.
 
-Here is an example of a tree drawn from `testStrategy.json` where regressor
+Here is an example of a tree drawn from `exampleStrategy.json` where regressor
 `(1)` has been chosen:
 
-![Example tree]( ./exampleQTree.png )
+![Example tree]( ./examples/exampleQTree.png )
 
 ## Convert Q-trees to decision trees
 
@@ -58,9 +58,15 @@ for i in range(1, len(leafs)):
 ```
 
 The result of this conversion based on the example above (the test strategy in
-`testStrategy.json`), yields the following decision tree:
+`examples/exampleStrategy.json`), yields the following decision tree:
 
-![Example decision tree](./exampleDecisionTree.png)
+![Example decision tree](./examples/exampleDecisionTree.png)
 
-This is obvious not minimal and could be greatly reduced by pruning entire
-subtrees. This will be coming up!
+However, we can get a better (smaller) representation of this tree by sorting
+the leafs according to cost value first. This is done automatically if we call
+the handy class method `make_decision_tree_from_leafs(leafs)` on `Node`. The
+resulting tree is shown below.
+
+![Example decision tree made from a list of sorted leafs](./examples/exampleTreeSorted.png)
+
+Examples involving a larger strategy can be found in `examples/`.
