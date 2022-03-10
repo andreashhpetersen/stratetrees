@@ -90,7 +90,11 @@ def _draw_graph(graph, tree, n, print_action=False):
         graph.add_node(node)
         return node, n
 
-    low_node, low_n = _draw_graph(graph, tree.low, n, print_action=print_action)
+    try:
+        low_node, low_n = _draw_graph(graph, tree.low, n, print_action=print_action)
+    except AttributeError:
+        print("what??")
+        import ipdb; ipdb.set_trace()
     high_node, high_n = _draw_graph(graph, tree.high, low_n + 1, print_action=print_action)
 
     new_n = high_n + 1

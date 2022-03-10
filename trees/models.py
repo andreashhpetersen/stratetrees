@@ -1,4 +1,5 @@
 import math
+from random import shuffle
 
 
 class State:
@@ -110,21 +111,76 @@ class Node:
 
         return root
 
+    @classmethod
+    def equivalent(cls, node1, node2):
+        """
+        Test if `node1` and `node2` are equivalent. Requires both nodes to
+        have leafs at both their `low` and `high` directions.
+        """
+        if not (Node.is_leaf(node1.low) and Node.is_leaf(node1.high)):
+            return False
 
-    def _make_root_from_leaf(cls, node, leaf):
-        pass
+        if not (Node.is_leaf(node2.low) and Node.is_leaf(node2.high)):
+            return False
+
+        if not node1.variable == node2.variable:
+            return False
+
+        if not node1.bound == node2.bound:
+            return False
+
+        if not node1.low.action == node2.low.action:
+            return False
+
+        if not node1.high.action == node2.high.action:
+            return False
+
+        return True
+
+    @classmethod
+    def make_decision_tree_from_leafs(cls, leafs):
+        variables = leafs[0].state.variables
+        leafs.sort(key=lambda x: x.cost)
+        root = Node.make_root_from_leaf(leafs[0])
+        for i in range(1, len(leafs)):
+            root = root.put_leaf(leafs[i], State(variables))
+
+        return root
+
+    def prune(self):
+        if not Node.is_leaf(self.low):
+            self.low = self.low.prune()
+
+        if not Node.is_leaf(self.high):
+            self.high = self.high.prune()
+
+        if Node.is_leaf(self.low) and Node.is_leaf(self.high):
+            if self.low.action == self.high.action:
+                return Leaf(
+                    max(self.low.cost, self.high.cost),
+                    action=self.low.action
+                )
+
+        elif not (Node.is_leaf(self.low) or Node.is_leaf(self.high)):
+            if Node.equivalent(self.low, self.high):
+                # arbitrary if we here choose high or low
+                return self.low
+
+        return self
 
     def put_leaf(self, leaf, state):
         var_min, var_max = leaf.state.min_max(self.variable)
         if var_min < self.bound:
-            state = state.copy()
-            state.less_than(self.variable, self.bound)
-            self.low = self.low.put_leaf(leaf, state)
+            low_state = state.copy()
+            low_state.less_than(self.variable, self.bound)
+
+            self.low = self.low.put_leaf(leaf, low_state)
 
         if var_max > self.bound:
-            state = state.copy()
-            state.greater_than(self.variable, self.bound)
-            self.high = self.high.put_leaf(leaf, state)
+            high_state = state.copy()
+            high_state.greater_than(self.variable, self.bound)
+
+            self.high = self.high.put_leaf(leaf, high_state)
 
         return self
 
@@ -219,7 +275,9 @@ class Leaf:
         if self.cost < leaf.cost:
             return self
 
-        for var in state.variables:
+        variables = state.variables.copy()
+        shuffle(variables)
+        for var in variables:
             self_var_min, self_var_max = state.min_max(var)
             leaf_var_min, leaf_var_max = leaf.state.min_max(var)
 
