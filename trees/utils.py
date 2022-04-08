@@ -74,18 +74,43 @@ def plot_clusters(data, k=4):
     plt.tight_layout()
     plt.show()
 
+def hex_to_RGB(hex):
+  ''' "#FFFFFF" -> [255,255,255] '''
+  # Pass 16 to the integer function for change of base
+  return [int(hex[i:i+2], 16) for i in range(1,6,2)]
+
+def RGB_to_hex(RGB):
+  ''' [255,255,255] -> "#FFFFFF" '''
+  # Components need to be integers for hex to make sense
+  RGB = [int(x) for x in RGB]
+  return "#"+"".join(["0{0:x}".format(v) if v < 16 else
+            "{0:x}".format(v) for v in RGB])
+
+def color_gradient(weight, start="#FFFFFF", end="#000000"):
+    s = hex_to_RGB(start)
+    f = hex_to_RGB(end)
+    return RGB_to_hex([
+        int(s[j] + (weight * (f[j] - s[j]))) for j in range(3)
+    ])
+
 def _draw_graph(graph, tree, n, print_action=False):
     if isinstance(tree, Leaf):
         label = ''
+        font_color = 'black'
+        color = 'white'
         if print_action:
             label += f'Action: {tree.action}\n'
         label += f'Cost: {round(tree.cost, 2)}'
         if hasattr(tree, 'ratio'):
             label += f'\nFreq: {round(tree.ratio * 100, 2)}'
+            color = color_gradient(tree.ratio, start="#FFFFFF", end="#FF0000")
+            if tree.ratio == 0:
+                color = 'black'
         if hasattr(tree, 'best_ratio'):
             label += f'\nbest: {round(tree.best_ratio * 100, 2)}'
         node = pydot.Node(
-            str(n), label=label, shape='circle'
+            str(n), label=label,
+            shape='circle', fillcolor=color, fontcolor=font_color, style='filled'
         )
         graph.add_node(node)
         return node, n
@@ -93,8 +118,8 @@ def _draw_graph(graph, tree, n, print_action=False):
     try:
         low_node, low_n = _draw_graph(graph, tree.low, n, print_action=print_action)
     except AttributeError:
-        print("what??")
         import ipdb; ipdb.set_trace()
+        pass
     high_node, high_n = _draw_graph(graph, tree.high, low_n + 1, print_action=print_action)
 
     new_n = high_n + 1
