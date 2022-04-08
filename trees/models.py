@@ -145,7 +145,7 @@ class Node:
         for i in range(1, len(leafs)):
             root = root.put_leaf(leafs[i], State(variables))
 
-        return root
+        return root.prune()
 
     def prune(self):
         if not Node.is_leaf(self.low):
@@ -266,6 +266,19 @@ class Leaf:
         self.state = state
         self.visits = 0
 
+    def split(self, variable, bound, state):
+        new_node = Node(variable, bound)
+
+        low_state = state.copy()
+        low_state.less_than(variable, bound)
+        new_node.low = Leaf(self.cost, action=self.action, state=low_state)
+
+        high_state = state.copy()
+        high_state.greater_than(variable, bound)
+        new_node.high = Leaf(self.cost, action=self.action, state=high_state)
+
+        return new_node
+
     def put_leaf(self, leaf, state):
         """
         If all variables in `leaf` has been checked, compare cost value to
@@ -282,33 +295,22 @@ class Leaf:
             leaf_var_min, leaf_var_max = leaf.state.min_max(var)
 
             if self_var_min < leaf_var_min:
-                new_node = Node(var, leaf_var_min)
-
-                low_state = state.copy()
-                low_state.less_than(var, leaf_var_min)
-                new_node.low = Leaf(self.cost, action=self.action, state=low_state)
-
-                high_state = state.copy()
-                high_state.greater_than(var, leaf_var_min)
-                new_node.high = Leaf(self.cost, action=self.action, state=high_state)
-
+                new_node = self.split(var, leaf_var_min, state)
                 return new_node.put_leaf(leaf, state)
 
             if self_var_max > leaf_var_max:
-                new_node = Node(var, leaf_var_max)
-
-                low_state = state.copy()
-                low_state.less_than(var, leaf_var_max)
-                new_node.low = Leaf(self.cost, action=self.action, state=low_state)
-
-                high_state = state.copy()
-                high_state.greater_than(var, leaf_var_max)
-                new_node.high = Leaf(self.cost, action=self.action, state=high_state)
-
+                new_node = self.split(var, leaf_var_max, state)
                 return new_node.put_leaf(leaf, state)
 
         # all variables are checked
-        return leaf
+        return Leaf.copy(leaf)
+
+    @classmethod
+    def copy(cls, leaf):
+        """
+        Returns a new Leaf that is a copy of `leaf`
+        """
+        return Leaf(leaf.cost, action=leaf.action, state=leaf.state.copy())
 
     def _get_leafs(self, ls):
         ls.append(self)
