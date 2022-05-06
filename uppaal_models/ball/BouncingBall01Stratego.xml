@@ -569,5 +569,77 @@ Mean estimate of displayed sample: 42.99 ± 3.467 (95% CI)</comment>
 			<formula>// simulate 1 [&lt;=300] {LearnerPlayer.fired, Ball(0).p} under HitWell</formula>
 			<comment/>
 		</query>
+		<query>
+			<formula>simulate 1 [&lt;=300] {Ball(0).p}</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>// strategy HitWell = minE (LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) [&lt;=120] {} -&gt; {Ball(0).p, Ball(0).v}: &lt;&gt; time &gt;= 120</formula>
+			<comment>can i just say p for all balls? </comment>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy HitWell_original = loadStrategy {} -&gt; {Ball(0).p, Ball(0).v} ("/home/andreashhp/Documents/university/direc/stratetrees/uppaal_models/ball/strategies/large_strategy.json")</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy HitWell_converted = loadStrategy {} -&gt; {Ball(0).p, Ball(0).v} ("/home/andreashhp/Documents/university/direc/stratetrees/uppaal_models/ball/strategies/large_converted_noPrune.json")</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy HitWell_zeroPruned = loadStrategy {} -&gt; {Ball(0).p, Ball(0).v} ("/home/andreashhp/Documents/university/direc/stratetrees/uppaal_models/ball/strategies/large_converted_zeroPruned.json")</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy HitWell_onePruned = loadStrategy {} -&gt; {Ball(0).p, Ball(0).v} ("/home/andreashhp/Documents/university/direc/stratetrees/uppaal_models/ball/strategies/large_converted_onePruned.json")</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy HitWell_twoPruned = loadStrategy {} -&gt; {Ball(0).p, Ball(0).v} ("/home/andreashhp/Documents/university/direc/stratetrees/uppaal_models/ball/strategies/large_converted_twoPruned.json")</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell_original</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell_converted</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell_zeroPruned</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell_onePruned</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell_twoPruned</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy HitWell_zeroPruned2 = loadStrategy {} -&gt; {Ball(0).p, Ball(0).v} ("/home/andreashhp/Documents/university/direc/stratetrees/uppaal_models/ball/strategies/large_converted_zeroPruned2.json")</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell_zeroPruned2</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>simulate 1 [&lt;=30] {LearnerPlayer.fired, Ball(0).p} under HitWell</formula>
+			<comment/>
+		</query>
 	</queries>
 </nta>
