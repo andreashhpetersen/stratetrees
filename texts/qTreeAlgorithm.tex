@@ -59,7 +59,7 @@ Q-forest, let $\mathcal{A} = \{ A_1, A_2, \ldots, A_m \}$ be the set of all
 possible actions and let $\mathcal{V} = \{ V_1, V_2, \ldots, V_k \}$ be the $k$
 observable variables in the environment (where $V_i \in \mathbb{R}$ for all
 $i=1\ldots k$). For any $L_i \in \mathcal{L}$, we can define a state partition
-$S_i = \{ (u_{i,1}, l_{i,1}), (u_{i,2}, l_{i,2}), \ldots, (u_{i,k}, l_{i,k})\}$
+$S_i = \{ (l_{i,1}, u_{i,1}), (l_{i,2}, u_{i,2}), \ldots, (l_{i,k}, u_{i,k})\}$
 where $u_{i,j}$ is the \textit{upper} bound for the value of variable $V_{j}$ at
 the leaf $L_i$ and $l_{i,j}$ is the \textit{lower} bound. We consider all
 variables to ultimately be bounded by either positive or negative infinity,
@@ -75,7 +75,7 @@ purpose is contained in $\mathcal{L}$, the complete set of leaves in the forest.
 
 As an example of an actual leaf, the `left-most' leaf in the Q-forest in
 Figure~\ref{fig:QForest} can be described by the triplet $(\alpha, 10, \{
-(5, -\infty), (\infty, -\infty)\})$, assuming that $V_1 = var_1$ and $V_2 =
+(-\infty, 5), (-\infty, \infty)\})$, assuming that $V_1 = var_1$ and $V_2 =
 var_2$.\looseness=-1
 
 \section{The algorithm}
@@ -93,7 +93,7 @@ nodes of the tree will still be checks on variables in $\mathcal{V}$.
 We initialise the tree from the lowest valued leaf in $\mathcal{L}$ which we
 will denote $L_0$. The operation of inserting $L_0$ into the at this point empty
 tree requires special attention, since we have to create split nodes for all the
-variable bounds $(u_{0,i}, l_{0,i})$ in $S_0$. We denote this operation
+variable bounds $(l_{0,i}, u_{0,i})$ in $S_0$. We denote this operation
 \texttt{MakeRoot} and its pseudocode is given in Algorithm~\ref{alg:MakeRoot}.
 
 \begin{algorithm}[ht]
@@ -117,6 +117,7 @@ variable bounds $(u_{0,i}, l_{0,i})$ in $S_0$. We denote this operation
             \EndIf%
             \State{$\mathbf{return}\quad node$}
         \EndProcedure%
+        \item[]%
     \end{algorithmic}
 
     \begin{algorithmic}[1]
@@ -124,7 +125,7 @@ variable bounds $(u_{0,i}, l_{0,i})$ in $S_0$. We denote this operation
 
         \State{$rootNode \gets \texttt{None}$}
         \State{$prevNode \gets \texttt{None}$}
-        \For{($u_{0,i}, l_{0,i}) \text{ in } S_0$}
+        \For{$(l_{0,i}, u_{0,i}) \text{ in } S_0$}
             \If{$u_{0,i} < \infty$ }
                 \State{$prevNode \gets \text{\Call{MakeNewNode}{$V_i, u_{0,i}, a_0, \texttt{True},
                         prevNode$}}$}%
@@ -133,7 +134,7 @@ variable bounds $(u_{0,i}, l_{0,i})$ in $S_0$. We denote this operation
                 \EndIf%
             \EndIf%
 
-            \If{$l_{0,i} > \infty$ }
+            \If{$l_{0,i} > -\infty$ }
                 \State{$prevNode \gets \text{\Call{MakeNewNode}{$V_i, l_{0,i},
                     a_0, \texttt{False}, prevNode$}}$}%
                 \If{$rootNode \text{ is }\texttt{None}$ }
@@ -185,14 +186,14 @@ spot in the parent node and return the root node. With this approach, we end up
 with an initial tree that is very shallow and basically only has one interesting
 leaf at the maximum depth of the tree. An example of this is given in
 Figure~\ref{fig:rootTree}, where we have built the root tree from the leaf
-defined by $\texttt{Leaf}(\beta, 7, \{ (6, -\infty), (3, -\infty) \})$.
+defined by $\texttt{Leaf}(\beta, 7, \{ (-\infty, 6), (-\infty, 3) \})$.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[scale=0.4]{exampleRoot}
     \caption{%
         Tree build using \texttt{MakeNewNode} and the leaf triplet $(\beta, 7,
-        \{ (6, -\infty), (3, -\infty) \})$ 
+        \{ (-\infty, 6), (-\infty, 3) \})$ 
     }\label{fig:rootTree}
 \end{figure}
 
@@ -248,21 +249,21 @@ this is given in Algorithm~\ref{alg:putInternal}.
     \caption{PUT Q-leaf into an internal node}\label{alg:putInternal}
 
     \begin{algorithmic}[1]
-        \Function{PutAtBranchNode}{$\texttt{Node}(V_k, b, high, low),
+        \Function{PutAtBranchNode}{$\texttt{Node}(V_k, b, low, high),
             \texttt{Leaf}(a_i, q_i, S_i)$ }%
             
-        \If{$u_{i,k} > b$}
-        \State{$S'_i \gets \text{\Call{SetLower}{$S_i, V_k, b$}}$}
-        \State{$high \gets \text{\Call{Put}{$high, \texttt{Leaf}(a_i, q_i,
-                    S'_i)$}}$}
-        \EndIf%
         \If{$l_{i,k} < b$}
             \State{$S'_i \gets \text{\Call{SetUpper}{$S_i, V_k, b$}}$}
             \State{$low \gets \text{\Call{Put}{$low, \texttt{Leaf}(a_i, q_i,
                         S'_i)$}}$}
         \EndIf%
+        \If{$u_{i,k} > b$}
+            \State{$S'_i \gets \text{\Call{SetLower}{$S_i, V_k, b$}}$}
+            \State{$high \gets \text{\Call{Put}{$high, \texttt{Leaf}(a_i, q_i,
+                        S'_i)$}}$}
+        \EndIf%
 
-        \State{$\mathbf{return}\quad \texttt{Node}(V_k, b, high, low)$}
+        \State{$\mathbf{return}\quad \texttt{Node}(V_k, b, low, high)$}
         \EndFunction%
 
     \end{algorithmic}
@@ -299,7 +300,7 @@ The pseudocode for the function is given in Algorithm~\ref{alg:putLeaf}.
             \State{$lowState \gets \text{\Call{SetUpper}{$state, var, bound$}}$}
             \State{$high \gets \texttt{Leaf}(action, q, highState)$}
             \State{$low \gets \texttt{Leaf}(action, q, lowState)$} 
-            \State{$\mathbf{return}\quad \texttt{Node}(var, bound, high, low)$ }
+            \State{$\mathbf{return}\quad \texttt{Node}(var, bound, low, high)$ }
             \item[]
         \EndProcedure%
     \end{algorithmic}
@@ -311,17 +312,17 @@ The pseudocode for the function is given in Algorithm~\ref{alg:putLeaf}.
         \EndIf%
         \item[]
 
-        \For{$(u_{t,j}, l_{t,j}) \text{ in } S_t$}
-            \If{$u_{t,j} > u_{i,j}$}
+        \For{$(l_{t,j}, u_{t,j}) \text{ in } S_t$}
+            \If{$l_{t,j} < l_{i,j}$}
                 \State{$newNode \gets \text{\Call{Split}{$a_t, q_t, V_j,
-                            u_{i,j}$}}$}
+                            l_{i,j}$}}$}
                 \State{$\mathbf{return}\quad
                     \text{\Call{Put}{$newNode, \texttt{Leaf}(a_i,
                             q_i, S_i)$}}$} 
                 \item[]
-            \ElsIf{$l_{t,j} < l_{i,j}$}
+            \ElsIf{$u_{t,j} > u_{i,j}$}
                 \State{$newNode \gets \text{\Call{Split}{$a_t, q_t, V_j,
-                            l_{i,j}$}}$}
+                            u_{i,j}$}}$}
                 \State{$\mathbf{return}\quad
                     \text{\Call{Put}{$newNode, \texttt{Leaf}(a_i,
                             q_i, S_i)$}}$} 
@@ -342,10 +343,10 @@ Using this algorithm, we can now construct a decision tree from the Q-forest we
 saw in Figure~\ref{fig:QForest}. For simplicity, we will simply consider the
 obvious order of the leafs that comes from collecting them from left to right in
 the figure, that is, we create our root from $\texttt{Leaf}(\alpha, 10, \{
-(5, -\infty), (\infty, -\infty) \})$ and the final input to \texttt{Put} is
-$\texttt{Leaf}(\gamma, 4, \{ (\infty, 4), (\infty, -\infty) \})$. Note that we
+(-\infty, 5), (-\infty, \infty) \})$ and the final input to \texttt{Put} is
+$\texttt{Leaf}(\gamma, 4, \{ (4, \infty), (-\infty, \infty) \})$. Note that we
 omit the step where we would insert $\texttt{Leaf}(\beta, 13, \{ (\infty,
--\infty), (\infty, 3) \})$, as this has such a bad Q-value that it is just
+-\infty), (3, \infty) \})$, as this has such a bad Q-value that it is just
 discarded.
 
     
@@ -370,8 +371,8 @@ some optimization steps before and after constructing the tree.
         \includegraphics[width=.8\textwidth]{exampleBuild0}
         \captionsetup{labelformat=empty}
         \caption{%
-            \texttt{MakeRoot}$(\alpha, 10, \{ (5, -\infty),
-            (\infty, -\infty) \})$
+            \texttt{MakeRoot}$(\alpha, 10, \{ (-\infty, 5),
+            (-\infty, \infty) \})$
         }
         \vspace{3ex}
     \end{subfigure}
@@ -380,7 +381,7 @@ some optimization steps before and after constructing the tree.
         \includegraphics[width=.8\textwidth]{exampleBuild1}
         \captionsetup{labelformat=empty}
         \caption{%
-            \texttt{Put}$(\alpha, 6, \{(\infty, 5),(\infty,-\infty)\})$
+            \texttt{Put}$(\alpha, 6, \{(5, \infty),(\infty,-\infty)\})$
         }
     \end{subfigure}
     \begin{subfigure}[t]{0.3\textwidth}
@@ -388,7 +389,7 @@ some optimization steps before and after constructing the tree.
         \includegraphics[width=.8\textwidth]{exampleBuild2}
         \captionsetup{labelformat=empty}
         \caption{%
-            \texttt{Put}$(\beta, 7, \{(6, -\infty),(3,-\infty)\})$
+            \texttt{Put}$(\beta, 7, \{(-\infty, 6),(3,-\infty)\})$
         }
     \end{subfigure}
     \begin{subfigure}[t]{0.35\textwidth}
@@ -396,7 +397,7 @@ some optimization steps before and after constructing the tree.
         \includegraphics[width=.9\textwidth]{exampleBuild3}
         \captionsetup{labelformat=empty}
         \caption{%
-            \texttt{Put}$(\beta, 0, \{(\infty, 6),(3,-\infty)\})$
+            \texttt{Put}$(\beta, 0, \{(6, \infty),(3,-\infty)\})$
         }
         \vspace{2ex}
     \end{subfigure}
@@ -405,7 +406,7 @@ some optimization steps before and after constructing the tree.
         \includegraphics[width=.9\textwidth]{exampleBuild5}
         \captionsetup{labelformat=empty}
         \caption{%
-            \texttt{Put}$(\gamma, 3, \{(4, -\infty),(\infty,-\infty)\})$
+            \texttt{Put}$(\gamma, 3, \{(-\infty, 4),(\infty,-\infty)\})$
         }
     \end{subfigure}
     \begin{subfigure}[t]{0.55\textwidth}
@@ -413,7 +414,7 @@ some optimization steps before and after constructing the tree.
         \includegraphics[width=.9\textwidth]{exampleBuild6}
         \captionsetup{labelformat=empty}
         \caption{%
-            \texttt{Put}$(\gamma, 4, \{(\infty, 4),(\infty,-\infty)\})$
+            \texttt{Put}$(\gamma, 4, \{(4, \infty),(\infty,-\infty)\})$
         }
     \end{subfigure}
 \end{figure}

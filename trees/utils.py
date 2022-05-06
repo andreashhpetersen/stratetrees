@@ -9,12 +9,17 @@ from trees.models import Node, Leaf, State
 ####### Functions to add color gradients #######
 
 def hex_to_RGB(hex):
-  """ "#FFFFFF" -> [255,255,255] """
+  """
+  #FFFFFF -> [255,255,255]
+  """
+
   # Pass 16 to the integer function for change of base
   return [int(hex[i:i+2], 16) for i in range(1,6,2)]
 
 def RGB_to_hex(RGB):
-  """ [255,255,255] -> "#FFFFFF" """
+  """
+  [255,255,255] -> #FFFFFF
+  """
   # Components need to be integers for hex to make sense
   RGB = [int(x) for x in RGB]
   return "#"+"".join(["0{0:x}".format(v) if v < 16 else
@@ -30,37 +35,39 @@ def color_gradient(weight, start="#FFFFFF", end="#000000"):
 
 ####### Functions to draw a tree and save it to png #######
 
-def _draw_graph(graph, tree, n, print_action=False):
-    if isinstance(tree, Leaf):
-        label = ''
-        font_color = 'black'
-        color = 'white'
-        if print_action:
-            label += f'Action: {tree.action}\n'
-        label += f'Cost: {round(tree.cost, 2)}'
-        if hasattr(tree, 'ratio'):
-            label += f'\nFreq: {round(tree.ratio * 100, 2)}'
-            color = color_gradient(tree.ratio, start="#FFFFFF", end="#FF0000")
-            if tree.ratio == 0:
-                color = 'black'
-        if hasattr(tree, 'best_ratio'):
-            label += f'\nbest: {round(tree.best_ratio * 100, 2)}'
-        node = pydot.Node(
-            str(n), label=label,
-            shape='circle', fillcolor=color, fontcolor=font_color, style='filled'
-        )
-        graph.add_node(node)
-        return node, n
+def draw_leaf(graph, leaf, n, print_action=False):
+    label = ''
+    font_color = 'black'
+    color = 'white'
 
-    try:
-        low_node, low_n = _draw_graph(graph, tree.low, n, print_action=print_action)
-    except AttributeError:
-        import ipdb; ipdb.set_trace()
-        pass
-    high_node, high_n = _draw_graph(graph, tree.high, low_n + 1, print_action=print_action)
+    if print_action:
+        label += f'Action: {leaf.action}\n'
+    label += f'Cost: {round(leaf.cost, 2)}'
+    if hasattr(leaf, 'ratio'):
+        label += f'\nFreq: {round(leaf.ratio * 100, 2)}'
+        color = color_gradient(leaf.ratio, start="#FFFFFF", end="#FF0000")
+        if leaf.ratio == 0:
+            color = 'black'
+    if hasattr(leaf, 'best_ratio'):
+        label += f'\nbest: {round(leaf.best_ratio * 100, 2)}'
+
+    node = pydot.Node(
+        str(n), label=label,
+        shape='circle', fillcolor=color, fontcolor=font_color, style='filled'
+    )
+    graph.add_node(node)
+    return node, n
+
+def draw_node(graph, root, n, print_action=False):
+    if isinstance(root, Leaf):
+        return draw_leaf(graph, root, n, print_action=print_action)
+
+    low_node, low_n = draw_node(graph, root.low, n, print_action=print_action)
+
+    high_node, high_n = draw_node(graph, root.high, low_n + 1, print_action=print_action)
 
     new_n = high_n + 1
-    label = f'{tree.variable}: {round(tree.bound, 2)}'
+    label = f'{root.variable}: {round(root.bound, 2)}'
     node = graph.add_node(
         pydot.Node(str(new_n), label=label, shape='square')
     )
@@ -76,7 +83,7 @@ def draw_graph(trees, labels=None, out_fp='graph_drawing.png', print_action=Fals
 
     n = 0
     for label, tree in iterator:
-        node, n = _draw_graph(graph, tree, n, print_action=print_action)
+        node, n = draw_node(graph, tree, n, print_action=print_action)
         graph.add_edge(pydot.Edge('actions', str(n), label=label))
         n += 1
 
@@ -85,24 +92,78 @@ def draw_graph(trees, labels=None, out_fp='graph_drawing.png', print_action=Fals
 
 ####### Functions to load and add statistics to a tree #######
 
-def load_stat(fp):
-    with open(fp, 'r') as f:
-        reader = csv.reader(f)
-        variables, data = [], []
-        next(reader)
+def parse_from_sampling_log(filepath, as_numpy=True):
+    """
+    Return data as a list (or as a `np.array` if `as_numpy=True`) of floats
+    parsed from a log file (of the format [timestep, var1, var2, ...])
+    """
+    with open(filepath, 'r') as f:
+        data = f.readlines()
 
-        for row in reader:
-            if len(row) == 1:
-                # TODO: get actual var name
-                variables.append(row[0])
-                data.append([])
-            else:
-                data[-1].append((float(row[0]), float(row[1])))
+    data = [list(map(float, s.strip().split(' '))) for s in data]
+    if as_numpy:
+        data = np.array(data)
 
-    for i in range(len(data)):
-        data[i] = np.array(data[i])
+    return data
 
-    return data, variables
+def test_equivalence(tree, forest, data, variables, step=1):
+    for i in range(0, len(data), step):
+        state = { var: val for var, val in zip(variables, data[i][1:]) }
+        a1 = tree.get_leaf(state).action
+        a2 = sorted(
+            [r.get_leaf(state) for r in forest], key=lambda x: x.cost
+        )[0].action
+        if not a1 == a2:
+            print(f'Inconsistent at {state}')
+            print(f'Tree chose {a1}, forest chose {a2}')
+            return False
+    return True
+
+def count_visits(root, data, variables, step=1):
+    """
+    Evaluate every state given by `data`, and mark the resulting leaf in `root`
+    as visited. Counts the total number of visits and the frequency each leaf
+    was visited with. Note that the variables in every entry in `data` must
+    occur in the same order as the do in `variables`.
+
+    - params:
+        - `root`, the root `Node` of the strategy
+        - `data`, a list of lists, where each entry is of the form
+            `[t, var1_t, ..., varN_t]` for a setting with N variables in
+            the state at each time `t`
+        - `variables`, a list of the variable names in the order they occur in
+            each of `data[t]`
+        - `step` (default 1), the stepsize when iterating `data`
+
+    - returns:
+        a dictionary counting the times each action was chosen
+    """
+
+    leafs = root.get_leafs()
+    for l in leafs:
+        l.visits = 0
+        l.ratio = 0
+
+    total = 0
+    actions = defaultdict(int)
+    last_a = None
+    for i in range(0, len(data), step):
+        state = { var: val for var, val in zip(variables, data[i][1:]) }
+        leaf = root.get_leaf(state)
+        leaf.visits += 1
+        actions[leaf.action] += 1
+        total += 1
+        # if leaf.action == '1':
+        #     print('Sample: {}\nState: {}\nAction: {}'.format(
+        #         data[i], state, leaf.action
+        #     ))
+            # import ipdb; ipdb.set_trace()
+        last_a = leaf.action
+
+    for l in leafs:
+        l.ratio = l.visits / total
+
+    return actions
 
 def add_stats(trees, stats, variables, max_ts, step_sz):
     """
@@ -175,7 +236,16 @@ def build_tree(tree, a, variables=None):
         high=build_tree(tree['high'], a, variables)
     )
 
-def load_tree(fp, loc='(1)', stats=[]):
+def get_uppaal_data(data):
+    for reg in data['regressors']:
+        data['regressors'][reg]['regressor'] = {}
+    return data
+
+def load_tree(fp, loc='(1)', verbosity=0):
+    """
+    If `verbosity=1`, also return a dict with the UPPAAL specific strategy data
+    (relevant for later exporting back to the UPPAAL forma). Default 0.
+    """
     with open(fp, 'r') as f:
         data = json.load(f)
 
@@ -189,7 +259,8 @@ def load_tree(fp, loc='(1)', stats=[]):
         roots.append(root)
         actions.append(action)
 
-    if len(stats) > 0:
-        add_stats(roots, stats)
+    if verbosity > 0:
+        misc = get_uppaal_data(data)
+        return roots, variables, actions, misc
 
     return roots, variables, actions
