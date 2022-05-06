@@ -10,11 +10,6 @@ The representation is based on the json output of strategies trained with
 
 ---
 
-Currently messy. But you can 
-
-- draw trees
-- convert Q-trees to decision trees (with actions in the leafs)
-
 ## Draw trees
 
 Make a virtual environment, activate it and run `pip install -r
@@ -70,6 +65,57 @@ resulting tree is shown below.
 ![Example decision tree made from a list of sorted leafs](./examples/exampleTreeSorted.png)
 
 Examples involving a larger strategy can be found in `examples/`.
+
+### Export back to UPPAAL
+
+Currently, UPPAAL doesn't accept strategies in the decision tree format, so to
+actually try the decision tree strategies in a real UPPAAL setting, we need to
+convert it back to Q-trees. This can easily be done by calling 
+`root.to_q_trees(actions)` which essentially outputs a copy of `strategy` for 
+each action in `actions`, but where each copy is modified so that every leaf
+corresponding to the current action is given a very low cost (default 0) and
+all other leaves are given a very large cost.
+
+To actually get a working json file that can be loaded into UPPAAL follow this
+example:
+
+```python
+import json
+from trees.models import Node
+from trees.utils import load_tree, get_uppaal_data
+
+# need to set this manually (currently only one location is supported)
+loc = "(1)"
+
+# set verbosity=1 to get necessary meta-data about the strategy
+roots, variables, actions, meta = load_tree(
+    "/path/to/strategy.json",
+    loc=loc,
+    verbosity=1
+)
+
+# the meta data could also be obtained directly
+with open("/path/to/strategy.json", "r") as f:
+    meta = get_uppaal_data(json.load(f))
+
+# convert Q-trees to decision tree
+leafs = [l for ls in [root.get_leafs() for root in roots] for l in ls]
+strategy = Node.make_decision_tree_from_leafs(leafs)
+
+# convert back to Q-trees
+action_tree_pairs = strategy.to_q_trees(actions)
+
+# we need a mapping from variable to a variable index
+var_map = { v: i for i, v in enumerate(variables) }
+
+# insert into the strategy meta data
+for action, root in action_tree_pairs:
+    meta['regressors'][loc]['regressor'][action] = root.to_uppaal(var_map)
+
+# export to json and be happy!
+with open("myConvertedStrategy.json", "w") as f:
+    json.dump(meta, f, indent=4)
+```
 
 ## Empirically prune decision trees
 
