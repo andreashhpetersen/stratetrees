@@ -143,6 +143,7 @@ class Node:
             try:
                 self.low = self.low.prune()
             except AttributeError:
+
                 import ipdb; ipdb.set_trace()
 
         if not Node.is_leaf(self.high):
@@ -227,6 +228,19 @@ class Node:
                     leaf.cost = MIN_COST
             out.append((action, root))
         return out
+
+    def export_to_uppaal(
+            self, actions, variables, meta, path='./out.json', loc='(1)'
+    ):
+        var_map = { v: i for i, v in enumerate(variables) }
+        roots = self.to_q_trees(actions)
+        for action, root in roots:
+            meta['regressors'][loc]['regressor'][action] = root.to_uppaal(
+                var_map
+            )
+
+        with open(path, 'w') as f:
+            json.dump(meta, f, indent=4)
 
     def __copy__(self):
         return type(self)(
@@ -351,6 +365,10 @@ class Node:
         return True
 
     @classmethod
+    def get_all_leafs(cls, roots):
+        return [l for ls in [root.get_leafs() for root in roots] for l in ls]
+
+    @classmethod
     def make_decision_tree_from_leafs(cls, leafs):
         variables = leafs[0].state.variables
         leafs.sort(key=lambda x: x.cost)
@@ -359,6 +377,10 @@ class Node:
             root = root.put_leaf(leafs[i], State(variables))
 
         return root.prune()
+
+    @classmethod
+    def make_decision_tree_from_roots(cls, roots):
+        return cls.make_decision_tree_from_leafs(cls.get_all_leafs(roots))
 
     @classmethod
     def get_var_data(cls, root, variables=None):
