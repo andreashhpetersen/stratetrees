@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.5//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_5.dtd'>
+<nta>
+	<declaration>urgent broadcast chan bounce;
+broadcast chan ehit, uhit, lhit;
+clock time;
+
+const int NUMBER_OF_BALLS = 1;
+typedef int[0, NUMBER_OF_BALLS-1] ball_id;</declaration>
+	<template>
+		<name x="5" y="5">Ball</name>
+		<parameter>ball_id id</parameter>
+		<declaration>// Place local declarations here.
+clock p, v, x;
+hybrid clock c;
+int number_deaths = 0;</declaration>
+		<location id="id0" x="93" y="-34">
+			<name x="83" y="-68">B</name>
+			<label kind="invariant" x="0" y="-126">v'==-9.81 &amp;&amp;
+p'==1*v &amp;&amp; c'==0</label>
+			<label kind="exponentialrate" x="68" y="-68">1</label>
+		</location>
+		<location id="id1" x="-76" y="-34">
+			<name x="-86" y="-68">I</name>
+			<urgent/>
+		</location>
+		<location id="id2" x="93" y="153">
+			<name x="110" y="144">is_dead</name>
+			<committed/>
+		</location>
+		<location id="id3" x="-42" y="153">
+			<name x="-52" y="119">dead</name>
+			<label kind="invariant" x="-102" y="170">c' == 0 &amp;&amp;
+v' == 0 &amp;&amp;
+p' == 0</label>
+			<committed/>
+		</location>
+		<init ref="id1"/>
+		<transition id="id4" controllable="false">
+			<source ref="id3"/>
+			<target ref="id1"/>
+			<nail x="-76" y="153"/>
+		</transition>
+		<transition id="id5" controllable="false">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="25" y="161">v&lt;=1</label>
+			<label kind="assignment" x="-8" y="178">number_deaths++, x = 0, v=0, p=0</label>
+		</transition>
+		<transition id="id6" controllable="false">
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-17" y="42">v&gt;1</label>
+			<nail x="25" y="51"/>
+		</transition>
+		<transition id="id7">
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="guard" x="152" y="-126">p&gt;=4 &amp;&amp; v&gt;=0</label>
+			<label kind="synchronisation" x="152" y="-110">lhit?</label>
+			<label kind="assignment" x="152" y="-94">v=-(0.9+random(0.1))*v - 4,
+c=c+1</label>
+			<nail x="144" y="-102"/>
+			<nail x="144" y="-42"/>
+		</transition>
+		<transition id="id8">
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="guard" x="157" y="-26">p&gt;=4 &amp;&amp;v&gt;=-4&amp;&amp; v&lt;0</label>
+			<label kind="synchronisation" x="157" y="-10">lhit?</label>
+			<label kind="assignment" x="157" y="6">v=-4.0, c=c+1</label>
+			<nail x="149" y="6"/>
+			<nail x="149" y="-26"/>
+		</transition>
+		<transition id="id9" controllable="false">
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="guard" x="102" y="59">p==0 &amp;&amp; v &lt; 0</label>
+			<label kind="synchronisation" x="102" y="42">bounce!</label>
+			<label kind="assignment" x="102" y="76">v=-(0.85+random(0.12))*v</label>
+		</transition>
+		<transition id="id10" controllable="false">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="assignment" x="-51" y="-25">p=7+random(3), v=0</label>
+		</transition>
+	</template>
+	<template>
+		<name>LearnerPlayer</name>
+		<declaration>clock x;
+int fired;</declaration>
+		<location id="id11" x="0" y="0">
+			<name x="-10" y="-34">W</name>
+			<label kind="invariant" x="-17" y="17">x&lt;=0.3</label>
+		</location>
+		<location id="id12" x="0" y="-68">
+			<name x="-10" y="-102">C</name>
+			<committed/>
+		</location>
+		<init ref="id11"/>
+		<transition id="id13" controllable="false">
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="guard" x="8" y="-34">x==0.3</label>
+			<label kind="assignment" x="8" y="-51">x=0</label>
+		</transition>
+		<transition id="id14">
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<nail x="85" y="-68"/>
+			<nail x="85" y="0"/>
+		</transition>
+		<transition id="id15">
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-119" y="-59">lhit!</label>
+			<label kind="assignment" x="-144" y="-42">++fired</label>
+			<nail x="-85" y="-68"/>
+			<nail x="-85" y="0"/>
+		</transition>
+	</template>
+	<template>
+		<name>UniformPlayer</name>
+		<declaration>clock x;
+int fired;</declaration>
+		<location id="id16" x="0" y="0">
+			<label kind="invariant" x="-59" y="8">x&lt;=1</label>
+		</location>
+		<init ref="id16"/>
+		<transition id="id17" controllable="false">
+			<source ref="id16"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="18" y="-17">uhit!</label>
+			<label kind="assignment" x="18" y="0">x=0,
+++fired</label>
+			<nail x="85" y="0"/>
+			<nail x="85" y="-93"/>
+			<nail x="0" y="-93"/>
+		</transition>
+	</template>
+	<template>
+		<name>ExpPlayer</name>
+		<declaration>int fired;</declaration>
+		<location id="id18" x="0" y="0">
+			<label kind="exponentialrate" x="-10" y="34">1:5</label>
+		</location>
+		<init ref="id18"/>
+		<transition id="id19" controllable="false">
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="-41" y="-68">ehit!</label>
+			<label kind="assignment" x="-41" y="-51">++fired</label>
+			<nail x="59" y="-51"/>
+			<nail x="-59" y="-51"/>
+		</transition>
+	</template>
+	<system>
+system Ball,
+       LearnerPlayer;
+</system>
+	<queries>
+		<query>
+			<formula>simulate 1 [&lt;=1] {Ball(0).p}</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2022-04-28 15:44:28 +0200">
+				<plot title="Simulations (1)" xaxis="time" yaxis="value">
+					<series title="Ball[0].p" type="l" color="0xff0000" encoding="csv">0.0,0.0
+0.0,9.01573391175397
+0.01,9.01475291175397
+0.02,9.012790911753969
+0.03,9.009847911753969
+0.04,9.00592391175397
+0.05,9.001018911753969
+0.06,8.995132911753968
+0.07,8.988265911753968
+0.08,8.98041791175397
+0.09,8.971588911753969
+0.09999999999999999,8.961778911753969
+0.11,8.95098791175397
+0.12,8.93921591175397
+0.13,8.926462911753969
+0.14,8.91272891175397
+0.15,8.898013911753969
+0.16,8.882317911753969
+0.17,8.86564091175397
+0.18,8.847982911753968
+0.19,8.829343911753968
+0.2,8.809723911753968
+0.21,8.789122911753969
+0.2200000000000001,8.767540911753969
+0.2300000000000001,8.744977911753969
+0.2400000000000001,8.72143391175397
+0.2500000000000001,8.696908911753969
+0.2600000000000001,8.671402911753969
+0.2700000000000001,8.64491591175397
+0.2800000000000001,8.617447911753969
+0.2900000000000001,8.588998911753968
+0.3,8.559568911753969
+0.31,8.518587911753968
+0.32,8.476625911753969
+0.33,8.43368291175397
+0.34,8.389758911753969
+0.35,8.344853911753969
+0.36,8.29896791175397
+0.3700000000000001,8.252100911753969
+0.3800000000000001,8.204252911753969
+0.3900000000000001,8.155423911753969
+0.4000000000000001,8.105613911753968
+0.4100000000000001,8.054822911753968
+0.4200000000000001,8.003050911753968
+0.4300000000000001,7.950297911753968
+0.4400000000000001,7.896563911753968
+0.4500000000000001,7.841848911753968
+0.4600000000000001,7.786152911753968
+0.4700000000000001,7.729475911753968
+0.4800000000000001,7.671817911753968
+0.4900000000000002,7.613178911753968
+0.5000000000000001,7.553558911753968
+0.5100000000000001,7.492957911753968
+0.5200000000000001,7.431375911753968
+0.5300000000000001,7.368812911753968
+0.5400000000000001,7.305268911753968
+0.5500000000000002,7.240743911753968
+0.5600000000000002,7.175237911753968
+0.5700000000000002,7.108750911753969
+0.5800000000000002,7.041282911753969
+0.5900000000000002,6.972833911753969
+0.6000000000000001,6.90340391175397
+0.6100000000000001,6.83299291175397
+0.6200000000000001,6.761600911753971
+0.6300000000000001,6.689227911753971
+0.6400000000000001,6.615873911753971
+0.6500000000000001,6.541538911753971
+0.6600000000000001,6.466222911753971
+0.6700000000000002,6.389925911753971
+0.6800000000000002,6.312647911753971
+0.6900000000000002,6.234388911753971
+0.7000000000000002,6.155148911753971
+0.7100000000000002,6.074927911753972
+0.7200000000000002,5.993725911753971
+0.7300000000000002,5.911542911753972
+0.7400000000000002,5.828378911753972
+0.7500000000000002,5.744233911753972
+0.7600000000000002,5.659107911753972
+0.7700000000000002,5.573000911753972
+0.7800000000000002,5.485912911753973
+0.7900000000000003,5.397843911753973
+0.8000000000000003,5.308793911753972
+0.8100000000000003,5.218762911753973
+0.8200000000000003,5.127750911753973
+0.8300000000000003,5.035757911753973
+0.8400000000000003,4.942783911753973
+0.8500000000000003,4.848828911753973
+0.8600000000000003,4.753892911753973
+0.8700000000000003,4.657975911753973
+0.8800000000000003,4.561077911753974
+0.8900000000000003,4.463198911753974
+0.9000000000000002,4.364338911753975
+0.9100000000000003,4.264497911753975
+0.9200000000000003,4.163675911753975
+0.9300000000000003,4.061872911753975
+0.9400000000000003,3.959088911753975
+0.9500000000000003,3.855323911753975
+0.9600000000000003,3.750577911753975
+0.9700000000000003,3.644850911753975
+0.9800000000000003,3.538142911753975
+0.9900000000000003,3.430453911753975
+1.0,3.321783911753978
+					</series>
+					<comment/>
+				</plot>
+			</result>
+		</query>
+		<query>
+			<formula>// strategy HitWell = minE (LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) [&lt;=120] {} -&gt; {Ball(0).p, Ball(0).v}: &lt;&gt; time &gt;= 120</formula>
+			<comment>can i just say p for all balls? </comment>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell</formula>
+			<comment/>
+			<result outcome="success" type="quantity" value="42.99 ± 3.46728 (95% CI)" timestamp="2022-04-28 15:47:29 +0200">
+				<details>42.99 ± 3.46728 (95% CI)</details>
+				<plot title="Probability Density Distribution" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability density">
+					<series title="density" type="b(32.000000)" color="0x0000ff" encoding="csv">30.0,0.03115625
+62.0,0.0
+94.0,0.0
+126.0,0.0
+158.0,0.0
+190.0,0.0
+222.0,0.0
+254.0,0.0
+286.0,0.0
+318.0,0.0
+350.0,0.0
+382.0,0.0
+414.0,0.0
+446.0,0.0
+478.0,0.0
+510.0,0.0
+542.0,0.0
+574.0,0.0
+606.0,0.0
+638.0,0.0
+670.0,0.0
+702.0,0.0
+734.0,0.0
+766.0,0.0
+798.0,0.0
+830.0,0.0
+862.0,0.0
+894.0,0.0
+926.0,0.0
+958.0,0.0
+990.0,0.0
+1022.0,0.0
+1054.0,9.375E-5
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">42.99,0.0
+42.99,0.03115625
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=32, bucket count=33
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [30, 1062]
+Mean estimate of displayed sample: 42.99 ± 3.467 (95% CI)</comment>
+				</plot>
+				<plot title="Probability Distribution" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability">
+					<series title="probability" type="b(32.000000)" color="0x0000ff" encoding="csv">30.0,0.997
+62.0,0.0
+94.0,0.0
+126.0,0.0
+158.0,0.0
+190.0,0.0
+222.0,0.0
+254.0,0.0
+286.0,0.0
+318.0,0.0
+350.0,0.0
+382.0,0.0
+414.0,0.0
+446.0,0.0
+478.0,0.0
+510.0,0.0
+542.0,0.0
+574.0,0.0
+606.0,0.0
+638.0,0.0
+670.0,0.0
+702.0,0.0
+734.0,0.0
+766.0,0.0
+798.0,0.0
+830.0,0.0
+862.0,0.0
+894.0,0.0
+926.0,0.0
+958.0,0.0
+990.0,0.0
+1022.0,0.0
+1054.0,0.003
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">42.99,0.0
+42.99,0.997
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=32, bucket count=33
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [30, 1062]
+Mean estimate of displayed sample: 42.99 ± 3.467 (95% CI)</comment>
+				</plot>
+				<plot title="Cumulative Probability Distribution" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability">
+					<series title="cumulative" type="l" color="0x000000" encoding="csv">30.0,0.0
+62.0,0.997
+94.0,0.997
+126.0,0.997
+158.0,0.997
+190.0,0.997
+222.0,0.997
+254.0,0.997
+286.0,0.997
+318.0,0.997
+350.0,0.997
+382.0,0.997
+414.0,0.997
+446.0,0.997
+478.0,0.997
+510.0,0.997
+542.0,0.997
+574.0,0.997
+606.0,0.997
+638.0,0.997
+670.0,0.997
+702.0,0.997
+734.0,0.997
+766.0,0.997
+798.0,0.997
+830.0,0.997
+862.0,0.997
+894.0,0.997
+926.0,0.997
+958.0,0.997
+990.0,0.997
+1022.0,0.997
+1054.0,0.997
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">42.99,0.0
+42.99,1.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=32, bucket count=33
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [30, 1062]
+Mean estimate of displayed sample: 42.99 ± 3.467 (95% CI)</comment>
+				</plot>
+				<plot title="Cumulative Probability Confidence Intervals" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability">
+					<series title="upper limit" type="k" color="0x0000dd" encoding="csv">30.0,0.003682083896865672
+62.0,0.9993809000683505
+94.0,0.9993809000683505
+126.0,0.9993809000683505
+158.0,0.9993809000683505
+190.0,0.9993809000683505
+222.0,0.9993809000683505
+254.0,0.9993809000683505
+286.0,0.9993809000683505
+318.0,0.9993809000683505
+350.0,0.9993809000683505
+382.0,0.9993809000683505
+414.0,0.9993809000683505
+446.0,0.9993809000683505
+478.0,0.9993809000683505
+510.0,0.9993809000683505
+542.0,0.9993809000683505
+574.0,0.9993809000683505
+606.0,0.9993809000683505
+638.0,0.9993809000683505
+670.0,0.9993809000683505
+702.0,0.9993809000683505
+734.0,0.9993809000683505
+766.0,0.9993809000683505
+798.0,0.9993809000683505
+830.0,0.9993809000683505
+862.0,0.9993809000683505
+894.0,0.9993809000683505
+926.0,0.9993809000683505
+958.0,0.9993809000683505
+990.0,0.9993809000683505
+1022.0,0.9993809000683505
+1054.0,0.9993809000683505
+					</series>
+					<series title="upper limit" type="k" color="0xdd0000" encoding="csv">30.0,0.0
+62.0,0.9912579767615217
+94.0,0.9912579767615217
+126.0,0.9912579767615217
+158.0,0.9912579767615217
+190.0,0.9912579767615217
+222.0,0.9912579767615217
+254.0,0.9912579767615217
+286.0,0.9912579767615217
+318.0,0.9912579767615217
+350.0,0.9912579767615217
+382.0,0.9912579767615217
+414.0,0.9912579767615217
+446.0,0.9912579767615217
+478.0,0.9912579767615217
+510.0,0.9912579767615217
+542.0,0.9912579767615217
+574.0,0.9912579767615217
+606.0,0.9912579767615217
+638.0,0.9912579767615217
+670.0,0.9912579767615217
+702.0,0.9912579767615217
+734.0,0.9912579767615217
+766.0,0.9912579767615217
+798.0,0.9912579767615217
+830.0,0.9912579767615217
+862.0,0.9912579767615217
+894.0,0.9912579767615217
+926.0,0.9912579767615217
+958.0,0.9912579767615217
+990.0,0.9912579767615217
+1022.0,0.9912579767615217
+1054.0,0.9912579767615217
+					</series>
+					<series title="cumulative" type="l" color="0x000000" encoding="csv">30.0,0.0
+62.0,0.997
+94.0,0.997
+126.0,0.997
+158.0,0.997
+190.0,0.997
+222.0,0.997
+254.0,0.997
+286.0,0.997
+318.0,0.997
+350.0,0.997
+382.0,0.997
+414.0,0.997
+446.0,0.997
+478.0,0.997
+510.0,0.997
+542.0,0.997
+574.0,0.997
+606.0,0.997
+638.0,0.997
+670.0,0.997
+702.0,0.997
+734.0,0.997
+766.0,0.997
+798.0,0.997
+830.0,0.997
+862.0,0.997
+894.0,0.997
+926.0,0.997
+958.0,0.997
+990.0,0.997
+1022.0,0.997
+1054.0,0.997
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">42.99,0.0
+42.99,1.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=32, bucket count=33
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [30, 1062]
+Mean estimate of displayed sample: 42.99 ± 3.467 (95% CI)</comment>
+				</plot>
+				<plot title="Frequency Histogram" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="count">
+					<series title="count" type="b(32.000000)" color="0x0000ff" encoding="csv">30.0,997.0
+62.0,0.0
+94.0,0.0
+126.0,0.0
+158.0,0.0
+190.0,0.0
+222.0,0.0
+254.0,0.0
+286.0,0.0
+318.0,0.0
+350.0,0.0
+382.0,0.0
+414.0,0.0
+446.0,0.0
+478.0,0.0
+510.0,0.0
+542.0,0.0
+574.0,0.0
+606.0,0.0
+638.0,0.0
+670.0,0.0
+702.0,0.0
+734.0,0.0
+766.0,0.0
+798.0,0.0
+830.0,0.0
+862.0,0.0
+894.0,0.0
+926.0,0.0
+958.0,0.0
+990.0,0.0
+1022.0,0.0
+1054.0,3.0
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">42.99,0.0
+42.99,997.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=32, bucket count=33
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [30, 1062]
+Mean estimate of displayed sample: 42.99 ± 3.467 (95% CI)</comment>
+				</plot>
+			</result>
+		</query>
+		<query>
+			<formula>// simulate 1 [&lt;=300] {LearnerPlayer.fired, Ball(0).p} under HitWell</formula>
+			<comment/>
+		</query>
+	</queries>
+</nta>

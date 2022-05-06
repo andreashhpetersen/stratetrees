@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>urgent broadcast chan bounce;
+broadcast chan ehit, uhit, lhit;
+clock time;
+
+const int NUMBER_OF_BALLS = 2;
+typedef int[0, NUMBER_OF_BALLS-1] ball_id;</declaration>
+	<template>
+		<name x="5" y="5">Ball</name>
+		<parameter>ball_id id</parameter>
+		<declaration>// Place local declarations here.
+clock p, v, x;
+hybrid clock c;
+int number_deaths = 0;</declaration>
+		<location id="id0" x="93" y="-34">
+			<label kind="invariant" x="0" y="-126">v'==-9.81 &amp;&amp;
+p'==1*v &amp;&amp; c'==0</label>
+			<label kind="exponentialrate" x="68" y="-68">1</label>
+		</location>
+		<location id="id1" x="-76" y="-34">
+			<urgent/>
+		</location>
+		<location id="id2" x="93" y="153">
+			<name x="110" y="144">is_dead</name>
+			<committed/>
+		</location>
+		<location id="id3" x="-42" y="153">
+			<name x="-52" y="119">dead</name>
+			<label kind="invariant" x="-102" y="170">c' == 0 &amp;&amp;
+v' == 0 &amp;&amp;
+p' == 0</label>
+			<committed/>
+		</location>
+		<init ref="id1"/>
+		<transition controllable="false">
+			<source ref="id3"/>
+			<target ref="id1"/>
+			<nail x="-76" y="153"/>
+		</transition>
+		<transition controllable="false">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="25" y="161">v&lt;=1</label>
+			<label kind="assignment" x="-8" y="178">number_deaths++, x = 0, v=0, p=0</label>
+		</transition>
+		<transition controllable="false">
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-17" y="42">v&gt;1</label>
+			<nail x="25" y="51"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="guard" x="152" y="-126">p&gt;=4 &amp;&amp; v&gt;=0</label>
+			<label kind="synchronisation" x="152" y="-110">lhit?</label>
+			<label kind="assignment" x="152" y="-94">v=-(0.9+random(0.1))*v - 4,
+c=c+1</label>
+			<nail x="144" y="-102"/>
+			<nail x="144" y="-42"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="guard" x="157" y="-26">p&gt;=4 &amp;&amp;v&gt;=-4&amp;&amp; v&lt;0</label>
+			<label kind="synchronisation" x="157" y="-10">lhit?</label>
+			<label kind="assignment" x="157" y="6">v=-4.0, c=c+1</label>
+			<nail x="149" y="6"/>
+			<nail x="149" y="-26"/>
+		</transition>
+		<transition controllable="false">
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="guard" x="102" y="59">p==0 &amp;&amp; v &lt; 0</label>
+			<label kind="synchronisation" x="102" y="42">bounce!</label>
+			<label kind="assignment" x="102" y="76">v=-(0.85+random(0.12))*v</label>
+		</transition>
+		<transition controllable="false">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="assignment" x="-51" y="-25">p=7+random(3), v=0</label>
+		</transition>
+	</template>
+	<template>
+		<name>LearnerPlayer</name>
+		<declaration>clock x;
+int fired;</declaration>
+		<location id="id4" x="0" y="0">
+			<label kind="invariant" x="-17" y="17">x&lt;=0.3</label>
+		</location>
+		<location id="id5" x="0" y="-68">
+			<committed/>
+		</location>
+		<init ref="id4"/>
+		<transition controllable="false">
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="guard" x="8" y="-34">x==0.3</label>
+			<label kind="assignment" x="8" y="-51">x=0</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<nail x="85" y="-68"/>
+			<nail x="85" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-119" y="-59">lhit!</label>
+			<label kind="assignment" x="-144" y="-42">++fired</label>
+			<nail x="-85" y="-68"/>
+			<nail x="-85" y="0"/>
+		</transition>
+	</template>
+	<template>
+		<name>UniformPlayer</name>
+		<declaration>clock x;
+int fired;</declaration>
+		<location id="id6" x="0" y="0">
+			<label kind="invariant" x="-59" y="8">x&lt;=1</label>
+		</location>
+		<init ref="id6"/>
+		<transition controllable="false">
+			<source ref="id6"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="18" y="-17">uhit!</label>
+			<label kind="assignment" x="18" y="0">x=0,
+++fired</label>
+			<nail x="85" y="0"/>
+			<nail x="85" y="-93"/>
+			<nail x="0" y="-93"/>
+		</transition>
+	</template>
+	<template>
+		<name>ExpPlayer</name>
+		<declaration>int fired;</declaration>
+		<location id="id7" x="0" y="0">
+			<label kind="exponentialrate" x="-10" y="34">1:5</label>
+		</location>
+		<init ref="id7"/>
+		<transition controllable="false">
+			<source ref="id7"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-41" y="-68">ehit!</label>
+			<label kind="assignment" x="-41" y="-51">++fired</label>
+			<nail x="59" y="-51"/>
+			<nail x="-59" y="-51"/>
+		</transition>
+	</template>
+	<system>
+system Ball,
+       LearnerPlayer;
+</system>
+</nta>

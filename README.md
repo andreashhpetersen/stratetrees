@@ -70,3 +70,59 @@ resulting tree is shown below.
 ![Example decision tree made from a list of sorted leafs](./examples/exampleTreeSorted.png)
 
 Examples involving a larger strategy can be found in `examples/`.
+
+## Empirically prune decision trees
+
+When UPPAAL learns a strategy, it will most likely generate a lot of partitions
+early on in the training, which will turn out to be quite irrelevant to the
+final controller. In other words, the strategy will contain information about
+parts of the state space, that in actuality is rarely (if ever) visited. On top
+of that, this information will also most likely be based on very little actual
+experience.
+
+To prune the strategies of these superfluous partitions, we can generate a
+sample run (or several), count the visits to each leaf in the decision
+tree strategy and then remove all leaves visited less than some threshold.
+
+The function `trees.utils.count_visits` takes 4 arguments: the
+decision tree strategy, the sample data as a list of 
+`[timestep, var_1, var_2, ..., var_n]` entries, a list of variables `[var_1,
+var_2, ..., var_n]` and an optional step parameter, that defaults to 1 (this is
+for only evaluating every `step` entry in the sample data). An output like this
+can be generated via the command line using
+
+```sh
+/path/to/uppaal_application/bin/verifyta \
+    /path/to/model.xml \
+    /path/to/query_file.q \
+    --sampling-time 0.1
+```
+
+which creates a file `./sampling.log` with an entry for every 0.1 timestep (vary
+according to needs).
+
+Calling `count_visits(strategy, data, variables)` will add statistics to each
+leaf in `strategy` about the number and frequency of visits, which can then be
+used by `Node.emp_prune(strategy)` to remove all leaves that is never visited.
+`Node.emp_prune` accepts an optional argument `thresh` which can be provided to
+prune even more strict.
+
+#### Example
+
+```python
+from trees.models import Node
+from trees.utils import load_tree, parse_from_sampling_log, count_visits
+
+# import strategy and convert to decision tree
+roots, variabels, actions = load_tree("/path/to/strategy.json")
+leafs = [l for ls in [root.get_leafs() for root in roots] for l in ls]
+strategy = Node.make_decision_tree_from_leafs(leafs)
+
+# parse sampling data and gather statistics
+data = parse_from_sampling_log("/path/to/sampling.log")
+count_visits(strategy, data, variables)
+
+# prune leaves only visited 3 or few times
+thresh = 3 / len(data)
+Node.emp_prune(strategy, thresh=thresh)
+```

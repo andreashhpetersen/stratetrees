@@ -1,4 +1,6 @@
+import json
 import math
+from copy import deepcopy
 from random import shuffle
 
 
@@ -63,6 +65,217 @@ class Node:
         self.state = state
         self.low = low
         self.high = high
+
+    @property
+    def size(self):
+        return len(self.get_leafs())
+
+    def put_leaf(self, leaf, state):
+        var_min, var_max = leaf.state.min_max(self.variable)
+        if var_min < self.bound:
+            low_state = state.copy()
+            low_state.less_than(self.variable, self.bound)
+
+            self.low = self.low.put_leaf(leaf, low_state)
+
+        if var_max > self.bound:
+            high_state = state.copy()
+            high_state.greater_than(self.variable, self.bound)
+
+            self.high = self.high.put_leaf(leaf, high_state)
+
+        return self
+
+    def get_leaf(self, state):
+        """
+        Get a particular leaf corresponding to the given `state`
+        """
+        if state[self.variable] > self.bound:
+            return self.high.get_leaf(state)
+        else:
+            return self.low.get_leaf(state)
+
+    def get_leafs(self):
+        """
+        return a list of all leafs of this tree
+        """
+        ls = []
+        self._get_leafs(ls)
+        return ls
+
+    def _get_leafs(self, ls):
+        self.low._get_leafs(ls)
+        self.high._get_leafs(ls)
+
+    def get_leafs_at_symbolic_state(self, state, pairs=[]):
+        """
+        Takes a symbolic state (of type `State`) and returns a list of tuples
+        indicating each action/state combination found
+        """
+        var_min, var_max = state.min_max(self.variable)
+        var_min = float(var_min)
+        var_max = float(var_max)
+        if var_min <= self.bound:
+            pairs = self.low.get_leafs_at_symbolic_state(state, pairs)
+
+        if var_max > self.bound:
+            pairs = self.high.get_leafs_at_symbolic_state(state, pairs)
+
+        return pairs
+
+    def set_state(self, state):
+        """
+        set the state of this Node to `state` and call the function on
+        child nodes aswell
+        """
+        self.state = state
+        low_state = state.copy()
+        low_state.less_than(self.variable, self.bound)
+
+        high_state = state.copy()
+        high_state.greater_than(self.variable, self.bound)
+
+        self.low.set_state(low_state)
+        self.high.set_state(high_state)
+
+    def prune(self):
+        if not Node.is_leaf(self.low):
+            try:
+                self.low = self.low.prune()
+            except AttributeError:
+                import ipdb; ipdb.set_trace()
+
+        if not Node.is_leaf(self.high):
+            self.high = self.high.prune()
+
+        if Node.is_leaf(self.low) and Node.is_leaf(self.high):
+            if self.low.action == self.high.action:
+                return Leaf(
+                    max(self.low.cost, self.high.cost),
+                    action=self.low.action
+                )
+
+        elif not (Node.is_leaf(self.low) or Node.is_leaf(self.high)):
+            if Node.equivalent(self.low, self.high):
+                # arbitrary if we here choose high or low
+                return self.low
+
+        return self
+
+    def save_as(self, filepath, filetype='json'):
+        """
+        Save tree as json to a file at `filepath`.
+
+        TODO: support multiple filetypes
+        """
+        with open(filepath, 'w') as f:
+            json.dump(self.as_dict(), f, indent=4)
+
+    def as_dict(self, var_func=lambda x: x):
+        """
+        Output the tree as a dictionary.
+        """
+        return {
+            'var': var_func(self.variable),
+            'bound': self.bound,
+            'low': self.low.as_dict(var_func=var_func),
+            'high': self.high.as_dict(var_func=var_func)
+        }
+
+    def to_uppaal(self, var_map):
+        """
+        Export to dict with in a way that's ready for UPPAAL json format
+        """
+        if isinstance(self.low, Leaf):
+            low = self.low.cost
+        else:
+            low = self.low.to_uppaal(var_map)
+
+        if isinstance(self.high, Leaf):
+            high = self.high.cost
+        else:
+            high = self.high.to_uppaal(var_map)
+
+        return {
+            'var': var_map[self.variable],
+            'bound': self.bound,
+            'low': low,
+            'high': high
+        }
+
+    def to_q_trees(self, actions, MAX_COST=9999, MIN_COST=0):
+        """
+        Export this decision tree to a forest of Q-trees
+        """
+        # here we store the resulting (action, root) pairs
+        out = []
+
+        # create a root per action
+        roots = [deepcopy(self) for _ in actions]
+
+        # generate each tree
+        for root, action in zip(roots, actions):
+            leafs = root.get_leafs()
+            for leaf in leafs:
+
+                # if another action is here, make it very expensive
+                if leaf.action != action:
+                    leaf.cost = MAX_COST
+
+                # otherwise, make it cheap
+                else:
+                    leaf.cost = MIN_COST
+            out.append((action, root))
+        return out
+
+    def __copy__(self):
+        return type(self)(
+            self.variable, self.bound, self.low, self.high, self.state
+        )
+
+    def __deepcopy__(self, memo):
+        id_self = id(self)
+        _copy = memo.get(id_self)
+        if _copy is None:
+            _copy = type(self)(
+                deepcopy(self.variable, memo),
+                deepcopy(self.bound, memo),
+                deepcopy(self.low, memo),
+                deepcopy(self.high, memo),
+                deepcopy(self.state, memo)
+            )
+            memo[id_self] = _copy
+        return _copy
+
+    @classmethod
+    def load_from_file(cls, filepath):
+        with open(filepath, 'r') as f:
+            json_root = json.load(f)
+
+        variables, actions = set(), set()
+        root = cls.build_from_dict(json_root, variables, actions)
+        root.set_state(State(variables))
+        return root, list(variables), list(actions)
+
+    @classmethod
+    def build_from_dict(cls, node_dict, variables, actions):
+        """
+        Recursively build a tree using the top level in `node_dict` as root and
+        keep track of variables and actions
+        """
+
+        # is this a leaf?
+        if not 'low' in node_dict:
+            actions.add(node_dict['action'])
+            return Leaf(node_dict['cost'], action=node_dict['action'])
+
+        variables.add(node_dict['var'])
+        return Node(
+            node_dict['var'],
+            node_dict['bound'],
+            low=cls.build_from_dict(node_dict['low'], variables, actions),
+            high=cls.build_from_dict(node_dict['high'], variables, actions)
+        )
 
     @classmethod
     def make_root_from_leaf(cls, leaf):
@@ -147,70 +360,6 @@ class Node:
 
         return root.prune()
 
-    def prune(self):
-        if not Node.is_leaf(self.low):
-            self.low = self.low.prune()
-
-        if not Node.is_leaf(self.high):
-            self.high = self.high.prune()
-
-        if Node.is_leaf(self.low) and Node.is_leaf(self.high):
-            if self.low.action == self.high.action:
-                return Leaf(
-                    max(self.low.cost, self.high.cost),
-                    action=self.low.action
-                )
-
-        elif not (Node.is_leaf(self.low) or Node.is_leaf(self.high)):
-            if Node.equivalent(self.low, self.high):
-                # arbitrary if we here choose high or low
-                return self.low
-
-        return self
-
-    def put_leaf(self, leaf, state):
-        var_min, var_max = leaf.state.min_max(self.variable)
-        if var_min < self.bound:
-            low_state = state.copy()
-            low_state.less_than(self.variable, self.bound)
-
-            self.low = self.low.put_leaf(leaf, low_state)
-
-        if var_max > self.bound:
-            high_state = state.copy()
-            high_state.greater_than(self.variable, self.bound)
-
-            self.high = self.high.put_leaf(leaf, high_state)
-
-        return self
-
-    def get_leafs(self):
-        """
-        return a list of all leafs of this tree
-        """
-        ls = []
-        self._get_leafs(ls)
-        return ls
-
-    def _get_leafs(self, ls):
-        self.low._get_leafs(ls)
-        self.high._get_leafs(ls)
-
-    def set_state(self, state):
-        """
-        set the state of this Node to `state` and call the function on
-        child nodes aswell
-        """
-        self.state = state
-        low_state = state.copy()
-        low_state.less_than(self.variable, self.bound)
-
-        high_state = state.copy()
-        high_state.greater_than(self.variable, self.bound)
-
-        self.low.set_state(low_state)
-        self.high.set_state(high_state)
-
     @classmethod
     def get_var_data(cls, root, variables=None):
         """
@@ -243,14 +392,29 @@ class Node:
     def is_leaf(cls, tree):
         return isinstance(tree, Leaf)
 
-    def get_leaf(self, state):
-        """
-        Get a particular leaf corresponding to the given `state`
-        """
-        if state[self.variable] > self.bound:
-            return self.high.get_leaf(state)
-        else:
-            return self.low.get_leaf(state)
+    @classmethod
+    def emp_prune(cls, node, thresh=0.0):
+        if isinstance(node, Leaf):
+            if node.ratio <= thresh:
+                return None
+            else:
+                return node
+
+        low = cls.emp_prune(node.low, thresh)
+        high = cls.emp_prune(node.high, thresh)
+
+        if low is None and high is None:
+            return None
+
+        if low is None:
+            return high
+
+        if high is None:
+            return low
+
+        node.low = low
+        node.high = high
+        return node.prune()
 
     def __str__(self):
         return f'Node(var: {self.variable}, bound: {self.bound})'
@@ -312,30 +476,46 @@ class Leaf:
         """
         return Leaf(leaf.cost, action=leaf.action, state=leaf.state.copy())
 
+    def __copy__(self):
+        return type(self)(self.cost, self.action, self.state.copy)
+
+    def __deepcopy__(self, memo):
+        id_self = id(self)
+        _copy = memo.get(id_self)
+        if _copy is None:
+            _copy = type(self)(
+                deepcopy(self.cost, memo),
+                deepcopy(self.action, memo),
+                deepcopy(self.state, memo)
+            )
+            memo[id_self] = _copy
+        return _copy
+
     def _get_leafs(self, ls):
         ls.append(self)
 
     def get_leaf(self, state):
         return self
 
+    def get_leafs_at_symbolic_state(self, state, pairs=[]):
+        """
+        Append the local state of the leaf to `pairs` and return the list
+
+        :raises:    `AssertionError` if `state` does not contain `self.state`,
+                    that is, if the check `state.contains(self.state)` fails
+        """
+        # assert state.contains(self.state)
+        pairs.append((self.action, self.state))
+        return pairs
+
     def set_state(self, state):
         self.state = state
 
-    def merge(self, other):
-        """
-        not working
-        """
-        s1, s2 = self.state, other.state
-        new_state = State(s1.variables)
-        for var in self.state.variables:
-            new_state.less_than(var, min(s1.max[var], s2.max[var]))
-            new_state.greater_than(var, max(s1.min[var], s2.min[var]))
-
-        return Leaf(
-            self.cost + other.cost,
-            self.action + other.action,
-            state=new_state
-        )
+    def as_dict(self, var_func=None):
+        return {
+            'action': self.action,
+            'cost': self.cost
+        }
 
     def __str__(self):
         return f'Leaf(action: {self.action}, cost: {self.cost}, {self.state})'
