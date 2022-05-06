@@ -143,7 +143,6 @@ class Node:
             try:
                 self.low = self.low.prune()
             except AttributeError:
-
                 import ipdb; ipdb.set_trace()
 
         if not Node.is_leaf(self.high):
@@ -365,8 +364,11 @@ class Node:
         return True
 
     @classmethod
-    def get_all_leafs(cls, roots):
-        return [l for ls in [root.get_leafs() for root in roots] for l in ls]
+    def get_all_leafs(cls, roots, sort=True):
+        leafs = [l for ls in [root.get_leafs() for root in roots] for l in ls]
+        if sort:
+            leafs.sort(key=lambda x: x.cost)
+        return leafs
 
     @classmethod
     def make_decision_tree_from_leafs(cls, leafs):
