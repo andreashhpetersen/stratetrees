@@ -30,6 +30,8 @@ if len(regs) > 1:
         print(f'{i+1}: {regs[i]}')
 
     loc = regs[int(input())-1]
+else:
+    loc = regs[0]
 
 roots, variables, actions = load_tree(fp, loc=loc)
 draw_graph(roots, labels=actions, out_fp=out_name)
