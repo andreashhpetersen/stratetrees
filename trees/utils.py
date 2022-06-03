@@ -63,7 +63,6 @@ def draw_node(graph, root, n, print_action=False):
         return draw_leaf(graph, root, n, print_action=print_action)
 
     low_node, low_n = draw_node(graph, root.low, n, print_action=print_action)
-
     high_node, high_n = draw_node(graph, root.high, low_n + 1, print_action=print_action)
 
     new_n = high_n + 1
@@ -71,6 +70,7 @@ def draw_node(graph, root, n, print_action=False):
     node = graph.add_node(
         pydot.Node(str(new_n), label=label, shape='square')
     )
+
 
     graph.add_edge(pydot.Edge(str(new_n), str(low_n), label='low'))
     graph.add_edge(pydot.Edge(str(new_n), str(high_n), label='high'))
@@ -226,8 +226,8 @@ def add_stats(trees, stats, variables, max_ts, step_sz):
 ####### Function to load and build tree #######
 
 def build_tree(tree, a, variables=None):
-    if isinstance(tree, float):
-        return Leaf(tree, action=a)
+    if isinstance(tree, float) or isinstance(tree, int):
+        return Leaf(float(tree), action=a)
 
     return Node(
         tree['var'] if variables is None else variables[tree['var']],
