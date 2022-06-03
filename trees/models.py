@@ -65,6 +65,7 @@ class Node:
         self.state = state
         self.low = low
         self.high = high
+        self.is_leaf = False
 
     @property
     def size(self):
@@ -99,13 +100,14 @@ class Node:
         """
         return a list of all leafs of this tree
         """
-        ls = []
-        self._get_leafs(ls)
-        return ls
+        leafs = []
+        self.low._get_leafs(leafs)
+        self.high._get_leafs(leafs)
+        return leafs
 
-    def _get_leafs(self, ls):
-        self.low._get_leafs(ls)
-        self.high._get_leafs(ls)
+    def _get_leafs(self, leafs=[]):
+        self.low._get_leafs(leafs=leafs)
+        self.high._get_leafs(leafs=leafs)
 
     def get_leafs_at_symbolic_state(self, state, pairs=[]):
         """
@@ -122,6 +124,25 @@ class Node:
             pairs = self.high.get_leafs_at_symbolic_state(state, pairs)
 
         return pairs
+
+    def get_bounds(self):
+        bounds = self._get_bounds(bounds={})
+        for var, bs in bounds.items():
+            bounds[var] = sorted(list(set(bs)))
+        return bounds
+
+    def _get_bounds(self, bounds={}):
+        if self.variable not in bounds:
+            bounds[self.variable] = []
+        bounds[self.variable].append(self.bound)
+
+        if not self.low.is_leaf:
+            bounds = self.low._get_bounds(bounds)
+
+        if not self.high.is_leaf:
+            bounds = self.high._get_bounds(bounds)
+
+        return bounds
 
     def set_state(self, state):
         """
@@ -140,10 +161,7 @@ class Node:
 
     def prune(self):
         if not Node.is_leaf(self.low):
-            try:
-                self.low = self.low.prune()
-            except AttributeError:
-                import ipdb; ipdb.set_trace()
+            self.low = self.low.prune()
 
         if not Node.is_leaf(self.high):
             self.high = self.high.prune()
@@ -453,6 +471,7 @@ class Leaf:
         self.action = action
         self.state = state
         self.visits = 0
+        self.is_leaf = True
 
     def split(self, variable, bound, state):
         new_node = Node(variable, bound)
@@ -515,8 +534,8 @@ class Leaf:
             memo[id_self] = _copy
         return _copy
 
-    def _get_leafs(self, ls):
-        ls.append(self)
+    def _get_leafs(self, leafs=[]):
+        leafs.append(self)
 
     def get_leaf(self, state):
         return self
