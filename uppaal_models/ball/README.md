@@ -77,10 +77,10 @@ partitioning of the state space. The visual representation is shown below in whi
 
 We now convert this list of leaves to a tree using `tree = boxes_to_tree(boxes, variables)`. Since we cannot perfectly capture the partitioning with a tree (we would need a diagram), we get a version that has slightly more leaves, namely 1,077. But this is still a considerable reduction from the original 86,807! The UPPAAL version is saved as `./strategies/large_converted_noPrune_minified.json`.
 
-We then do the same with the zero pruned version, which goes from 6,204 leaves, to 576 after `get_boxes` and to 1025 when converted back into a tree. In the table below their performance in UPPAAL is shown.
+We then do the same with the zero pruned version, which goes from 6,204 leaves, to 576 after `get_boxes` and to 1,025 when converted back into a tree. In the table below their performance in UPPAAL is shown.
 
 
 Strategy | Leaves | Expectation | Deviation
 --- | --- | --- | --- |
 No pruning | 1,077 | 38,213 | 0,174478
-ZeroPruned | 1,025 | 39,900 | 0,205447
+ZeroPruned | 1,025 | 39,871 | 0,204642

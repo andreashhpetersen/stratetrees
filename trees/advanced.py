@@ -115,13 +115,10 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
             # check if we have already explored this state
             explored = False
             if tree is not None:
-                # try:
                 explored = [
                     l for l in tree.get_leafs_at_symbolic_state(sym_state, pairs=[])
                     if l.action is not None
                 ]
-                # except:
-                    # import ipdb; ipdb.set_trace()
 
             if len(state_actions) > 1 or explored or bound == math.inf:
 
@@ -138,7 +135,8 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
 
                 # otherwise, store the big box as a leaf
                 box = build_state({
-                    v: (float(p[var2id[v]] - Decimal(str(eps))), state[v]) for v in variables
+                    v: (float(p[var2id[v]] - Decimal(str(eps))), state[v])
+                    for v in variables
                 })
                 leaf = Leaf(cost=0, action=action, state=box)
                 boxes.append(leaf)
@@ -153,7 +151,9 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
                 for v in variables:
                     if p[var2id[v]] != state[v] and state[v] < max_var_vals[v]:
                         points.append(tuple(
-                            float(p[var2id[w]] - Decimal(str(eps))) if w != v else state[w]
+                            float(
+                                p[var2id[w]] - Decimal(str(eps))
+                            ) if w != v else state[w]
                             for w in variables
                         ))
                 break
