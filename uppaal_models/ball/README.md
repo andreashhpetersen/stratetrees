@@ -45,3 +45,42 @@ Converted (no prune) | 81,324 | 38,337 | 0,172967
 ZeroPruned2 | 6,256 | 39,900 | 0,205447
 OnePruned2 | 3,387 | 70,383 | 9,66556
 TwoPruned2 | 1,962 | 926,173 | 49,134
+
+
+## Minify strategies
+
+In the following, we use the tools in the `trees.advanced` that let us minify a
+strategy by merging adjacent partitions with the same optimal action. This is
+done without considering the tree structure and is therefor rather a geometric
+minimization. However, the strategy is turned back into a tree after the fact,
+so that it can be inspected and exported to UPPAAL.
+
+We start by considering the complete strategy, derived from `./strategies/large_strategy.json`, which for this alteration gave a tree with 86,807 leaves (there is stochasticity in the tree generating algorithm, which results in slightly different sized trees for each run). A visual representation of the strategy can be seen below:
+
+![Full strategy partitioning]( ./svgs/largeStrategyNoPrunePartitioning.svg )
+
+Then we use the function `get_boxes()` as follows:
+
+```python
+boxes = get_boxes(
+    root,                        # this is our strategy
+    ['Ball[0].p', 'Ball[0].v'],  # these are the variables in the strategy
+    min_vals=[0, -14],           # these are minimum values of our two variables
+    eps=0.000001                 # this is how much we 'move' into a new box at each step
+)
+```
+
+This gives us a list of just 703 leaves, that still represent an equivalent
+partitioning of the state space. The visual representation is shown below in which it can be seen, that there are way fewer partitions.
+
+![Minimal partitioning](./svgs/largeStrategyNoPruneMinimalPartitioning.svg )
+
+We now convert this list of leaves to a tree using `tree = boxes_to_tree(boxes, variables)`. Since we cannot perfectly capture the partitioning with a tree (we would need a diagram), we get a version that has slightly more leaves, namely 1,077. But this is still a considerable reduction from the original 86,807! The UPPAAL version is saved as `./strategies/large_converted_noPrune_minified.json`.
+
+We then do the same with the zero pruned version, which goes from 6,204 leaves, to 576 after `get_boxes` and to 1025 when converted back into a tree. In the table below their performance in UPPAAL is shown.
+
+
+Strategy | Leaves | Expectation | Deviation
+--- | --- | --- | --- |
+No pruning | 1,077 | 38,213 | 0,174478
+ZeroPruned | 1,025 | 39,900 | 0,205447
