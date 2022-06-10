@@ -69,7 +69,12 @@ class Node:
 
     @property
     def size(self):
-        return len(self.get_leafs())
+        return self.count_leafs()
+
+    def count_leafs(self):
+        low_count = 1 if self.low.is_leaf else self.low.count_leafs()
+        high_count = 1 if self.high.is_leaf else self.high.count_leafs()
+        return low_count + high_count
 
     def put_leaf(self, leaf, state):
         var_min, var_max = leaf.state.min_max(self.variable)
@@ -353,6 +358,7 @@ class Node:
         else:
             last.high = leaf
 
+        root.set_state(State(leaf.state.variables))
         return root
 
     @classmethod
@@ -543,12 +549,8 @@ class Leaf:
     def get_leafs_at_symbolic_state(self, state, pairs=[]):
         """
         Append the local state of the leaf to `pairs` and return the list
-
-        :raises:    `AssertionError` if `state` does not contain `self.state`,
-                    that is, if the check `state.contains(self.state)` fails
         """
-        # assert state.contains(self.state)
-        pairs.append((self.action, self.state))
+        pairs.append(self)
         return pairs
 
     def set_state(self, state):
