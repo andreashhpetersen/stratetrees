@@ -143,9 +143,6 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
                 leaf = Leaf(cost=0, action=action, state=box)
                 boxes.append(leaf)
 
-                # if box.max["Ball[0].p"] == 4.711346404291602:
-                #     import ipdb; ipdb.set_trace()
-
                 # add to the tree, so we know not to explore this part again
                 if tree is not None:
                     tree.put_leaf(leaf, State(variables))
