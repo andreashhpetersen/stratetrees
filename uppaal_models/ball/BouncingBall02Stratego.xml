@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.5//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_5.dtd'>
 <nta>
 	<declaration>urgent broadcast chan bounce;
 broadcast chan ehit, uhit, lhit;
@@ -34,24 +34,24 @@ p' == 0</label>
 			<committed/>
 		</location>
 		<init ref="id1"/>
-		<transition controllable="false">
+		<transition id="id4" controllable="false">
 			<source ref="id3"/>
 			<target ref="id1"/>
 			<nail x="-76" y="153"/>
 		</transition>
-		<transition controllable="false">
+		<transition id="id5" controllable="false">
 			<source ref="id2"/>
 			<target ref="id3"/>
 			<label kind="guard" x="25" y="161">v&lt;=1</label>
 			<label kind="assignment" x="-8" y="178">number_deaths++, x = 0, v=0, p=0</label>
 		</transition>
-		<transition controllable="false">
+		<transition id="id6" controllable="false">
 			<source ref="id2"/>
 			<target ref="id0"/>
 			<label kind="guard" x="-17" y="42">v&gt;1</label>
 			<nail x="25" y="51"/>
 		</transition>
-		<transition>
+		<transition id="id7">
 			<source ref="id0"/>
 			<target ref="id0"/>
 			<label kind="guard" x="152" y="-126">p&gt;=4 &amp;&amp; v&gt;=0</label>
@@ -61,7 +61,7 @@ c=c+1</label>
 			<nail x="144" y="-102"/>
 			<nail x="144" y="-42"/>
 		</transition>
-		<transition>
+		<transition id="id8">
 			<source ref="id0"/>
 			<target ref="id0"/>
 			<label kind="guard" x="157" y="-26">p&gt;=4 &amp;&amp;v&gt;=-4&amp;&amp; v&lt;0</label>
@@ -70,14 +70,14 @@ c=c+1</label>
 			<nail x="149" y="6"/>
 			<nail x="149" y="-26"/>
 		</transition>
-		<transition controllable="false">
+		<transition id="id9" controllable="false">
 			<source ref="id0"/>
 			<target ref="id2"/>
 			<label kind="guard" x="102" y="59">p==0 &amp;&amp; v &lt; 0</label>
 			<label kind="synchronisation" x="102" y="42">bounce!</label>
 			<label kind="assignment" x="102" y="76">v=-(0.85+random(0.12))*v</label>
 		</transition>
-		<transition controllable="false">
+		<transition id="id10" controllable="false">
 			<source ref="id1"/>
 			<target ref="id0"/>
 			<label kind="assignment" x="-51" y="-25">p=7+random(3), v=0</label>
@@ -87,28 +87,28 @@ c=c+1</label>
 		<name>LearnerPlayer</name>
 		<declaration>clock x;
 int fired;</declaration>
-		<location id="id4" x="0" y="0">
+		<location id="id11" x="0" y="0">
 			<label kind="invariant" x="-17" y="17">x&lt;=0.3</label>
 		</location>
-		<location id="id5" x="0" y="-68">
+		<location id="id12" x="0" y="-68">
 			<committed/>
 		</location>
-		<init ref="id4"/>
-		<transition controllable="false">
-			<source ref="id4"/>
-			<target ref="id5"/>
+		<init ref="id11"/>
+		<transition id="id13" controllable="false">
+			<source ref="id11"/>
+			<target ref="id12"/>
 			<label kind="guard" x="8" y="-34">x==0.3</label>
 			<label kind="assignment" x="8" y="-51">x=0</label>
 		</transition>
-		<transition>
-			<source ref="id5"/>
-			<target ref="id4"/>
+		<transition id="id14">
+			<source ref="id12"/>
+			<target ref="id11"/>
 			<nail x="85" y="-68"/>
 			<nail x="85" y="0"/>
 		</transition>
-		<transition>
-			<source ref="id5"/>
-			<target ref="id4"/>
+		<transition id="id15">
+			<source ref="id12"/>
+			<target ref="id11"/>
 			<label kind="synchronisation" x="-119" y="-59">lhit!</label>
 			<label kind="assignment" x="-144" y="-42">++fired</label>
 			<nail x="-85" y="-68"/>
@@ -119,13 +119,13 @@ int fired;</declaration>
 		<name>UniformPlayer</name>
 		<declaration>clock x;
 int fired;</declaration>
-		<location id="id6" x="0" y="0">
+		<location id="id16" x="0" y="0">
 			<label kind="invariant" x="-59" y="8">x&lt;=1</label>
 		</location>
-		<init ref="id6"/>
-		<transition controllable="false">
-			<source ref="id6"/>
-			<target ref="id6"/>
+		<init ref="id16"/>
+		<transition id="id17" controllable="false">
+			<source ref="id16"/>
+			<target ref="id16"/>
 			<label kind="synchronisation" x="18" y="-17">uhit!</label>
 			<label kind="assignment" x="18" y="0">x=0,
 ++fired</label>
@@ -137,13 +137,13 @@ int fired;</declaration>
 	<template>
 		<name>ExpPlayer</name>
 		<declaration>int fired;</declaration>
-		<location id="id7" x="0" y="0">
+		<location id="id18" x="0" y="0">
 			<label kind="exponentialrate" x="-10" y="34">1:5</label>
 		</location>
-		<init ref="id7"/>
-		<transition controllable="false">
-			<source ref="id7"/>
-			<target ref="id7"/>
+		<init ref="id18"/>
+		<transition id="id19" controllable="false">
+			<source ref="id18"/>
+			<target ref="id18"/>
 			<label kind="synchronisation" x="-41" y="-68">ehit!</label>
 			<label kind="assignment" x="-41" y="-51">++fired</label>
 			<nail x="59" y="-51"/>
@@ -154,4 +154,301 @@ int fired;</declaration>
 system Ball,
        LearnerPlayer;
 </system>
+	<queries>
+		<query>
+			<formula>strategy HitWell = minE (LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) [&lt;=120] {} -&gt; {Ball(0).p, Ball(0).v, Ball(1).p, Ball(1).v}: &lt;&gt; time &gt;= 120</formula>
+			<comment>can i just say p for all balls? </comment>
+			<result outcome="success" type="quality" timestamp="2022-06-23 11:15:05 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>saveStrategy("/home/andreashhp/Documents/university/direc/stratetrees/uppaal_models/ball/strategies/HitWell2.json", HitWell)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2022-06-23 11:18:48 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>E[&lt;=120;1000] (max:LearnerPlayer.fired + (sum (id : ball_id) (Ball(id).number_deaths) * 1000 )) under HitWell</formula>
+			<comment/>
+			<result outcome="success" type="quantity" value="66.444 ± 5.00757 (95% CI)" timestamp="2022-06-23 11:21:13 +0200">
+				<details>66.444 ± 5.00757 (95% CI)</details>
+				<plot title="Probability Density Distribution" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability density">
+					<series title="density" type="b(66.000000)" color="0x0000ff" encoding="csv">49.0,0.01510606060606061
+115.0,0.0
+181.0,0.0
+247.0,0.0
+313.0,0.0
+379.0,0.0
+445.0,0.0
+511.0,0.0
+577.0,0.0
+643.0,0.0
+709.0,0.0
+775.0,0.0
+841.0,0.0
+907.0,0.0
+973.0,0.0
+1039.0,1.515151515151515E-5
+1105.0,1.515151515151515E-5
+1171.0,0.0
+1237.0,0.0
+1303.0,0.0
+1369.0,0.0
+1435.0,0.0
+1501.0,0.0
+1567.0,0.0
+1633.0,0.0
+1699.0,0.0
+1765.0,0.0
+1831.0,0.0
+1897.0,0.0
+1963.0,0.0
+2029.0,0.0
+2095.0,1.515151515151515E-5
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">66.444,0.0
+66.444,0.01510606060606061
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=66, bucket count=32
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [49, 2145]
+Mean estimate of displayed sample: 66.44 ± 5.008 (95% CI)</comment>
+				</plot>
+				<plot title="Probability Distribution" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability">
+					<series title="probability" type="b(66.000000)" color="0x0000ff" encoding="csv">49.0,0.997
+115.0,0.0
+181.0,0.0
+247.0,0.0
+313.0,0.0
+379.0,0.0
+445.0,0.0
+511.0,0.0
+577.0,0.0
+643.0,0.0
+709.0,0.0
+775.0,0.0
+841.0,0.0
+907.0,0.0
+973.0,0.0
+1039.0,0.001
+1105.0,0.001
+1171.0,0.0
+1237.0,0.0
+1303.0,0.0
+1369.0,0.0
+1435.0,0.0
+1501.0,0.0
+1567.0,0.0
+1633.0,0.0
+1699.0,0.0
+1765.0,0.0
+1831.0,0.0
+1897.0,0.0
+1963.0,0.0
+2029.0,0.0
+2095.0,0.001
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">66.444,0.0
+66.444,0.997
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=66, bucket count=32
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [49, 2145]
+Mean estimate of displayed sample: 66.44 ± 5.008 (95% CI)</comment>
+				</plot>
+				<plot title="Cumulative Probability Distribution" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability">
+					<series title="cumulative" type="l" color="0x000000" encoding="csv">49.0,0.0
+115.0,0.997
+181.0,0.997
+247.0,0.997
+313.0,0.997
+379.0,0.997
+445.0,0.997
+511.0,0.997
+577.0,0.997
+643.0,0.997
+709.0,0.997
+775.0,0.997
+841.0,0.997
+907.0,0.997
+973.0,0.997
+1039.0,0.997
+1105.0,0.998
+1171.0,0.999
+1237.0,0.999
+1303.0,0.999
+1369.0,0.999
+1435.0,0.999
+1501.0,0.999
+1567.0,0.999
+1633.0,0.999
+1699.0,0.999
+1765.0,0.999
+1831.0,0.999
+1897.0,0.999
+1963.0,0.999
+2029.0,0.999
+2095.0,0.999
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">66.444,0.0
+66.444,1.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=66, bucket count=32
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [49, 2145]
+Mean estimate of displayed sample: 66.44 ± 5.008 (95% CI)</comment>
+				</plot>
+				<plot title="Cumulative Probability Confidence Intervals" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="probability">
+					<series title="upper limit" type="k" color="0x0000dd" encoding="csv">49.0,0.003682083896865672
+115.0,0.9993809000683505
+181.0,0.9993809000683505
+247.0,0.9993809000683505
+313.0,0.9993809000683505
+379.0,0.9993809000683505
+445.0,0.9993809000683505
+511.0,0.9993809000683505
+577.0,0.9993809000683505
+643.0,0.9993809000683505
+709.0,0.9993809000683505
+775.0,0.9993809000683505
+841.0,0.9993809000683505
+907.0,0.9993809000683505
+973.0,0.9993809000683505
+1039.0,0.9993809000683505
+1105.0,0.9997576988831227
+1171.0,0.9999746825125088
+1237.0,0.9999746825125088
+1303.0,0.9999746825125088
+1369.0,0.9999746825125088
+1435.0,0.9999746825125088
+1501.0,0.9999746825125088
+1567.0,0.9999746825125088
+1633.0,0.9999746825125088
+1699.0,0.9999746825125088
+1765.0,0.9999746825125088
+1831.0,0.9999746825125088
+1897.0,0.9999746825125088
+1963.0,0.9999746825125088
+2029.0,0.9999746825125088
+2095.0,0.9999746825125088
+					</series>
+					<series title="upper limit" type="k" color="0xdd0000" encoding="csv">49.0,0.0
+115.0,0.9912579767615217
+181.0,0.9912579767615217
+247.0,0.9912579767615217
+313.0,0.9912579767615217
+379.0,0.9912579767615217
+445.0,0.9912579767615217
+511.0,0.9912579767615217
+577.0,0.9912579767615217
+643.0,0.9912579767615217
+709.0,0.9912579767615217
+775.0,0.9912579767615217
+841.0,0.9912579767615217
+907.0,0.9912579767615217
+973.0,0.9912579767615217
+1039.0,0.9912579767615217
+1105.0,0.9927941610885425
+1171.0,0.9944410757201734
+1237.0,0.9944410757201734
+1303.0,0.9944410757201734
+1369.0,0.9944410757201734
+1435.0,0.9944410757201734
+1501.0,0.9944410757201734
+1567.0,0.9944410757201734
+1633.0,0.9944410757201734
+1699.0,0.9944410757201734
+1765.0,0.9944410757201734
+1831.0,0.9944410757201734
+1897.0,0.9944410757201734
+1963.0,0.9944410757201734
+2029.0,0.9944410757201734
+2095.0,0.9944410757201734
+					</series>
+					<series title="cumulative" type="l" color="0x000000" encoding="csv">49.0,0.0
+115.0,0.997
+181.0,0.997
+247.0,0.997
+313.0,0.997
+379.0,0.997
+445.0,0.997
+511.0,0.997
+577.0,0.997
+643.0,0.997
+709.0,0.997
+775.0,0.997
+841.0,0.997
+907.0,0.997
+973.0,0.997
+1039.0,0.997
+1105.0,0.998
+1171.0,0.999
+1237.0,0.999
+1303.0,0.999
+1369.0,0.999
+1435.0,0.999
+1501.0,0.999
+1567.0,0.999
+1633.0,0.999
+1699.0,0.999
+1765.0,0.999
+1831.0,0.999
+1897.0,0.999
+1963.0,0.999
+2029.0,0.999
+2095.0,0.999
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">66.444,0.0
+66.444,1.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=66, bucket count=32
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [49, 2145]
+Mean estimate of displayed sample: 66.44 ± 5.008 (95% CI)</comment>
+				</plot>
+				<plot title="Frequency Histogram" xaxis="max: LearnerPlayer.fired + (sum (id:(const (label ball_id:(range (int) &quot;0&quot; &quot;NUMBER_OF_BALLS - 1&quot;)))) Ball[id].number_deaths * 1000)" yaxis="count">
+					<series title="count" type="b(66.000000)" color="0x0000ff" encoding="csv">49.0,997.0
+115.0,0.0
+181.0,0.0
+247.0,0.0
+313.0,0.0
+379.0,0.0
+445.0,0.0
+511.0,0.0
+577.0,0.0
+643.0,0.0
+709.0,0.0
+775.0,0.0
+841.0,0.0
+907.0,0.0
+973.0,0.0
+1039.0,1.0
+1105.0,1.0
+1171.0,0.0
+1237.0,0.0
+1303.0,0.0
+1369.0,0.0
+1435.0,0.0
+1501.0,0.0
+1567.0,0.0
+1633.0,0.0
+1699.0,0.0
+1765.0,0.0
+1831.0,0.0
+1897.0,0.0
+1963.0,0.0
+2029.0,0.0
+2095.0,1.0
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">66.444,0.0
+66.444,997.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=66, bucket count=32
+Runs: 1000 in total, 1000 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [49, 2145]
+Mean estimate of displayed sample: 66.44 ± 5.008 (95% CI)</comment>
+				</plot>
+			</result>
+		</query>
+	</queries>
 </nta>
