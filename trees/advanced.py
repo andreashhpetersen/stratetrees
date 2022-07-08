@@ -31,6 +31,7 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
 
     if max_vals is None:
         max_vals = [math.inf for _ in variables]
+
     max_var_vals = { v: m for v, m in zip(variables, max_vals) }
     min_var_vals = {} if min_vals is None else {
         v: m for v, m in zip(variables, min_vals)
@@ -108,10 +109,6 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
                 v: (p[var2id[v]], state[v]) for v in variables
             })
 
-            # check if our new state returns a different action
-            leafs = root.get_leafs_at_symbolic_state(sym_state, pairs=[])
-            state_actions = set([l.action for l in leafs])
-
             # check if we have already explored this state
             explored = False
             if tree is not None:
@@ -119,6 +116,12 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
                     l for l in tree.get_leafs_at_symbolic_state(sym_state, pairs=[])
                     if l.action is not None
                 ]
+
+            # check if our new state returns a different action
+            state_actions = []
+            if not explored:  # but skip
+                leafs = root.get_leafs_at_symbolic_state(sym_state, pairs=[])
+                state_actions = set([l.action for l in leafs])
 
             if len(state_actions) > 1 or explored or bound == math.inf:
 
@@ -148,6 +151,7 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
                 else:
                     tree = Node.make_root_from_leaf(leaf)
 
+                # add new points from which to start later
                 for v in variables:
                     if p[var2id[v]] != state[v] and state[v] < max_var_vals[v]:
                         points.append(tuple(
