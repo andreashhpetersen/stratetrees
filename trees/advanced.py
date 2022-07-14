@@ -123,7 +123,7 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
                 leafs = root.get_leafs_at_symbolic_state(sym_state, pairs=[])
                 state_actions = set([l.action for l in leafs])
 
-            if len(state_actions) > 1 or explored or bound == math.inf:
+            if len(state_actions) > 1 or explored or bound == max_var_vals[variables[var]]:
 
                 # roll back to last state
                 if len(state_actions) > 1 or explored:
