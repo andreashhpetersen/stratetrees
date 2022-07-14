@@ -10,6 +10,26 @@ class State:
         self.min = { v: -math.inf for v in variables }
         self.max = { v: math.inf  for v in variables }
 
+    def center(self, point=True):
+        """
+        Returns the center point of the state box. None if one of the bounds
+        are infinite. If `point=False`, returns a dict with variables as
+        keys and coordinates as values
+        """
+        center = []
+        vcenters = {}
+        for v in self.variables:
+            vmin, vmax = self.min_max(v)
+            if vmin == -math.inf or vmax == math.inf:
+                return None
+
+            vcenter = vmin + ((vmax - vmin) / 2)
+            vcenters[v] = vcenter
+            center.append(vcenter)
+
+        return center if point else vcenters
+
+
     def greater_than(self, var, bound):
         self.min[var] = bound
 
