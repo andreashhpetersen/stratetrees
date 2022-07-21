@@ -1,5 +1,6 @@
 import json
 import math
+import pydot
 from copy import deepcopy
 from random import shuffle
 
@@ -312,6 +313,38 @@ class Node:
         root = cls.build_from_dict(json_root, variables, actions)
         root.set_state(State(variables))
         return root, list(variables), list(actions)
+
+    @classmethod
+    def parse_from_dot(cls, filepath, variables=None):
+        graph = pydot.graph_from_dot_file(filepath)[0]
+
+        nodes = []
+        for node in graph.get_nodes():
+            try:
+                int(node.get_name())
+            except ValueError:
+                continue
+
+            label = node.get_attributes()['label'].strip('"').split(" ")
+            if len(label) == 1:
+                nodes.append(Leaf(0, action=int(label[0])))
+            else:
+                var = variables[label[0]] if variables else label[0]
+                bound = float(label[2])
+                nodes.append(Node(var, bound))
+
+        for edge in graph.get_edges():
+            src = nodes[int(edge.get_source())]
+            dst = nodes[int(edge.get_destination())]
+            low = True if edge.get_label().strip('"') == 'True' else False
+
+            if low:
+                src.low = dst
+            else:
+                src.high = dst
+
+        return nodes[0]
+
 
     @classmethod
     def build_from_dict(cls, node_dict, variables, actions):
