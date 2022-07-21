@@ -1,6 +1,6 @@
-import pydot
 import csv
 import json
+import pydot
 import numpy as np
 from collections import defaultdict
 
@@ -76,7 +76,8 @@ def draw_node(graph, root, n, print_action=False):
     graph.add_edge(pydot.Edge(str(new_n), str(high_n), label='high'))
     return node, new_n
 
-def draw_graph(trees, labels=None, out_fp='graph_drawing.png', print_action=False):
+def draw_graph(trees, labels=None, out_fp='graph_drawing.png',
+               print_action=False):
     graph = pydot.Dot(graph_type='digraph')
     root = pydot.Node('root')
     iterator = zip(labels, trees) if labels is not None else enumerate(trees)
@@ -87,7 +88,14 @@ def draw_graph(trees, labels=None, out_fp='graph_drawing.png', print_action=Fals
         graph.add_edge(pydot.Edge('actions', str(n), label=label))
         n += 1
 
-    graph.write_png(out_fp)
+    if out_fp.endswith('.dot'):
+        graph.write_dot(out_fp)
+    elif out_fp.endswith('.png'):
+        graph.write_png(out_fp)
+    elif out_fp.endswith('.svg'):
+        graph.write_svg(out_fp)
+    else:
+        print('format not supported')
 
 
 ####### Functions to load and add statistics to a tree #######
