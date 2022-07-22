@@ -12,6 +12,7 @@
 \usepackage{subcaption} 
 \usepackage{lipsum}
 \usepackage{todonotes}
+\usepackage{booktabs}
 
 % argmax and argmin
 \DeclareMathOperator*{\argmax}{argmax}
@@ -20,7 +21,7 @@
 % transpose
 \DeclareMathOperator*{\tran}{\mathsf{T}}
 
-\graphicspath{{../imgs/}}
+\graphicspath{{./imgs/}}
 
 \usepackage{tikz} 
 \usetikzlibrary{shapes.geometric}
@@ -268,5 +269,136 @@ The algorithm for this operation is given in Algorithm~\ref{}.
 
 \lipsum[5]
 
+
+\section{Experiments}%
+\label{sec:experiments}
+
+\subsection{Maximizing partitions}%
+\label{subsec:experimentsMaxParts}
+
+Continuing with the bouncing ball example, we now try and apply the
+\texttt{MaxPartitions} algorithm (see Section~\ref{subsec:findBoxes}) to the
+strategy trained by UPPAAL Stratego.  This first step is, as mentioned, to
+convert the set of Q-trees into a decision tree. The reason for this is that is
+one way to merge the (two) action specific partitionings of the state space into
+one single partitioning where every area is prescribed one optimal action.
+
+Due to the randomness involved in how the decision tree turns out (caused by the
+fact that we randomize the order in which state bounds are turned into branching
+nodes), we cannot expect excactly the same tree size at every instance of
+performing the conversion. For this experiment, we did the conversion 100 times
+and only saved the best (smallest) version of the tree. This gave us an instance
+of the complete strategy represented by a tree with 86,807 paths from the root
+to a leaf.
+
+Since the bouncing ball example only has two state variables (position and
+velocity) we can actually draw the state partitioning and colorize the different
+partitions according to the action that is prescribed (green for no hit, red for
+hit). This can be seen in Figure~\ref{fig:ballPartitioningBefore}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{ballPartitioningBefore}
+    \caption{%
+        A 2D visualization of the partitioning (dotted lines) of the state space
+        of the bouncing ball model as it looks without any minimization
+        attempts. The x-axis is velocity and the y-axis is the balls position.
+        Green areas represents the action `no hit', red areas represents `hit'.
+        The thick black line is $x=0$ and there have been drawn grid lines at
+        every 1 tick.
+    }\label{fig:ballPartitioningBefore}
+\end{figure}
+
+An inspection of this partitioning shows that a lot of partitions that are next
+to each other share the same action which make them fit for combining, thus
+reducing the overall number of partitions and maximizing the size of the
+partitions. Using the \texttt{MaxPartitions} algorithm we obtain a new set of
+partitions (not a DT yet) but the number has been dramatically reduced to only
+703, that is, a 99.19\% reduction! The new partition can be seen in
+Figure~\ref{fig:ballPartitioningAfter}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{ballPartitioningAfter}
+    \caption{%
+        A visualization of the same strategy as in
+        Figure~\ref{fig:ballPartitioningBefore} but now with much fewer and
+        larger partitions.
+    }\label{fig:ballPartitioningAfter}
+\end{figure}
+
+
+
+
+\subsection{dtControl}%
+\label{subsec:dtControl}
+
+The tool \texttt{dtControl} has the ability to take a synthesized strategy
+represented as a look-up table and convert the representation to a decision
+tree that respects the safety requirements but compresses the size immensely.
+This is naturally of great interest for our case, but both the Q-tree
+representation and our own decision tree conversion alters the setup somewhat.
+
+However, even though the tool actually supports directly working with the output
+format of UPPAAL Stratego, this is only the case for strategies learned using
+the \texttt{control[]} directive, which controls for certain defined safety
+parameters to always be respected. In our case of the bouncing ball example, the
+controller is trained with the \texttt{minE[]} directive, which minimizes a
+given parameter (in this case, the number of times the controller hits the
+ball).
+
+Instead, we had to create our own output files to use as input for
+\texttt{dtControl}. According to the documentation, a controller strategy can be
+specified in a simple CSV format where each line contains an allowed
+state/action pair, that is, $N$ values representing a state where the following
+$M$ values constitutes an allowed action. For example, in the case of the
+bouncing ball, we have two state variables (position and velocity) and one action
+variable (hit or not hit), meaning each line would have three values.
+
+We have attempted two experiments with different ways of specifying our original
+controller.
+
+In the first experiment, we used the trained controller to generate 30,000
+samples of state/action pairs. That is, the UPPAAL model was run for 300
+timesteps with the trained controller deciding what action to take in each
+encountered state and then the state/action pairs were logged at each 0.01
+timestep.
+
+In the second experiment, we converted the strategy a set of Q-trees (the
+initial UPPAAL format) to a DT as described in Section~\ref{sec:convergeToDT}.
+This DT had a partition size (number of leaves/paths) of 91,054. We used these
+partitions as the input data to \texttt{dtControl} by taking the maximum value
+of each variable in each individual partition together with the optimal action
+of that state. That is, we effectively specified the discretization of the state
+space by defining the bounds of each state paired with the allowed/optimal
+action.
+
+\begin{table}[ht]
+    \centering
+    \caption{%
+        Comparing the performance of controllers for the bouncing ball example
+        over 1000 runs for 120 timesteps each before and after various attempts
+        at minimizing the size through \texttt{dtControl}.  
+    }\label{tab:dtcontrolTable}
+    \begin{tabular}[t]{lccc}
+        \toprule
+        Version & Paths & Construction time & Expectation (hits) \\
+        \midrule
+        Original DT & 91,054 & --- & 38.431 \\
+        Samples & 27,234 & 8:14 & 318.411 \\
+        State bounds & 521 & 0:41 & 315.769 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+The results when applying the generated strategies to the model in UPPAAL are
+given in Table~\ref{tab:dtcontrolTable} together with the baseline original
+decision tree directly converted from the Q-tree set. As is seen, when we used
+samples, we still got a somewhat large DT that took more than 8 minutes to
+generate. And the perfomance (expected number of hits) is substantially worse
+than the baseline version. For the version based on state bounds, we got a much
+smaller tree with only 521 paths, but the performance was still very far from
+the original.
 
 \end{document}
