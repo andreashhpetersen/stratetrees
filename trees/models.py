@@ -345,7 +345,6 @@ class Node:
 
         return nodes[0]
 
-
     @classmethod
     def build_from_dict(cls, node_dict, variables, actions):
         """
@@ -590,6 +589,12 @@ class Leaf:
                 deepcopy(self.action, memo),
                 deepcopy(self.state, memo)
             )
+
+            if hasattr(self, 'visits'):
+                _copy.visits = self.visits
+            if hasattr(self, 'ratio'):
+                _copy.ratio = self.ratio
+
             memo[id_self] = _copy
         return _copy
 
