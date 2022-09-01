@@ -166,30 +166,68 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
 
 
 def find_best_cut_2(boxes, variables):
+
+    # map each variable to a sorted list of indicies of the leaves in `boxes'
+    # where the sorting is done according to maximum value of the respective
+    # variable for that leaf
     max_sorted = {
+        # the variable is key, the list is the value
         v: sorted(
+            # this just generates indicies from [0, 1, ..., len(boxes) - 1]
             range(len(boxes)),
+
+            # this sorts the above indicies in ascending order according to the
+            # maximum value of v in the box that the index corresponds to
             key=lambda x: (boxes[x].state.max[v], boxes[x].state.min[v])
         )
+
+        # iterate the variables
         for v in variables
     }
 
+    # store potential cuts here
     cuts = []
+
+    # go through each variable
     for v in variables:
+
+        # list of indicies of entries in `boxes' sorted according to their max
+        # value for the variable `v'
         curr_l = max_sorted[v]
+
+        # go through each index in the sorted list
         for i in range(len(curr_l)):
+
+            # this is the lowest max value for v in the rest of the list (ie.
+            # boxes[curr_l[i]].state.max[v] <= boxes[curr_l[j]].state.max[v]
+            # for all j > i)
             max_v = boxes[curr_l[i]].state.max[v]
+
+            # ideally, we'd split at i == len(boxes) / 2, so we start by
+            # defining impurity as the difference between `i' and the optimal
+            # value (the halfway point)
             impurity = abs((len(boxes) / 2) - (i + 1))
+
+            # look at the rest of curr_l (with large max values for v)
             for j in range(i + 1, len(curr_l)):
+
+                # if the min value for v in curr_l[j] is less that max_v, we
+                # know that the box will be cut in 2, since it's max value for
+                # v by design must be greater than max_v
                 if boxes[curr_l[j]].state.min[v] < max_v:
                     impurity += 1
 
+            # add the triplet to our list of possible cuts
             cuts.append((v, i, impurity))
 
+    # sort according to impurity and take the 'most pure' cut
     v, b_id, _ = sorted(cuts, key=lambda x: x[2])[0]
 
+    # grab that optimal value
     max_val = boxes[max_sorted[v][b_id]].state.max[v]
 
+    # separate the boxes into list of those that are lower than our cut, those
+    # that are higher or both if it falls on both sides of the cut
     low, high = [], []
     for b in boxes:
         if b.state.min[v] < max_val:
@@ -198,9 +236,11 @@ def find_best_cut_2(boxes, variables):
         if b.state.max[v] > max_val:
             high.append(b)
 
+    # something went wrong if we end up here
     if len(low) == 0 or len(high) == 0:
         import ipdb; ipdb.set_trace()
 
+    # create the new branch node with a cut on v <= max_val
     node = Node(v, max_val)
 
     return node, low, high
@@ -253,7 +293,7 @@ def cut_to_node(boxes, variables):
 
 
 def boxes_to_tree(boxes, variables):
-    return cut_to_node(boxes, variables)
+    return cut_to_node(boxes, variables).prune()
 
 
 def draw_grid(d, xk, yk, min_x, min_y, max_x, max_y, conv_x, conv_y, lines=True):
