@@ -1,5 +1,15 @@
 # Notes to remember stuff by
 
+### 2022-07-07 | dtControl
+
+Running `dtControl --input <some_uppaal_strategy>.dump` causes an error. Seems
+like the file format doesn't fit what `dtControl` expects. Maybe `dtControl`
+thinks that UPPAAL Stratego create look-up tables? It kind of seems that way
+from the literature.
+
+_Impurity_ is the degree to which the states agree on their action.
+
+
 ### 2022-04-28
 
 Attempted to make conversion stuff on bouncing ball example from Peters folder.
