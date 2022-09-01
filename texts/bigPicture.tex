@@ -279,9 +279,9 @@ The algorithm for this operation is given in Algorithm~\ref{}.
 Continuing with the bouncing ball example, we now try and apply the
 \texttt{MaxPartitions} algorithm (see Section~\ref{subsec:findBoxes}) to the
 strategy trained by UPPAAL Stratego.  This first step is, as mentioned, to
-convert the set of Q-trees into a decision tree. The reason for this is that is
-one way to merge the (two) action specific partitionings of the state space into
-one single partitioning where every area is prescribed one optimal action.
+convert the set of Q-trees into a decision tree. The reason for this is that it
+is one way to merge the (two) action specific partitionings of the state space
+into one single partitioning where every area is prescribed one optimal action.
 
 Due to the randomness involved in how the decision tree turns out (caused by the
 fact that we randomize the order in which state bounds are turned into branching
@@ -314,7 +314,7 @@ to each other share the same action which make them fit for combining, thus
 reducing the overall number of partitions and maximizing the size of the
 partitions. Using the \texttt{MaxPartitions} algorithm we obtain a new set of
 partitions (not a DT yet) but the number has been dramatically reduced to only
-703, that is, a 99.19\% reduction! The new partition can be seen in
+703, that is, a 99.19\% reduction! The new partitioning can be seen in
 Figure~\ref{fig:ballPartitioningAfter}.
 
 \begin{figure}[h]
@@ -327,7 +327,34 @@ Figure~\ref{fig:ballPartitioningAfter}.
     }\label{fig:ballPartitioningAfter}
 \end{figure}
 
+This new partitioning describes excactly the same strategy as the original
+Q-tree based representation from UPPAAL and the converted DT, but with
+significantly fewer individual parts. Converting it into a new decision tree
+gives a tree with 895 paths, that is, the conversion could not perfectly
+preserve the minimality of the new partitioning. Using this DT as an input
+strategy for the UPPAAL model, we see that it performs equivalently to the
+original UPPAAL Strategy (see Table~\ref{tab:minimizedResults}).
 
+
+\begin{table}[ht]
+    \centering
+    \caption{%
+        Comparing the performance of controllers for the bouncing ball example
+        over 1000 runs for 120 timesteps each before and after various attempts
+        at minimizing the size through either empirical pruning or the
+        \texttt{MaxPartitions} algorithm.
+    }\label{tab:minimizedResults}
+    \begin{tabular}[t]{lccc}
+        \toprule
+        Version & Paths & Expectation (hits) & Deviation \\
+        \midrule
+        Original DT & 86,807 & 38.431 & 0.178 \\
+        ZeroPruned & 6,256 & 39.900 & 0.205 \\
+        MaxPartitions & 895 & 38.435 & 0.177 \\
+        MaxPartitions then Prune & 189 & 38.347 & 0.173 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 
 \subsection{dtControl}%
