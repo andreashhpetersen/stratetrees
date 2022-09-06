@@ -1,0 +1,1308 @@
+{
+    "var": "Ball[0].v",
+    "bound": 1.934218447232788,
+    "low": {
+        "var": "Ball[0].v",
+        "bound": -3.317235609428735,
+        "low": {
+            "var": "Ball[0].v",
+            "bound": -7.997860182455537,
+            "low": {
+                "var": "Ball[0].v",
+                "bound": -10.06280564296744,
+                "low": {
+                    "var": "Ball[0].v",
+                    "bound": -11.10612630120189,
+                    "low": {
+                        "var": "Ball[0].v",
+                        "bound": -11.73903241989779,
+                        "low": {
+                            "var": "Ball[0].p",
+                            "bound": 3.368442726815435,
+                            "low": {
+                                "action": "0",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "var": "Ball[0].v",
+                                "bound": -12.16664048831582,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": -12.10595065801337,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 3.465689786663178,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].p",
+                            "bound": 1.145621837424217,
+                            "low": {
+                                "action": "0",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "var": "Ball[0].v",
+                                "bound": -11.15311569955731,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].p",
+                                    "bound": 2.002360902548098,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "action": "0",
+                        "cost": 0.0
+                    }
+                },
+                "high": {
+                    "var": "Ball[0].p",
+                    "bound": 2.346705539615033,
+                    "low": {
+                        "action": "0",
+                        "cost": 0.0
+                    },
+                    "high": {
+                        "var": "Ball[0].v",
+                        "bound": -9.753493727274094,
+                        "low": {
+                            "var": "Ball[0].p",
+                            "bound": 3.268834763482166,
+                            "low": {
+                                "var": "Ball[0].v",
+                                "bound": -9.838800315044326,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].p",
+                                    "bound": 2.727644926909363,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].v",
+                                "bound": -9.875124451885807,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].p",
+                                    "bound": 3.322737369777192,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "action": "0",
+                            "cost": 0.0
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "Ball[0].v",
+                "bound": -5.032580111060351,
+                "low": {
+                    "action": "0",
+                    "cost": 0.0
+                },
+                "high": {
+                    "var": "Ball[0].p",
+                    "bound": 6.180438263759696,
+                    "low": {
+                        "var": "Ball[0].p",
+                        "bound": 5.932291907695087,
+                        "low": {
+                            "action": "0",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "action": "1",
+                            "cost": 0.0
+                        }
+                    },
+                    "high": {
+                        "action": "0",
+                        "cost": 0.0
+                    }
+                }
+            }
+        },
+        "high": {
+            "var": "Ball[0].v",
+            "bound": 0,
+            "low": {
+                "var": "Ball[0].v",
+                "bound": -1.952354074053764,
+                "low": {
+                    "var": "Ball[0].p",
+                    "bound": 7.894054646592602,
+                    "low": {
+                        "action": "0",
+                        "cost": 0.0
+                    },
+                    "high": {
+                        "var": "Ball[0].v",
+                        "bound": -2.468467198004675,
+                        "low": {
+                            "action": "0",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": -2.413965770354308,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 8.0874060848492,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].v",
+                                "bound": -2.175392866906146,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].p",
+                                    "bound": 8.229054426038577,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "Ball[0].p",
+                    "bound": 8.229054426038577,
+                    "low": {
+                        "var": "Ball[0].v",
+                        "bound": -0.8964905033934414,
+                        "low": {
+                            "action": "1",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "action": "0",
+                            "cost": 0.0
+                        }
+                    },
+                    "high": {
+                        "action": "0",
+                        "cost": 0.0
+                    }
+                }
+            },
+            "high": {
+                "var": "Ball[0].v",
+                "bound": 0.9547202721471179,
+                "low": {
+                    "var": "Ball[0].p",
+                    "bound": 8.38011345188884,
+                    "low": {
+                        "var": "Ball[0].p",
+                        "bound": 8.280562060379562,
+                        "low": {
+                            "action": "1",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 0.5229593775607753,
+                            "low": {
+                                "action": "1",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "action": "0",
+                                "cost": 0.0
+                            }
+                        }
+                    },
+                    "high": {
+                        "action": "0",
+                        "cost": 0.0
+                    }
+                },
+                "high": {
+                    "var": "Ball[0].v",
+                    "bound": 1.719446353226426,
+                    "low": {
+                        "var": "Ball[0].p",
+                        "bound": 8.280562060379562,
+                        "low": {
+                            "var": "Ball[0].v",
+                            "bound": 1.433488196269245,
+                            "low": {
+                                "action": "0",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 8.20381679062647,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                }
+                            }
+                        },
+                        "high": {
+                            "action": "0",
+                            "cost": 0.0
+                        }
+                    },
+                    "high": {
+                        "action": "0",
+                        "cost": 0.0
+                    }
+                }
+            }
+        }
+    },
+    "high": {
+        "var": "Ball[0].v",
+        "bound": 5.651431263144681,
+        "low": {
+            "var": "Ball[0].v",
+            "bound": 4.072372168023205,
+            "low": {
+                "var": "Ball[0].v",
+                "bound": 3.296584310622968,
+                "low": {
+                    "var": "Ball[0].p",
+                    "bound": 7.627065416853906,
+                    "low": {
+                        "action": "1",
+                        "cost": 0.0
+                    },
+                    "high": {
+                        "var": "Ball[0].v",
+                        "bound": 2.509426240984092,
+                        "low": {
+                            "var": "Ball[0].p",
+                            "bound": 7.985011687072705,
+                            "low": {
+                                "action": "1",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "action": "0",
+                                "cost": 0.0
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 3.245824520034449,
+                            "low": {
+                                "action": "0",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 7.936797340594532,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "Ball[0].p",
+                    "bound": 7.569637979230439,
+                    "low": {
+                        "action": "1",
+                        "cost": 0.0
+                    },
+                    "high": {
+                        "var": "Ball[0].v",
+                        "bound": 3.559815941674331,
+                        "low": {
+                            "var": "Ball[0].p",
+                            "bound": 7.836729411031522,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 7.758424691759529,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 3.522306240639442,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            },
+                            "high": {
+                                "action": "0",
+                                "cost": 0.0
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].p",
+                            "bound": 7.710955170847338,
+                            "low": {
+                                "var": "Ball[0].v",
+                                "bound": 3.982511690642071,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].v",
+                                "bound": 3.629640795051754,
+                                "low": {
+                                    "var": "Ball[0].p",
+                                    "bound": 7.758424691759529,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "Ball[0].v",
+                "bound": 4.695644600690954,
+                "low": {
+                    "var": "Ball[0].p",
+                    "bound": 7.39188245716279,
+                    "low": {
+                        "var": "Ball[0].p",
+                        "bound": 7.360251928591505,
+                        "low": {
+                            "action": "1",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 4.550978950686875,
+                            "low": {
+                                "action": "1",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "action": "0",
+                                "cost": 0.0
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "Ball[0].v",
+                        "bound": 4.288840530351294,
+                        "low": {
+                            "var": "Ball[0].p",
+                            "bound": 7.569637979230439,
+                            "low": {
+                                "var": "Ball[0].v",
+                                "bound": 4.251061756321203,
+                                "low": {
+                                    "var": "Ball[0].p",
+                                    "bound": 7.505942659984215,
+                                    "low": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    }
+                                },
+                                "high": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].v",
+                                "bound": 4.202263470155479,
+                                "low": {
+                                    "var": "Ball[0].p",
+                                    "bound": 7.710955170847338,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 4.32754800690078,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 7.569637979230439,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            },
+                            "high": {
+                                "action": "0",
+                                "cost": 0.0
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "Ball[0].v",
+                    "bound": 5.216008648054415,
+                    "low": {
+                        "var": "Ball[0].p",
+                        "bound": 6.996922319850711,
+                        "low": {
+                            "action": "1",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "var": "Ball[0].p",
+                            "bound": 7.300685221507334,
+                            "low": {
+                                "var": "Ball[0].v",
+                                "bound": 5.057462783481171,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            },
+                            "high": {
+                                "action": "0",
+                                "cost": 0.0
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "Ball[0].p",
+                        "bound": 6.610731600349133,
+                        "low": {
+                            "action": "1",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "action": "0",
+                            "cost": 0.0
+                        }
+                    }
+                }
+            }
+        },
+        "high": {
+            "var": "Ball[0].v",
+            "bound": 7.792754450540115,
+            "low": {
+                "var": "Ball[0].p",
+                "bound": 4.005927229725014,
+                "low": {
+                    "var": "Ball[0].v",
+                    "bound": 6.917259323465053,
+                    "low": {
+                        "action": "0",
+                        "cost": 0.0
+                    },
+                    "high": {
+                        "var": "Ball[0].p",
+                        "bound": 3.999271192893529,
+                        "low": {
+                            "action": "0",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "action": "1",
+                            "cost": 0.0
+                        }
+                    }
+                },
+                "high": {
+                    "var": "Ball[0].v",
+                    "bound": 6.917259323465053,
+                    "low": {
+                        "var": "Ball[0].v",
+                        "bound": 6.357706044774135,
+                        "low": {
+                            "var": "Ball[0].v",
+                            "bound": 6.215905584809985,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 6.598856892555646,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 5.830487539986342,
+                                    "low": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].p",
+                                        "bound": 6.659960038123675,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 6.344792702262035,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 6.547215729672286,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 6.404984611635066,
+                                "low": {
+                                    "var": "Ball[0].p",
+                                    "bound": 6.234527745304251,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].v",
+                                        "bound": 6.460465651166816,
+                                        "low": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "var": "Ball[0].p",
+                                            "bound": 6.344792702262035,
+                                            "low": {
+                                                "action": "1",
+                                                "cost": 0.0
+                                            },
+                                            "high": {
+                                                "action": "0",
+                                                "cost": 0.0
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 6.48513349423025,
+                                    "low": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].v",
+                                        "bound": 6.533517771993883,
+                                        "low": {
+                                            "var": "Ball[0].p",
+                                            "bound": 6.44148047913967,
+                                            "low": {
+                                                "action": "1",
+                                                "cost": 0.0
+                                            },
+                                            "high": {
+                                                "action": "0",
+                                                "cost": 0.0
+                                            }
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 6.104622459077486,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 6.901633652405163,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 6.234527745304251,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "Ball[0].v",
+                        "bound": 7.399197516081098,
+                        "low": {
+                            "var": "Ball[0].p",
+                            "bound": 6.104622459077486,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 5.879627939936052,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 7.166275899230409,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 6.056918903482822,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "var": "Ball[0].v",
+                                            "bound": 7.061115023658957,
+                                            "low": {
+                                                "action": "1",
+                                                "cost": 0.0
+                                            },
+                                            "high": {
+                                                "action": "0",
+                                                "cost": 0.0
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].v",
+                                        "bound": 7.210567638079889,
+                                        "low": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "var": "Ball[0].p",
+                                            "bound": 5.942765348188273,
+                                            "low": {
+                                                "action": "1",
+                                                "cost": 0.0
+                                            },
+                                            "high": {
+                                                "action": "0",
+                                                "cost": 0.0
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "action": "0",
+                                "cost": 0.0
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 7.674087658950643,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 5.523718839925113,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 7.525730112789139,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 5.633358812028948,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].v",
+                                        "bound": 7.628974478840957,
+                                        "low": {
+                                            "var": "Ball[0].p",
+                                            "bound": 5.54843847347529,
+                                            "low": {
+                                                "action": "1",
+                                                "cost": 0.0
+                                            },
+                                            "high": {
+                                                "action": "0",
+                                                "cost": 0.0
+                                            }
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 5.402713897006491,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 7.7530800731435,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 5.443235054348158,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "Ball[0].v",
+                "bound": 9.366167962598311,
+                "low": {
+                    "var": "Ball[0].p",
+                    "bound": 4.013398731487817,
+                    "low": {
+                        "var": "Ball[0].p",
+                        "bound": 2.007840785509063,
+                        "low": {
+                            "action": "0",
+                            "cost": 0.0
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 8.778117786178264,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 3.999271192893529,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].v",
+                                "bound": 9.104132170148954,
+                                "low": {
+                                    "var": "Ball[0].p",
+                                    "bound": 3.999271192893529,
+                                    "low": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    }
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "Ball[0].v",
+                        "bound": 8.550706221748811,
+                        "low": {
+                            "var": "Ball[0].v",
+                            "bound": 8.173036776127075,
+                            "low": {
+                                "var": "Ball[0].v",
+                                "bound": 8.123560060587238,
+                                "low": {
+                                    "var": "Ball[0].p",
+                                    "bound": 5.194538514452071,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].v",
+                                        "bound": 8.069102903580669,
+                                        "low": {
+                                            "var": "Ball[0].p",
+                                            "bound": 5.402713897006491,
+                                            "low": {
+                                                "action": "1",
+                                                "cost": 0.0
+                                            },
+                                            "high": {
+                                                "action": "0",
+                                                "cost": 0.0
+                                            }
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "Ball[0].p",
+                                    "bound": 5.279826658379918,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 4.838696546008114,
+                                "low": {
+                                    "var": "Ball[0].v",
+                                    "bound": 8.377960180538993,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].p",
+                                        "bound": 4.712604499311911,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 8.280190825938071,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 5.008634959887199,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 8.794506193887484,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 4.608472633636949,
+                                "low": {
+                                    "action": "1",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 8.703623414353475,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 4.642429177581478,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 4.461985800529098,
+                                "low": {
+                                    "var": "Ball[0].p",
+                                    "bound": 4.215824798961585,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].v",
+                                        "bound": 9.223191171939861,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 9.05744131712708,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 4.498001929614675,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "Ball[0].v",
+                    "bound": 10.82519384837519,
+                    "low": {
+                        "var": "Ball[0].v",
+                        "bound": 9.815270665584729,
+                        "low": {
+                            "var": "Ball[0].p",
+                            "bound": 4.013398731487817,
+                            "low": {
+                                "action": "0",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 4.17842664282129,
+                                "low": {
+                                    "var": "Ball[0].v",
+                                    "bound": 9.425276193307752,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].p",
+                                        "bound": 4.081509578448511,
+                                        "low": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "var": "Ball[0].v",
+                                            "bound": 9.466176130933443,
+                                            "low": {
+                                                "action": "1",
+                                                "cost": 0.0
+                                            },
+                                            "high": {
+                                                "var": "Ball[0].p",
+                                                "bound": 4.132776466509757,
+                                                "low": {
+                                                    "action": "0",
+                                                    "cost": 0.0
+                                                },
+                                                "high": {
+                                                    "var": "Ball[0].v",
+                                                    "bound": 9.496057474697691,
+                                                    "low": {
+                                                        "action": "1",
+                                                        "cost": 0.0
+                                                    },
+                                                    "high": {
+                                                        "action": "0",
+                                                        "cost": 0.0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 9.422274770493466,
+                                    "low": {
+                                        "var": "Ball[0].p",
+                                        "bound": 4.205551575383226,
+                                        "low": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        }
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "Ball[0].v",
+                            "bound": 10.73245518807332,
+                            "low": {
+                                "var": "Ball[0].p",
+                                "bound": 4.710428953666698,
+                                "low": {
+                                    "var": "Ball[0].v",
+                                    "bound": 10.6042125555307,
+                                    "low": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "var": "Ball[0].p",
+                                        "bound": 4.533058702223244,
+                                        "low": {
+                                            "action": "0",
+                                            "cost": 0.0
+                                        },
+                                        "high": {
+                                            "action": "1",
+                                            "cost": 0.0
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                }
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 4.533058702223244,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].p",
+                                    "bound": 4.561415918542502,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "Ball[0].p",
+                        "bound": 4.533058702223244,
+                        "low": {
+                            "var": "Ball[0].v",
+                            "bound": 11.36975483307678,
+                            "low": {
+                                "action": "0",
+                                "cost": 0.0
+                            },
+                            "high": {
+                                "var": "Ball[0].p",
+                                "bound": 4.38143856517872,
+                                "low": {
+                                    "action": "0",
+                                    "cost": 0.0
+                                },
+                                "high": {
+                                    "var": "Ball[0].v",
+                                    "bound": 11.42766904746563,
+                                    "low": {
+                                        "action": "1",
+                                        "cost": 0.0
+                                    },
+                                    "high": {
+                                        "action": "0",
+                                        "cost": 0.0
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "action": "0",
+                            "cost": 0.0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
