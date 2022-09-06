@@ -275,6 +275,10 @@ class Node:
     def export_to_uppaal(
             self, actions, variables, meta, path='./out.json', loc='(1)'
     ):
+        """
+        Make sure the variables in `variables` is ordered the same way as
+        in `meta[pointvars]`
+        """
         var_map = { v: i for i, v in enumerate(variables) }
         roots = self.to_q_trees(actions)
         for action, root in roots:
