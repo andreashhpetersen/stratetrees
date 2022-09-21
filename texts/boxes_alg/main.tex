@@ -24,7 +24,7 @@
 
 \section{Algorithm}
 
-We start with a decision tree $\mathcal{T}$ representing af complete
+We start with a decision tree $\mathcal{T}$ representing a complete
 partitioning of the state space. Let $\mathcal{V}$ be the set of variables in
 the state space (ie.\ its dimensions) and let $\mathcal{L}$ be the set of all
 leaves in the tree, where each leaf $L_{i}$ has a state $S_i =
@@ -35,14 +35,14 @@ state represents one $m$-dimensional box or area in the state space.
 We then define $\mathcal{C}$ as the set of constraints in the partitioning given
 by all the upper bounds, ie. $\mathcal{C} = \{ u_{1,1}, \ldots, u_{1,m},
 u_{2,1}, \ldots, u_{n, m} \}$. Lastly, we define a mutable list $\mathcal{P}$ in
-which we store all the points from which our searches for mergable partitions
+which we store all the points from which our searches for mergeable partitions
 begin. If we denote the minimum value of each variable $V_i \in V$ as
-$v^{\min}_i$ then we initialise $\mathcal{P}$ as $\mathcal{P} = \{ (v^{\min}_1,
+$v^{\min}_i$ then we initialize $\mathcal{P}$ as $\mathcal{P} = \{ (v^{\min}_1,
 \ldots, v^{\min}_m) \}$.
 
 The algorithm works by continually popping the next element of $\mathcal{P}$ and
 using this point $p$ as a starting point. From $p$ we construct an
-infinitesmally small box $b = \{ (p_1, p_1), \ldots, (p_m,p_m) \}$ and then
+infinitesimally small box $b = \{ (p_1, p_1), \ldots, (p_m,p_m) \}$ and then
 query $\mathcal{T}$ to find out what action $a_p$ is chosen at this symbolic
 state (which at this point is the same as querying at point $p$). Then we pick
 the constraint $u_{i,j} \in \mathcal{C}$ whose euclidean distance to the upper
@@ -51,7 +51,7 @@ upper bound in dimension $i$. That is, we replace $(p_j, p_j) \in b$ with $(p_j,
 u_{i,j})$.
 
 Now we again query $\mathcal{T}$ for the action(s) in $b$ and continue updating
-$b$ untill we get more than one type of action. We then know, that the latest
+$b$ until we get more than one type of action. We then know, that the latest
 update of $b$ expanded the box into an area of the state space where a different
 action is optimal, and thus we should not include it in our current box. We
 therefore roll back the latest update and mark that particular dimension as

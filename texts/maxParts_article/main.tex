@@ -1,0 +1,90 @@
+\documentclass[runningheads]{llncs}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{bbm}
+\usepackage{nicefrac}
+\usepackage{graphicx} 
+\usepackage{lipsum}
+\usepackage{todonotes}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[subrefformat=parens]{subcaption}
+\usepackage{appendix}
+
+% argmax and argmin
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+
+% transpose
+\DeclareMathOperator*{\tran}{\mathsf{T}}
+
+% define theorems and definitions
+% \newtheorem{definition}{Definition}
+
+
+\graphicspath{{./imgs/}}
+
+\usepackage{tikz} 
+\usetikzlibrary{shapes.geometric}
+\tikzset{%
+    branch/.style={%
+        rectangle,
+        draw,
+        align=center
+    },
+    leaf/.style={%
+        circle,
+        draw,
+        text width=8mm,
+        align=center,
+    }
+}
+
+\title{%
+    Minimizing decision tree representation of controller strategy
+}
+\author{%
+    Andreas Holck Høeg-Petersen\inst{1},
+    Kim Guldstrand Larsen\inst{1},
+    Peter Gjøl Jensen\inst{1}, \\
+    Andrzej Wasowsk\inst{2}
+}
+
+\authorrunning{A. H. Høeg-Petersen, et al.}
+
+\institute{%
+    Aalborg University, Denmark \and
+    IT University of Copenhagen, Denmark
+}
+
+
+\begin{document}
+
+\maketitle
+
+\input{abstract}
+
+\input{introduction}
+
+\input{methods}
+
+\input{experiments}
+
+\newpage
+
+\bibliography{references}
+\bibliographystyle{ieeetr}
+
+\clearpage
+\newpage
+
+\appendix
+\appendixpage%
+
+\input{qTreeConversion}
+
+\end{document}

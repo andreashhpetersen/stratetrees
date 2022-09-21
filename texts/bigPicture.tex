@@ -67,7 +67,7 @@ determined by the constraints on the path from the root node to that leaf. As
 such, the set of Q-trees together represents a complete lookup-table as known
 from classical RL, except that the discretization (partitioning) of the state
 space is unique for each action and is something that is learned during training
-instead of being pre-dertimined by experts or engineers.
+instead of being predetermined by experts or engineers.
 
 The second step is to convert the set of Q-trees into an actual decision tree,
 where the leaf nodes are labelled not with Q-values but with actions. The
@@ -86,8 +86,8 @@ insertion will have a `worse' Q-value than every previous one).
 
 Thirdly, the resulting DT, that represents a single, complete partitioning of
 the state space with individual optimal actions assigned to every possible
-state, can then be scanned for `neighbouring' leaves with identical action
-labels and aligned constraints. `Neighbouring' in this sense refers to the
+state, can then be scanned for `neighboring' leaves with identical action
+labels and aligned constraints. `Neighboring' in this sense refers to the
 situation where the states of two leaves are spatially adjacent and therefore
 could be represented by a single leaf instead of two. This will happen quite
 often, since UPPAAL will create a lot of arbitrary or experimental partitions
@@ -99,7 +99,7 @@ for minimizing a given complete partitioning in the number of partitions used.
 
 The fourth and final part is to recreate a DT from the newly obtained
 minimal partitioning. This has the challenge that the partitions most likely
-wont be able to be represented excactly by a tree structure. For example, the
+wont be able to be represented exactly by a tree structure. For example, the
 partitioning in Figure~\ref{fig:intricatePartitioningEx} cannot be represented
 by a binary tree, since no matter what (axis aligned) constraint we would choose
 for a root node, it would `cut' one of the partitions in two and thus create a
@@ -139,7 +139,7 @@ by a look-up table with dimensions $|\mathcal{S}|\times|\mathcal{A}|$.\todo{What
 discrete states times the number of actions'?} This is called a Q-table.
 
 In UPPAAL Stratego~\ref{} the gap between a continuous and discretized state
-space is gapped by having the discretization happen as part of the training
+space is handled by having the discretization happen as part of the training
 process and representing the Q-values of state-action pairs as values in the
 leaf nodes of binary decision trees. During training, UPPAAL Stratego will build
 such trees by creating branch nodes that splits the state space in a particular
@@ -188,11 +188,11 @@ evaluated to $Q^{\pi}_{S,A}$\todo{Should I ditch the $\pi$ superscript now?} in
 any tree $T_A \in \mathcal{T}$ by following the path from the root node to a
 leaf node as specified by the predicates in the branching nodes. That is, at
 each branch node we follow the path to the `left' if the predicate is true for
-$S$ and we follow the path to the `right' otherwise, untill we end up at a leaf
+$S$ and we follow the path to the `right' otherwise, until we end up at a leaf
 node which will then carry the value of $Q^{\pi}_{S,A}$. The subscript $A$ in
 $T_A$ indicates that it is the tree specifying the Q-values of action $A$ and we
 can now define $T_A(S): S, A \mapsto Q^{\pi}_{S,A}$. The greedy policy then just
-have to choose a an action $A$ where $A = \argmin_{A \in \mathcal{A}}
+have to choose an action $A$ where $A = \argmin_{A \in \mathcal{A}}
 T_A(S)$\footnote{Note that UPPAAL Stratego uses \textit{cost} rather than
 \textit{reward}, therefore we minimize instead of maximizing}.
 
@@ -242,7 +242,7 @@ inserted with label $A_1$, knowing that this is the optimal action for this
 state. From here, we can continually pop and insert $L_2$, $L_2, \ldots, L_n$ in
 that order, creating new branching nodes when needed and ignoring insertions
 into areas that have already been covered by previous leafs (since the actions
-of these will necessarily be more optimal than the later one because of inital
+of these will necessarily be more optimal than the later one because of initial
 sorting).
 
 
@@ -259,7 +259,7 @@ sorting).
 \subsection{Maximizing partition sizes}%
 \label{subsec:findBoxes}
 
-We start with a decision tree $\mathcal{T}$ representing af complete
+We start with a decision tree $\mathcal{T}$ representing a complete
 partitioning of the state space. Let $\mathcal{V}$ be the set of variables in
 the state space (ie.\ its dimensions) and let $\mathcal{L}$ be the set of all
 leaves in the tree, where each leaf $L_{i}$ has a state $S_i =
@@ -270,14 +270,14 @@ state represents one $m$-dimensional box or area in the state space.
 We then define $\mathcal{C}$ as the set of constraints in the partitioning given
 by all the upper bounds, ie. $\mathcal{C} = \{ u_{1,1}, \ldots, u_{1,m},
 u_{2,1}, \ldots, u_{n, m} \}$. Lastly, we define a mutable list $\mathcal{P}$ in
-which we store all the points from which our searches for mergable partitions
+which we store all the points from which our searches for mergeable partitions
 begin. If we denote the minimum value of each variable $V_i \in V$ as
-$v^{\min}_i$ then we initialise $\mathcal{P}$ as $\mathcal{P} = \{ (v^{\min}_1,
+$v^{\min}_i$ then we initialize $\mathcal{P}$ as $\mathcal{P} = \{ (v^{\min}_1,
 \ldots, v^{\min}_m) \}$.
 
 The algorithm works by continually popping the next element of $\mathcal{P}$ and
 using this point $p$ as a starting point. From $p$ we construct an
-infinitesmally small box $b = \{ (p_1, p_1), \ldots, (p_m,p_m) \}$ and then
+infinitesimally small box $b = \{ (p_1, p_1), \ldots, (p_m,p_m) \}$ and then
 query $\mathcal{T}$ to find out what action $a_p$ is chosen at this symbolic
 state (which at this point is the same as querying at point $p$). Then we pick
 the constraint $u_{i,j} \in \mathcal{C}$ whose euclidean distance to the upper
@@ -286,7 +286,7 @@ upper bound in dimension $i$. That is, we replace $(p_j, p_j) \in b$ with $(p_j,
 u_{i,j})$.
 
 Now we again query $\mathcal{T}$ for the actions in $b$ and continue updating
-$b$ untill we get more than one type of action. We then know, that the latest
+$b$ until we get more than one type of action. We then know, that the latest
 update of $b$ expanded the box into an area of the state space where a different
 action is optimal, and thus we should not include it in our current box. We
 therefore roll back the latest update and mark that particular dimension as
@@ -403,7 +403,7 @@ into one single partitioning where every area is prescribed one optimal action.
 
 Due to the randomness involved in how the decision tree turns out (caused by the
 fact that we randomize the order in which state bounds are turned into branching
-nodes), we cannot expect excactly the same tree size at every instance of
+nodes), we cannot expect exactly the same tree size at every instance of
 performing the conversion. For this experiment, we did the conversion 100 times
 and only saved the best (smallest) version of the tree. This gave us an instance
 of the complete strategy represented by a tree with 86,807 paths from the root
@@ -445,7 +445,7 @@ Figure~\ref{fig:ballPartitioningAfter}.
     }\label{fig:ballPartitioningAfter}
 \end{figure}
 
-This new partitioning describes excactly the same strategy as the original
+This new partitioning describes exactly the same strategy as the original
 Q-tree based representation from UPPAAL and the converted DT, but with
 significantly fewer individual parts. Converting it into a new decision tree
 gives a tree with 895 paths, that is, the conversion could not perfectly
@@ -457,7 +457,7 @@ original UPPAAL Strategy (see Table~\ref{tab:minimizedResults}).
     \centering
     \caption{%
         Comparing the performance of controllers for the bouncing ball example
-        over 1000 runs for 120 timesteps each before and after various attempts
+        over 1000 runs for 120 time steps each before and after various attempts
         at minimizing the size through either empirical pruning or the
         \texttt{MaxPartitions} algorithm.
     }\label{tab:minimizedResults}
@@ -477,8 +477,8 @@ original UPPAAL Strategy (see Table~\ref{tab:minimizedResults}).
 
 Next, we perform empirical pruning (see Section~\ref{subsec:empPruning}) on the
 DT after running \texttt{MaxPartitions}. The sample was generated by running
-1000 simulations of 300 timesteps each, logging the state at every 0.5 timestep.
-Pruning unvisited states then reduced the number of paths to just 189 while
+1000 simulations of 300 time steps each, logging the state at every 0.5 time step.
+Pruning states not visited then reduced the number of paths to just 189 while
 retaining performance.  The tree was then further reduced by pruning redundant
 branch nodes and the final version of the strategy then only has 164 paths, but
 still manages to only require 38.311 hits in the evaluation test, just as the
@@ -515,9 +515,9 @@ controller.
 
 In the first experiment, we used the trained controller to generate 30,000
 samples of state/action pairs. That is, the UPPAAL model was run for 300
-timesteps with the trained controller deciding what action to take in each
+time steps with the trained controller deciding what action to take in each
 encountered state and then the state/action pairs were logged at each 0.01
-timestep.
+time step.
 
 In the second experiment, we converted the strategy a set of Q-trees (the
 initial UPPAAL format) to a DT as described in Section~\ref{sec:convergeToDT}.
@@ -532,7 +532,7 @@ action.
     \centering
     \caption{%
         Comparing the performance of controllers for the bouncing ball example
-        over 1000 runs for 120 timesteps each before and after various attempts
+        over 1000 runs for 120 time steps each before and after various attempts
         at minimizing the size through \texttt{dtControl}.  
     }\label{tab:dtcontrolTable}
     \begin{tabular}[t]{lccc}
@@ -551,9 +551,14 @@ The results when applying the generated strategies to the model in UPPAAL are
 given in Table~\ref{tab:dtcontrolTable} together with the baseline original
 decision tree directly converted from the Q-tree set. As is seen, when we used
 samples, we still got a somewhat large DT that took more than 8 minutes to
-generate. And the perfomance (expected number of hits) is substantially worse
+generate. And the performance (expected number of hits) is substantially worse
 than the baseline version. For the version based on state bounds, we got a much
 smaller tree with only 521 paths, but the performance was still very far from
 the original.
+
+\appendix
+
+\section{Q-tree conversion algorithm}%
+\label{app:qTreeConversion}
 
 \end{document}
