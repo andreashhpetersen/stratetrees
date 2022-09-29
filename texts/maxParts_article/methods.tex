@@ -1,3 +1,292 @@
+\section{MaxPartitions algorithm}%
+\label{sec:maxParts}
+
+The idea of the \texttt{MaxPartitions} algorithm is to maximize the size of the
+state space partitions, so that the overall number of partitions used to
+represent the strategy is minimized. As previously described, the partitioning
+that happens during training in UPPAAL Stratego creates a lot of redundant
+splits in the state space and this is amplified when we convert the Q-trees to a
+unified decision tree.
+
+As an example, take a look at the example strategy in
+Figure~\ref{fig:complexExample}. On the left, is the decision tree
+representation and on the right is a 2D visualization of the partitioning of the
+state space. It is easy to see, that this perfectly valid decision tree entails
+a state space partitioning with several redundant partitions, where areas of the
+same color (meaning they suggests the same optimal action) are split in two.
+Since each confined area, ie.\ partition, is represented in our decision tree as
+a leaf node, the fewer partitions we have the smaller a tree we need to
+represent it.
+
+\begin{figure}[ht]
+    \begin{subfigure}[b]{.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{complexExampleTree}
+        \subcaption{%
+            % Tree representation of strategy with 2 state dimensions and 3
+            % actions
+        }\label{fig:complexExampleTree}
+    \end{subfigure}
+    \begin{subfigure}[b]{.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{complexExample2dVisual}
+        \subcaption{%
+            % 2D visualization of the state space partitioning entailed by the
+            % decision tree.
+        }\label{fig:complexExample2dVisual}
+    \end{subfigure}%
+
+    \caption{%
+        Two representations of an example strategy.
+        In~\subref{fig:complexExampleTree} the decision tree representation is
+        given for state dimensions $x$ and $y$ and possible actions $a$, $b$ and
+        $c$. In~\subref{fig:complexExample2dVisual} a 2D visualization of the
+        state space partitioning is showed, where the colors indicate what the
+        optimal action is in that area of the state space (red for $a$, green
+        for $b$ and blue for $c$).
+    }%
+    \label{fig:complexExample}
+\end{figure}
+
+The \texttt{MaxPartitions} algorithms achieves this by maximizing the size of
+each partition so the strategy can be represented with a minimum number of
+partitions. The basic concept of the algorithm is to try and construct as large
+a partition as possible starting from a given point (typically the point
+representing the minimum of each dimension) while retaining the invariant that
+only one action is considered optimal in this partition. When this invariant is
+violated, the new partition is stored and the operation continues from the
+`corner' points of the new partition.  The pseudocode is given in
+Algorithm~\ref{alg:MaxPartitions}.
+
+The \texttt{MaxPartitions} algorithm takes 4 inputs as arguments. $\mathcal{T}$
+is a decision tree representing a strategy $\sigma$ and a complete partitioning
+of the state space $\mathcal{S} \in \mathbb{R}^K$; $\mathcal{C}$ is the
+set of constraints entailed by $\mathcal{T}$ so that each element of
+$\mathcal{C}$ is a tuple $(V_i, c)$ representing the predicate $\rho(x) = x_i
+\le c$ of a branch node in $\mathcal{T}$; $\mathcal{V}$ is the set of variables
+(dimensions); and $p_{start}$ is the initial point the algorithm should start
+from.
+
+In line 2 and 3 we define two lists. $regions$ is where we will store the
+regions we identify during the algorith, and $\mathcal{P}$ is used to keep track
+of points from where we will search the state space. We initialize
+$\mathcal{P}$ with the single point $p_{start}$. In line 4, we start our main
+loop which terminates when $\mathcal{P}$ is empty.
+
+Line 5-11 sets up the search we are about to do from the next point in
+$\mathcal{P}$. First, we initialize an empty list $exhausted$ to keep track of
+the dimensions that we are done exploring. Then we sort $\mathcal{P}$ so that we
+process the points in a consistent order. We then pop the first element of
+$\mathcal{P}$ and uses this as $p^{\min}$ for the region we are about to create.
+However, if we have already covered $p^{\min}$ in a previous iteration (by
+constructing a region $\nu$ in which $p^{\min}$ is contained), we skip this
+iteration and continue at line 4. Otherwise, we define $p^{\max} = p^{\min}$ so
+we now have an infinitesimally small region $\nu = (p^{\min},p^{\max})$, and
+finally we sort $\mathcal{C}$ in ascending order with respect to the distance to
+$p^{\min}$. That is, we order $\mathcal{C}$ so that for any two consecutive
+tuples $(V^m_i, c^m), (V^{m+1}_j, c^{m+1}) \in \mathcal{C}$ it holds that
+$abs(c^m - p^{\min}_i) \le  abs(c^{m+1} - p^{\min}_j)$.
+
+We start with a decision tree $\mathcal{T}$ over the state space $\mathcal{S}
+\in \mathbb{R}^K$ that maps any point $p \in \mathcal{S}$ to a single action $a
+\in Act$ or any region $\nu \in 2^{\mathbb{R}^K}$ to a set of actions
+$\mathbf{a}_{\nu} = \{ a \in Act \mid a = \mathcal{T}(p) \ \forall \ p \in \nu
+\}$. A region $\nu$ is a continuous $K$-dimensional area that can be defined in
+terms of two points $p^{\min}$ and $p^{\max}$, respectively representing the
+lower and upper bounds of $\nu$. We denote the lower and upper bounds of $\nu =
+(p^{\min},p^{\max})$ in dimension $i$ as $p^{\min}_i$ and $p^{\max}_i$
+respectively. Let $\mathcal{A}$ be the complete set of regions, so that
+$\bigcup_{\nu \in \mathcal{A}} = \mathcal{S}$.
+
+We then define the set of constraints $\mathcal{C}$ as all the pairs of upper
+bound and dimension of each region $\nu \in \mathcal{A}$, ie.\ $\mathcal{C} = \{
+(V_i, p^{\max}_i) \mid (p^{\min},p^{\max}) \in \mathcal{A}, V_i \in \mathcal{V}
+\}$. Our starting point for searching the state space will be the point given by
+the smallest lower bound of any region in any dimension. We store this in a
+mutable list $\mathcal{P}$ which we will update during the algorithm in order to
+keep track of where we have to search from.
+
+The algorithm works by continually popping the next element of $\mathcal{P}$ and
+using this point $p$ as a starting point $p^{\min}$ for the region $\nu$ we are
+creating. From $p$ we construct an
+infinitesimally small region $\nu = (p,p)$ and then query $\mathcal{T}$ to find
+out what action $a$ is optimal at this symbolic state. Then we pick the
+constraint $(c,i) \in \mathcal{C}$ that minimizes the euclidean distance between
+$p_i$ and $c$ with $p_i < c$ and `grow' our region $\nu$ in this direction by
+letting $\nu_{i,\max} = c$.
+
+Now we again query $\mathcal{T}$ for the actions in $\nu$ and continue updating
+$\nu$ until $|\mathcal{T}(\nu)| > 1$. We then know, that the latest
+update of $\nu$ expanded the region into an area of the state space where a different
+action is optimal, and thus we should not include it in our current box. We
+therefore roll back the latest update and mark that particular dimension as
+`exhausted'. If there are still unexhausted variables (dimensions) we continue
+as before, but now discarding any constraints on the exhausted dimensions.
+
+If after we have rolled back our update, we see that all variables are
+exhausted, we then have a region $\nu$ that spans the largest possible area from
+$p$ with only one optimal action. We store this and then add to $\mathcal{P}$
+the edge points of $\nu$.  That is, we let $\mathcal{P} = \mathcal{P} \cup \{
+(\nu_{1,\max}, \nu_{2,\min}, \ldots, \nu_{K,\min} ), (\nu_{1,\min},
+\nu_{2,\max}, \ldots, \nu_{K,\min}), \;\ldots,\allowbreak (\nu_{1,\min},
+\nu_{2,\min}, \ldots, \nu_{K,\max}) \}$.  After that, we start over with the
+next point in $\mathcal{P}$ and continue until we have emptied $\mathcal{P}$.
+
+
+\subsection{Description of algorithm}
+
+
+
+\begin{algorithm}[ht]
+    \caption{MaxPartitions}\label{alg:MaxPartitions}
+
+    \begin{algorithmic}[1]
+        \Function{MaxPartitions}{$\mathcal{T}$, $\mathcal{C}$, $\mathcal{V}$, $p_{start}$}
+
+        \State{$regions \gets \{\}$}
+        \State{$\mathcal{P} \gets \{ p_{start} \} $}
+
+        \While{$\mathcal{P}$ is not empty}
+            \State{$exhausted \gets \{\}$}
+            \State{\Call{Sort}{$\mathcal{P}$}}
+            \State{$p^{\min} \gets \Call{Pop}{\mathcal{P}}$}
+
+            \If{$p^{\min}$ has been visited}
+                \State{continue}
+            \EndIf%
+
+            \State{$p^{\max} \gets p^{\min}$}
+            \State{\Call{SortAccordingToDistance}{$\mathcal{C}$, $p^{\min}$}}
+
+            \item
+            \For{$V_i, c$ in $\mathcal{C}$}
+                \If{$c <= p^{\min}_i$ or $V_i \in exhausted$}
+                    \State{continue}
+                \EndIf%
+
+                \State{$oldVal \gets p^{\max}_i$}
+
+                \State{$p^{\max}_i \gets c$}
+
+                \item
+                \If{%
+                    $|\mathcal{T}((p^{\min},p^{\max}))|$ $>$ 1 \textbf{or}
+                    $p^{\max}$ is explored \textbf{or} $p^{\max}_i = V^{\max}_i$ 
+                }
+
+                    \State{$exhausted \gets exhausted \cup V_i$}
+
+                    \If{$|exhausted| < |\mathcal{V}|$}
+                        \State{continue}
+                    \EndIf%
+
+                    \If{$p^{\max}_i < V^{\max}_i$}
+                        \State{$p^{\max}_i \gets oldVal$}
+                    \EndIf%
+
+                    \State{$regions \gets regions \cup (p^{\min},p^{\max})$}
+
+                    \item
+                    \For{$V_i$ in $\mathcal{V}$}
+                    \If{%
+                        $p^{\min}_i \neq p^{\max}_i$
+                        \textbf{and} $p^{\max}_i < V^{\max}_i$
+                    }
+                        \State{$p' \gets p^{\min}$}
+                        \State{$p'_i \gets p^{\max}_i$}
+                        \State{$\mathcal{P} \gets \mathcal{P} \cup p'$}
+                        \EndIf%
+                    \EndFor%
+
+                \EndIf%
+
+            \EndFor%
+        \EndWhile%
+
+        \State{\textbf{return} $boxes$}
+
+        \EndFunction%
+    \end{algorithmic}
+
+\end{algorithm}
+
+\subsection{From regions to decision tree}%
+\label{sub:regionsToDT}
+
+The output of the \texttt{MaxPartitions} algorithm is a list of regions with
+associated actions. For this to be of any use, we need to construct a new
+decision tree to represent these state-action pairs. To this goal, we face the
+issue that it is not given (and in fact, very unlikely) that the suggested
+partitioning can be perfectly represented by a decision tree, as this would
+require the existence of enough `clean splits' (ie.\ predicates on some variable
+that perfectly divides the regions into two sets with an empty disjunction) to
+arrange the entire set of regions.
+
+Therefore, we suggest a brute-force algorithm that tries to separate the regions
+as cleanly as possible. Let $\mathbf{R}$ be a list of regions $\nu \in
+\mathbf{R}$ with $a_{\nu}$ being the action associated with $\nu$. We
+iteratively create a branch node that splits $\mathbf{R}$ into two,
+$\mathbf{R}_{low}$ and $\mathbf{R}_{high}$, based on a predicate function
+$\rho(x_i,c) = x_i \le c$ with $c \in \mathbb{R}$ so that $\mathbf{R}_{low} = \{
+\nu \in \mathbf{R} \mid \nu_{i,\min} \le c \}$ and $\mathbf{R_{high}} = \{ \nu
+\in \mathbf{R} \mid \nu_{i,\max} > c \}$. When the list only contains a single
+element $\nu$, we create a leaf node with action $a_{\nu}$ and return.
+
+The question is how to determine $\rho(x_i,c)$, more specifically which variable
+$x_i$ to predicate on and at which value $c$. Ideally, we want to split
+$\mathbf{R}$ in two equally sized subsets and in a way that no single region
+would have to occur in both, ie.\ we would like $\mathbf{R}_{low} \cap
+\mathbf{R}_{high} = \emptyset$. For this we define an impurity measure
+$I(\mathbf{R}_{low},\mathbf{R}_{high})$ that penalises the difference in size
+between $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ and the size of the
+disjunction between the two. Let $abs(a)$ be the absolute value of $a$ and let
+$|b|$ denote the size of a set $b$, then
+
+\[
+    I(\mathbf{R}_{low}, \mathbf{R}_{high})  = abs(|\mathbf{R}_{low}| -
+    |\mathbf{R}_{high}|) + |\mathbf{R}_{low} \cap \mathbf{R}_{high}|
+\]
+
+
+Our brute-force way of finding the predicate that minimizes $I$ is to iterate
+over the dimensions in $\mathcal{S}$ and for each dimension $i$ we sort the
+regions according to their upper bound. Let $\mathbf{R}_i = \{ \nu^1, \nu^2,
+\ldots, \nu^n \}$ be the list sorted according to the $i$ th dimension so that
+for all $\nu^j, \nu^{j+1}$ it holds that $\nu^{j}_{i,\max} \le
+\nu^{j+1}_{i,\max}$. If we then let $\rho(x_i,c) = x_i \le c$ with $c =
+\nu^{j}_{i,\max}$ we have $|\mathbf{R}_{low}| = j$ and |$\mathbf{R}_{high}| = n
+- j$. For determining the size of $\mathbf{R}_{low} \cap \mathbf{R}_{high}$ we
+simply need to count the number of regions $\nu^{j+m}$ for $m = 1, 2, \ldots,
+n-j$ whose lower bound is less than our predicate bound $c$, since these regions
+will appear both in $\mathbf{R}_{low}$ (because then, by definition, $\rho(x_i,c) = x_i
+\le c$ will be true for $x_i = \nu^{j+m}_{i,\min}$ and $c = \nu^{j}_{i,\max}$)
+and in $\mathbf{R}_{high}$ (because our sorting ensures that for all
+$\nu^{j},\nu^{j+m}$ it holds that $\nu^{j}_{i,\max} \le \nu^{j+m}_{i,\max}$).
+
+Now we can write our impurity measure in terms of these quantities:
+
+\[
+    I(\mathbf{R}_{low}, \mathbf{R}_{high}) = abs(j - (n - j)) +
+    \sum^{n}_{m=1} \mathbbm{1}(\rho(\nu^{j+m}_{i,\min},\nu^{j}_{i,\max})), \quad
+    \text{for all }\nu^{j} \in \mathbf{R}
+\] 
+
+where $\mathbbm{1}$ is the indicator function, $\mathbf{R}$ is the list of
+regions sorted according to upper bound and $\mathbf{R}_{low}$ and
+$\mathbf{R}_{high}$ are the subsets resulting from splitting on the predicate
+function $\rho(x_i,c) = x_i \le c$ with $c = \nu^{j}_{i,\max}$ so that
+$\mathbf{R}_{low} \subsetneq \mathbf{R}$, $\mathbf{R}_{high} \subsetneq
+\mathbf{R}$ and $\mathbf{R} \subseteq \mathbf{R}_{low} \cup \mathbf{R}_{high}$.
+
+Finding the best split, ie.\ the one that minimizes the impurity, is a $O(Kn^2)$
+operation, as it requires a nested loop through all the regions for each
+of the $K $dimensions (the nested loop being the final summation term over $m =
+1, 2, \ldots, n - j$ for all $j = 1, 2, \ldots, n - 1$). In this work, we have
+not attempted to find a faster implementation as we found that the size of
+$\mathbf{R}$ obtained by using our \texttt{MaxPartitions} algorithm did not
+cause performance issues.
+
+
 \section{From Q-trees to Decision Tree}%
 \label{sec:convergeToDT}
 
@@ -29,8 +318,13 @@ the discrete states are irrelevant (in the sense that they are never actually
 visited). This can be remedied if close care is taken to designing the
 discretization, but this would in itself impose bias onto the learning.
 
-\textit{Example 1} As a running example, we consider the articifial strategy
-given by a tabular representation in Table~\ref{tab:exStrategyQTable}. 
+\paragraph{} \textit{Example 1} As a running example, we consider an articifial
+strategy $\sigma$ with a Q-table given by Table~\ref{tab:exStrategyQTable}. The
+state space $\mathcal{S} \in \mathbb{R}^2 $ of the underlying environment is
+given by $x \in [0,3]$ and $y \in [0,3]$ and the set of possible actions is $Act
+= \{ a, b, c \}$. Each entry in the Q-table is a tuple $(a,b,c)$ representing
+the Q-value (cost) of each of the three actions in that state. The
+dimensionality of the Q-table is $3 \times 3 \times 3$ and it has 27 Q-entries.
 
 \begin{table}[htpb]
     \centering
@@ -50,11 +344,20 @@ given by a tabular representation in Table~\ref{tab:exStrategyQTable}.
     \end{tabular}
 \end{table}
 
+For any given state $s \in \mathcal{S}$ we obtain the optimal action by
+$\sigma(s) = \argmin_{a \in Act} Q(s,a)$. This means that $\sigma$ is
+deterministic. Therefore, a more compact representation can easily be obtained
+by discarding the Q-values and only store the optimal action in each state. If
+we do this, we can see that there is a continuous region $x \in [0,1]$, $y \in
+[0, 2]$ in which the same action $a$ is the optimal but which is represented by
+two different discrete states.
+
+\paragraph{}
 UPPAAL Stratego approaches the task of discretizing the state space in a
 different way. Instead of schematically discretizing $\mathcal{S}$ \textit{a
 priori} to the training, discretization is part of the Q-value estimation. What
 happens is \ldots\todo{The introduction of a partitioning $\mathcal{A}$ and
-    regions $\nu$ which I describe in Section~\ref{sub:maxParts} should probably
+    regions $\nu$ which I describe in Section~\ref{sec:maxParts} should probably
 come here instead.}
 
 The result is a strategy represented by a set of binary decision trees, each
@@ -105,14 +408,15 @@ upper bound of each dimension in  $S^{l}$.
 
 The decision about the order in which to predicate the branch nodes on each
 variable bound can and will greatly affect the size of the tree. However, as
-determining the optimal ordering of predicates is computationally infeasible, we
-will simply resort to a randomized picking order.  For the root node $v_0$, we
-thus pick a variable $i$ and a bound $j$ at random and set $\rho(v_0) = x_i \le
-c$ where $c = S^{l_0}_{i,j}$. If $j$ is a lower bound, then we set the left
-child node to a dummy leaf (we will complete this subtree later) and construct a
-new branch node for the right child from the remaining pairs of $i, j$ in
-$S^{l_0}$ and vice-versa if $j$ is an upper bound.  We continue this procedure
-until $S^{l_0} = \lambda(l_0)$ holds true in the tree under construction.
+determining the optimal ordering of predicates is computationally
+infeasible~\cite{HYAFIL197615}, we will simply resort to a randomized picking
+order.  For the root node $v_0$, we thus pick a variable $i$ and a bound $j$ at
+random and set $\rho(v_0) = x_i \le c$ where $c = S^{l_0}_{i,j}$. If $j$ is a
+lower bound, then we set the left child node to a dummy leaf (we will complete
+this subtree later) and construct a new branch node for the right child from the
+remaining pairs of $i, j$ in $S^{l_0}$ and vice-versa if $j$ is an upper bound.
+We continue this procedure until $S^{l_0} = \lambda(l_0)$ holds true in the tree
+under construction.
 
 For inserting the another leaf, $l_j$, we now need to check at each branch node
 $v_m$ whether we should insert in the left subtree, in the right subtree or in
@@ -200,7 +504,7 @@ This has two consequences. One is that the state space will be partitioned in
 such a way that neighboring partitions actually prescribe the same action, but
 do not necessarily appear as neighboring leafs in the strategy tree (ie.\ they
 do not have the same parent). We will deal with this problem in the
-Section~\ref{sub:maxParts}. The other consequence is that we end up with a lot
+Section~\ref{sec:maxParts}. The other consequence is that we end up with a lot
 of leaf nodes that in practice will never be visited, as the system that is
 modeled either never end up in such a state or because the strategy has the
 controller behave in such a way, that such a state is always avoided.\todo{This
@@ -243,251 +547,3 @@ way through the tree can lead to substantial reductions, as we will show in
 Section~\ref{sec:experiments}, and provided that the sample size is large enough
 the performance of the pruned strategy stays on par with the original.
 
-\subsection{MaxPartitions algorithm}%
-\label{sub:maxParts}
-
-The idea of the \texttt{MaxPartitions} algorithm is to maximize the size of the
-state space partitions, so that the overall number of partitions used to
-represent the strategy is minimized. As previously described, the partitioning
-that happens during training in UPPAAL Stratego creates a lot of redundant
-splits in the state space and this is amplified when we convert the Q-trees to a
-unified decision tree.
-
-As an example, take a look at the example strategy in
-Figure~\ref{fig:complexExample}. On the left, is the decision tree
-representation and on the right is a 2D visualization of the partitioning of the
-state space. It is easy to see, that this perfectly valid decision tree entails
-a state space partitioning with several redundant partitions, where areas of the
-same color (meaning they suggests the same optimal action) are split in two.
-Since each confined area, ie.\ partition, is represented in our decision tree as
-a leaf node, the fewer partitions we have the smaller a tree we need to
-represent it.
-
-\begin{figure}[ht]
-    \begin{subfigure}[b]{.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{complexExampleTree}
-        \subcaption{%
-            % Tree representation of strategy with 2 state dimensions and 3
-            % actions
-        }\label{fig:complexExampleTree}
-    \end{subfigure}
-    \begin{subfigure}[b]{.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{complexExample2dVisual}
-        \subcaption{%
-            % 2D visualization of the state space partitioning entailed by the
-            % decision tree.
-        }\label{fig:complexExample2dVisual}
-    \end{subfigure}%
-
-    \caption{%
-        Two representations of an example strategy.
-        In~\subref{fig:complexExampleTree} the decision tree representation is
-        given for state dimensions $x$ and $y$ and possible actions $a$, $b$ and
-        $c$. In~\subref{fig:complexExample2dVisual} a 2D visualization of the
-        state space partitioning is showed, where the colors indicate what the
-        optimal action is in that area of the state space (red for $a$, green
-        for $b$ and blue for $c$).
-    }%
-    \label{fig:complexExample}
-\end{figure}
-
-The \texttt{MaxPartitions} algorithms achieves this by maximizing the size of
-each partition so the strategy can be represented with a minimum number of
-partitions. The basic concept of the algorithm is to try and construct as large
-a partition as possible starting from a given point (typically the point
-representing the minimum of each dimension) while retaining the invariant that
-only one action is considered optimal in this partition. When this invariant is
-violated, the new partition is stored and the operation continues from the
-`corner' points of the new partition.  The pseudocode is given in
-Algorithm~\ref{alg:MaxPartitions}.
-
-We start with a decision tree $\mathcal{T}$ over the state space $\mathcal{S}
-\in \mathbb{R}^K$ that maps any point $p \in \mathcal{S}$ to a single action $a
-\in Act$ or any region $\nu \in 2^{\mathbb{R}^K}$ to a set of actions
-$\mathbf{a}_{\nu} = \{ a \in Act \mid a = \mathcal{T}(p) \ \forall \ p \in \nu
-\}$. A region $\nu$ is a Borel measurable that defines upper and lower bounds
-for that region on each of the $K$ dimensions of the space. In other words, this
-is the same as what has previously been called a partition or a state $S$ and
-each leaf node in $\mathcal{T}$ represents such a region $\nu$. We denote the
-lower and upper bounds of $\nu$ in dimension $i$ as $\nu_{i,\min}$ and
-$\nu_{i,\max}$ respectively. Let $\mathcal{A}$ be the complete set of regions, so
-that $\bigcup_{\nu \in \mathcal{A}} = \mathcal{S}$.
-
-We then define the set of constraints $\mathcal{C}$ as all the pairs of upper
-bound and dimension of each region $\nu \in \mathcal{A}$, ie.\ $\mathcal{C} = \{
-(\nu_{i,\max}, i) \mid \nu \in \mathcal{A}, i = 1, \ldots, K \}$. Our starting point
-for searching the state space will be the point given by the smallest lower
-bound of any region in any dimension. We store this in a mutable list
-$\mathcal{P}$ which we will update during the algorithm in order to keep track
-of where we have to search from.
-
-The algorithm works by continually popping the next element of $\mathcal{P}$ and
-using this point $p$ as a starting point. From $p$ we construct an
-infinitesimally small region $\nu = \{ (p_1, p_1), \ldots, (p_K,p_K) \}$ and then
-query $\mathcal{T}$ to find out what action $a$ is optimal at this symbolic
-state (which at this point is the same as querying at point $p$). Then we pick
-the constraint $(c,i) \in \mathcal{C}$ that minimizes the euclidean distance
-between $p_i$ and $c$ with $p_i < c$ and `grow' our region $\nu$ in this
-direction by letting $\nu_{i,\max} = c$.
-
-Now we again query $\mathcal{T}$ for the actions in $\nu$ and continue updating
-$\nu$ until $|\mathcal{T}(\nu)| > 1$. We then know, that the latest
-update of $\nu$ expanded the region into an area of the state space where a different
-action is optimal, and thus we should not include it in our current box. We
-therefore roll back the latest update and mark that particular dimension as
-`exhausted'. If there are still unexhausted variables (dimensions) we continue
-as before, but now discarding any constraints on the exhausted dimensions.
-
-If after we have rolled back our update, we see that all variables are
-exhausted, we then have a region $\nu$ that spans the largest possible area from
-$p$ with only one optimal action. We store this and then add to $\mathcal{P}$
-the edge points of $\nu$.  That is, we let $\mathcal{P} = \mathcal{P} \cup \{
-(\nu_{1,\max}, \nu_{2,\min}, \ldots, \nu_{K,\min} ), (\nu_{1,\min},
-\nu_{2,\max}, \ldots, \nu_{K,\min}), \;\ldots,\allowbreak (\nu_{1,\min},
-\nu_{2,\min}, \ldots, \nu_{K,\max}) \}$.  After that, we start over with the
-next point in $\mathcal{P}$ and continue until we have emptied $\mathcal{P}$.
-
-
-
-\begin{algorithm}[ht]
-    \caption{MaxPartitions}\label{alg:MaxPartitions}
-
-    \begin{algorithmic}[1]
-        \Function{MaxPartitions}{$\mathcal{T}$, $\mathcal{C}$, $\mathcal{V}$, $p_{start}$}
-
-        \State{$boxes \gets \{\}$}
-        \State{$\mathcal{P} \gets \{ p_{start} \} $}
-
-        \While{$\mathcal{P}$ is not empty}
-            \State{$exhausted \gets \{\}$}
-            \State{$\mathcal{P}.sort()$ } \Comment{left to right}
-            \State{$p \gets \mathcal{P}.pop()$}
-
-            \If{$p$ has been visited}
-                \Comment{can be checked by maintaining a separate tree}
-                \State{continue}
-            \EndIf%
-
-            \State{$b \gets \text{\Call{MakeBoxFromPoint}{$p$}}$}
-            \State{\Call{SortAccordingToDistance}{$\mathcal{C}$, $p$}}
-
-            \For{$u_{i,j}$ in $\mathcal{C}$}
-                \If{$u_{i,j} <= p_j$ or $V_j \in exhausted$}
-                \Comment{$p_j$ is value of $V_j$ in $p$}
-                    \State{continue}
-                \EndIf%
-
-                \State{$oldVal \gets b^u_j$}
-                \Comment{$b^u_j$ is the upper bound of variable $j$ in $b$}
-
-                \State{$b^u_j \gets u_{i,j}$}
-
-                \If{\Call{Count}{$\mathcal{T}.actionsAtState(b)$} $>$ 1 \textbf{or}
-                    $b$ is explored \textbf{or} $b^u_j = V^{\max}_j$ }
-
-                    \State{$exhausted.add(V_j)$}
-
-                    \If{$exhausted.size < \mathcal{V}.size$}
-                        \State{continue}
-                    \EndIf%
-
-                    \If{$b^u_j < V^{\max}_j$}
-                    \Comment{$V^{\max}_j$ is the maximum possible value of $V_j$ }
-                        \State{$b^u_j \gets oldVal$}
-                    \EndIf%
-
-                    \State{$boxes.add(b)$}
-
-                    \For{$p'$ in \Call{EdgePoints}{$b$}}
-                        \State{$\mathcal{P}.add(p')$}
-                    \EndFor%
-
-                \EndIf%
-
-            \EndFor%
-        \EndWhile%
-
-        \State{\textbf{return} $boxes$}
-
-        \EndFunction%
-    \end{algorithmic}
-
-\end{algorithm}
-
-\subsection{From regions to decision tree}%
-\label{sub:regionsToDT}
-
-The output of the \texttt{MaxPartitions} algorithm is a list of regions with
-associated actions. For this to be of any use, we need to construct a new
-decision tree to represent these state-action pairs. To this goal, we face the
-issue that it is not given (and in fact, very unlikely) that the suggested
-partitioning can be perfectly represented by a decision tree, as this would
-require the existence of enough `clean splits' (ie.\ predicates on some variable
-that perfectly divides the regions into two sets with an empty disjunction) to
-arrange the entire set of regions.
-
-Therefore, we suggest a brute-force algorithm that tries to separate the regions
-as cleanly as possible. Let $\mathbf{R}$ be a list of regions $\nu \in
-\mathbf{R}$ with $a_{\nu}$ being the action associated with $\nu$. We
-iteratively create a branch node that splits $\mathbf{R}$ into two,
-$\mathbf{R}_{low}$ and $\mathbf{R}_{high}$, based on a predicate function
-$\rho(x_i,c) = x_i \le c$ with $c \in \mathbb{R}$ so that $\mathbf{R}_{low} = \{
-\nu \in \mathbf{R} \mid \nu_{i,\min} \le c \}$ and $\mathbf{R_{high}} = \{ \nu
-\in \mathbf{R} \mid \nu_{i,\max} > c \}$. When the list only contains a single
-element $\nu$, we create a leaf node with action $a_{\nu}$ and return.
-
-The question is how to determine $\rho(x_i,c)$, more specifically which variable
-$x_i$ to predicate on and at which value $c$. Ideally, we want to split
-$\mathbf{R}$ in two equally sized subsets and in a way that no single region
-would have to occur in both, ie.\ we would like $\mathbf{R}_{low} \cap
-\mathbf{R}_{high} = \emptyset$. For this we define an impurity measure
-$I(\mathbf{R}_{low},\mathbf{R}_{high})$ that penalises the difference in size
-between $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ and the size of the
-disjunction between the two. Let $abs(a)$ be the absolute value of $a$ and let
-$|b|$ denote the size of a set $b$, then
-
-\[
-    I(\mathbf{R}_{low}, \mathbf{R}_{high})  = abs(|\mathbf{R}_{low}| -
-    |\mathbf{R}_{high}|) + |\mathbf{R}_{low} \cap \mathbf{R}_{high}|
-\]
-
-
-Our brute-force way of finding the predicate the minimizes $I$ is to iterate
-over the dimensions in $\mathcal{S}$ and for each dimension $i$ we sort the
-regions according to their upper bound. Let $\mathbf{R}_i = \{ \nu^i, \nu^2,
-\ldots, \nu^n \}$ be the list sorted according to the $i$ th dimension so that
-for all $\nu^j, \nu^{j+1}$ it holds that $\nu^{j}_{i,\max} \le
-\nu^{j+1}_{i,\max}$. If we then let $\rho(x_i,c) = x_i \le c$ with $c =
-\nu^{j}_{i,\max}$ we have $|\mathbf{R}_{low}| = j$ and |$\mathbf{R}_{high}| = n
-- j$. For determining the size of $\mathbf{R}_{low} \cap \mathbf{R}_{high}$ we
-simply need to count the number of regions $\nu^{j+m}$ for $m = 1, 2, \ldots,
-n-j$ whose lower bound is less than our predicate bound $c$, since these regions
-will appear both in $\mathbf{R}_{low}$ (because then, by definition, $\rho(x_i,c) = x_i
-\le c$ will be true for $x_i = \nu^{j+m}_{i,\min}$ and $c = \nu^{j}_{i,\max}$)
-and in $\mathbf{R}_{high}$ (because our sorting ensures that for all
-$\nu^{j},\nu^{j+m}$ it holds that $\nu^{j}_{i,\max} \le \nu^{j+m}_{i,\max}$).
-
-Now we can write our impurity measure in terms of these quantities:
-
-\[
-    I(\mathbf{R}_{low}, \mathbf{R}_{high}) = abs(j - (n - j)) +
-    \sum^{n}_{m=1} \mathbbm{1}(\rho(\nu^{j+m}_{i,\min},\nu^{j}_{i,\max})), \quad
-    \text{for all }\nu^{j} \in \mathbf{R}
-\] 
-
-where $\mathbbm{1}$ is the indicator function, $\mathbf{R}$ is the list of
-regions sorted according to upper bound and $\mathbf{R}_{low}$ and
-$\mathbf{R}_{high}$ are the subsets resulting from splitting on the predicate
-function $\rho(x_i,c) = x_i \le c$ with $c = \nu^{j}_{i,\max}$ so that
-$\mathbf{R}_{low} \subsetneq \mathbf{R}$, $\mathbf{R}_{high} \subsetneq
-\mathbf{R}$ and $\mathbf{R} \subseteq \mathbf{R}_{low} \cup \mathbf{R}_{high}$.
-
-Finding the best split, ie.\ the one that minimizes the impurity, is a $O(Kn^2)$
-operation, as it requires a nested loop through all the regions for each
-of the $K $dimensions (the nested loop being the final summation term over $m =
-1, 2, \ldots, n - j$ for all $j = 1, 2, \ldots, n - 1$). In this work, we have
-not attempted to find a faster implementation as we found that the size of
-$\mathbf{R}$ obtained by using our \texttt{MaxPartitions} algorithm did not
-cause performance issues.
