@@ -1,0 +1,77 @@
+{
+    "var": "y",
+    "bound": 3,
+    "low": {
+        "var": "x",
+        "bound": 2,
+        "low": {
+            "action": "a",
+            "cost": 0
+        },
+        "high": {
+            "var": "x",
+            "bound": 6,
+            "low": {
+                "var": "x",
+                "bound": 5,
+                "low": {
+                    "action": "b",
+                    "cost": 0
+                },
+                "high": {
+                    "action": "c",
+                    "cost": 0
+                }
+            },
+            "high": {
+                "action": "c",
+                "cost": 0
+            }
+        }
+    },
+    "high": {
+        "var": "x",
+        "bound": 4,
+        "low": {
+            "var": "x",
+            "bound": 2,
+            "low": {
+                "action": "a",
+                "cost": 0
+            },
+            "high": {
+                "var": "y",
+                "bound": 4,
+                "low": {
+                    "var": "x",
+                    "bound": 3,
+                    "low": {
+                        "action": "b",
+                        "cost": 0
+                    },
+                    "high": {
+                        "action": "c",
+                        "cost": 0
+                    }
+                },
+                "high": {
+                    "action": "a",
+                    "cost": 0
+                }
+            }
+        },
+        "high": {
+            "var": "y",
+            "bound": 4,
+            "low": {
+                "action": "c",
+                "cost": 0
+            },
+            "high": {
+                "action": "a",
+                "cost": 0
+            }
+        }
+    }
+}
+

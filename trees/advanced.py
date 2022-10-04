@@ -20,7 +20,7 @@ def build_state(intervals):
     return state
 
 
-def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
+def max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
     """
     Args:
         root: the root `Node` from which to extract boxes
