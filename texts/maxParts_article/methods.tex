@@ -37,13 +37,13 @@ represent it.
     \end{subfigure}%
 
     \caption{%
-        Two representations of an example strategy.
-        In~\subref{fig:complexExampleTree} the decision tree representation is
-        given for state dimensions $x$ and $y$ and possible actions $a$, $b$ and
-        $c$. In~\subref{fig:complexExample2dVisual} a 2D visualization of the
-        state space partitioning is showed, where the colors indicate what the
-        optimal action is in that area of the state space (red for $a$, green
-        for $b$ and blue for $c$).
+        Two representations of the toy strategy introduced in
+        Example~\ref{ex:runningExample}.  In~\subref{fig:complexExampleTree} the
+        deterministic version of the Q-table is represented as a decision tree.
+        In~\subref{fig:complexExample2dVisual} a 2D visualization of the state
+        space partitioning is showed, where the colors indicate what the optimal
+        action is in that area of the state space (red for $a$, green for $b$
+        and blue for $c$).
     }%
     \label{fig:complexExample}
 \end{figure}
@@ -58,14 +58,16 @@ violated, the new partition is stored and the operation continues from the
 `corner' points of the new partition.  The pseudocode is given in
 Algorithm~\ref{alg:MaxPartitions}.
 
-The \texttt{MaxPartitions} algorithm takes 4 inputs as arguments. $\mathcal{T}$
-is a decision tree representing a strategy $\sigma$ and a complete partitioning
-of the state space $\mathcal{S} \in \mathbb{R}^K$; $\mathcal{C}$ is the
-set of constraints entailed by $\mathcal{T}$ so that each element of
-$\mathcal{C}$ is a tuple $(V_i, c)$ representing the predicate $\rho(x) = x_i
-\le c$ of a branch node in $\mathcal{T}$; $\mathcal{V}$ is the set of variables
-(dimensions); and $p_{start}$ is the initial point the algorithm should start
-from.
+\subsection{Description of the algorithm}%
+\label{sub:maxPartsDescription}
+
+The algorithm takes 4 inputs as arguments. $\mathcal{T}$ is a decision tree
+representing a strategy $\sigma$ and a complete partitioning of the state space
+$\mathcal{S} \in \mathbb{R}^K$; $\mathcal{C}$ is the set of constraints entailed
+by $\mathcal{T}$ so that each element of $\mathcal{C}$ is a tuple $(V_i, c)$
+representing the predicate $\rho(x) = x_i \le c$ of a branch node in
+$\mathcal{T}$; $\mathcal{V}$ is the set of variables (dimensions); and
+$p_{start}$ is the initial point the algorithm should start from.
 
 In line 2 and 3 we define two lists. $regions$ is where we will store the
 regions we identify during the algorith, and $\mathcal{P}$ is used to keep track
@@ -85,59 +87,38 @@ we now have an infinitesimally small region $\nu = (p^{\min},p^{\max})$, and
 finally we sort $\mathcal{C}$ in ascending order with respect to the distance to
 $p^{\min}$. That is, we order $\mathcal{C}$ so that for any two consecutive
 tuples $(V^m_i, c^m), (V^{m+1}_j, c^{m+1}) \in \mathcal{C}$ it holds that
-$abs(c^m - p^{\min}_i) \le  abs(c^{m+1} - p^{\min}_j)$.
+$abs(c^m - p^{\min}_i) \le  abs(c^{m+1} - p^{\min}_j)$.\todo{This last part
+    about sorting $\mathcal{C}$ currently isn't in the pseudocode, as it got cut
+during refactoring --- but it needs to go back in!}
 
-We start with a decision tree $\mathcal{T}$ over the state space $\mathcal{S}
-\in \mathbb{R}^K$ that maps any point $p \in \mathcal{S}$ to a single action $a
-\in Act$ or any region $\nu \in 2^{\mathbb{R}^K}$ to a set of actions
-$\mathbf{a}_{\nu} = \{ a \in Act \mid a = \mathcal{T}(p) \ \forall \ p \in \nu
-\}$. A region $\nu$ is a continuous $K$-dimensional area that can be defined in
-terms of two points $p^{\min}$ and $p^{\max}$, respectively representing the
-lower and upper bounds of $\nu$. We denote the lower and upper bounds of $\nu =
-(p^{\min},p^{\max})$ in dimension $i$ as $p^{\min}_i$ and $p^{\max}_i$
-respectively. Let $\mathcal{A}$ be the complete set of regions, so that
-$\bigcup_{\nu \in \mathcal{A}} = \mathcal{S}$.
+In line 12 we begin our search through $\mathcal{C}$ for possible candidate
+bounds to grow our new region with. As mentioned, each bound is a tuple giving a
+dimension $V_i$ and a constraint value $c$. We only look at the subset of
+$\mathcal{C}$ where $V_i$ is not exhausted and $c > p^{\min}_i$, and we process
+these bounds in sorted order according to their distance to $p^{\min}$
+(currently not reflected in the pseudocode). When we find a candidate bound, we
+store the current value of $p^{\max}_i$ in a variable $oldValue$ (line 14)
+before updating it with the new bound (line 15).
 
-We then define the set of constraints $\mathcal{C}$ as all the pairs of upper
-bound and dimension of each region $\nu \in \mathcal{A}$, ie.\ $\mathcal{C} = \{
-(V_i, p^{\max}_i) \mid (p^{\min},p^{\max}) \in \mathcal{A}, V_i \in \mathcal{V}
-\}$. Our starting point for searching the state space will be the point given by
-the smallest lower bound of any region in any dimension. We store this in a
-mutable list $\mathcal{P}$ which we will update during the algorithm in order to
-keep track of where we have to search from.
+In line 17 we do 3 different checks to see if our current region $\nu =
+(p^{\min}, p^{\max})$ is now violating any requirements. First, we check if
+evaluating $\nu$ in $\mathcal{T}$ only returns 1 action.  Secondly, we check if
+we have moved $p^{\max}$ into an area already explored earlier (akin to the
+check in line 8). And lastly, we check if the latest update to $p^{\max}_i$
+moved it to the limit of the values $V_i$ can attain (denoted $V^{\max}_i$). If
+neither of these are true, we continue our attempt at updating $p^{\max}$ from
+line 12.
 
-The algorithm works by continually popping the next element of $\mathcal{P}$ and
-using this point $p$ as a starting point $p^{\min}$ for the region $\nu$ we are
-creating. From $p$ we construct an
-infinitesimally small region $\nu = (p,p)$ and then query $\mathcal{T}$ to find
-out what action $a$ is optimal at this symbolic state. Then we pick the
-constraint $(c,i) \in \mathcal{C}$ that minimizes the euclidean distance between
-$p_i$ and $c$ with $p_i < c$ and `grow' our region $\nu$ in this direction by
-letting $\nu_{i,\max} = c$.
+If any of the conditions are true, we proceed to check if and how we should
+store the region spanned by $p^{\min}$ and $p^{\max}$. First, in line 18, we add
+$V_i$ to the list of exhausted dimensions. This is because we know, that in one
+way or another, expanding $p^{\max}$ in the direction of $V_i$ has violated on
+of the requirements in line 17 and as such, $V_i$ should be ignored going
+forward. Then in line 19, we check if $p^{\max}_i$ is still smaller than
+$V^{\max}_i$. If it is, that means that we have to roll back the last update,
+which we do in line 20.
 
-Now we again query $\mathcal{T}$ for the actions in $\nu$ and continue updating
-$\nu$ until $|\mathcal{T}(\nu)| > 1$. We then know, that the latest
-update of $\nu$ expanded the region into an area of the state space where a different
-action is optimal, and thus we should not include it in our current box. We
-therefore roll back the latest update and mark that particular dimension as
-`exhausted'. If there are still unexhausted variables (dimensions) we continue
-as before, but now discarding any constraints on the exhausted dimensions.
-
-If after we have rolled back our update, we see that all variables are
-exhausted, we then have a region $\nu$ that spans the largest possible area from
-$p$ with only one optimal action. We store this and then add to $\mathcal{P}$
-the edge points of $\nu$.  That is, we let $\mathcal{P} = \mathcal{P} \cup \{
-(\nu_{1,\max}, \nu_{2,\min}, \ldots, \nu_{K,\min} ), (\nu_{1,\min},
-\nu_{2,\max}, \ldots, \nu_{K,\min}), \;\ldots,\allowbreak (\nu_{1,\min},
-\nu_{2,\min}, \ldots, \nu_{K,\max}) \}$.  After that, we start over with the
-next point in $\mathcal{P}$ and continue until we have emptied $\mathcal{P}$.
-
-
-\subsection{Description of algorithm}
-
-
-
-\begin{algorithm}[ht]
+\begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
 
     \begin{algorithmic}[1]
@@ -148,22 +129,23 @@ next point in $\mathcal{P}$ and continue until we have emptied $\mathcal{P}$.
 
         \While{$\mathcal{P}$ is not empty}
             \State{$exhausted \gets \{\}$}
-            \State{\Call{Sort}{$\mathcal{P}$}}
-            \State{$p^{\min} \gets \Call{Pop}{\mathcal{P}}$}
+            \State{$p^{\min} \gets \min \mathcal{P}$}
+            \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}
 
-            \If{$p^{\min}$ has been visited}
+            \If{$p^{\min}$ is explored}
                 \State{continue}
             \EndIf%
 
             \State{$p^{\max} \gets p^{\min}$}
-            \State{\Call{SortAccordingToDistance}{$\mathcal{C}$, $p^{\min}$}}
 
-            \item
-            \For{$V_i, c$ in $\mathcal{C}$}
-                \If{$c <= p^{\min}_i$ or $V_i \in exhausted$}
-                    \State{continue}
-                \EndIf%
+            % \State{\Call{SortAccordingToDistance}{$\mathcal{C}$, $p^{\min}$}}
 
+            \item\Comment{The list also need to be sorted according to distance
+                to $p^{\min}$ }
+            \For{$V_i, c$ in $\{(V_i, c) \mid (V_i, c) \in \mathcal{C},
+                c > p^{\min}_i,  V_i \notin  exhausted \} $}
+
+                \item
                 \State{$oldVal \gets p^{\max}_i$}
 
                 \State{$p^{\max}_i \gets c$}
@@ -176,39 +158,98 @@ next point in $\mathcal{P}$ and continue until we have emptied $\mathcal{P}$.
 
                     \State{$exhausted \gets exhausted \cup V_i$}
 
-                    \If{$|exhausted| < |\mathcal{V}|$}
-                        \State{continue}
-                    \EndIf%
-
                     \If{$p^{\max}_i < V^{\max}_i$}
                         \State{$p^{\max}_i \gets oldVal$}
+                    \EndIf%
+
+                    \If{$|exhausted| < |\mathcal{V}|$}
+                        \State{continue}
                     \EndIf%
 
                     \State{$regions \gets regions \cup (p^{\min},p^{\max})$}
 
                     \item
                     \For{$V_i$ in $\mathcal{V}$}
-                    \If{%
-                        $p^{\min}_i \neq p^{\max}_i$
-                        \textbf{and} $p^{\max}_i < V^{\max}_i$
-                    }
-                        \State{$p' \gets p^{\min}$}
-                        \State{$p'_i \gets p^{\max}_i$}
-                        \State{$\mathcal{P} \gets \mathcal{P} \cup p'$}
+                        \If{%
+                            $p^{\min}_i \neq p^{\max}_i$
+                            \textbf{and} $p^{\max}_i < V^{\max}_i$
+                        }
+                            \State{$\mathcal{P} \gets \mathcal{P} \cup
+                            (p^{\min}_1, \ldots, p^{\max}_i, \ldots, p^{\min}_k)$}
                         \EndIf%
                     \EndFor%
+
+                    \State{\textbf{break}}%
 
                 \EndIf%
 
             \EndFor%
         \EndWhile%
 
-        \State{\textbf{return} $boxes$}
+        \State{\textbf{return} $regions$}
 
         \EndFunction%
     \end{algorithmic}
 
 \end{algorithm}
+
+Then in line 21-22, we check if there are still unexhausted dimensions, and if
+so, we continue the search from line 12. Otherwise, we have have found
+$p^{\max}$ that spans the largest area from $p^{\min}$ that only prescribes one
+action in $\mathcal{T}$ and neither exceeds any dimensional upper limits of the
+state space or expands into other found regions. We can therefore, in line 23,
+add the region $\nu = (p^{\min},p^{\max})$ to the list of regions.
+
+The last thing needed is to add new starting points to $\mathcal{P}$. This is
+done in line 25-27. For every $V_i$ in $\mathcal{V}$ we create a new point $p' =
+(p^{\min}_1, \ldots, p^{\max}_i, \ldots, p^{\min}_k)$ and add it to
+$\mathcal{P}$ as long as long as some basic properties hold. Then we break (line
+28) and continue processing the next point in $\mathcal{P}$.
+
+
+\subsection{Analyzing the algorithm}%
+\label{sub:maxPartsAnalysis}
+
+In the following we provide an upper bound of the running time of
+\texttt{MaxPartitions} and a proof of correctness.
+
+For the running time, we first turn our attention to the outer while loop
+iterating through $\mathcal{P}$. Since $\mathcal{P}$ is dynamically grown, we
+must consider what the accumulated size during the entire run of the algorithm
+can amount to. For this, we look at the case where new points are added to
+$\mathcal{P}$, namely in line 27-31 where we have found a new region. We add a
+point for each of the $K$ variables, barring some edge cases. This means, that
+an upper bound to the number of points we must process in total is $K$ times the
+number of regions we find.
+
+The worst case number of regions the algorithm can find is on the other hand
+bounded by the number of partitions (or leaf nodes) in the original tree
+$\mathcal{T}$. This because either the partitioning $\mathcal{A}$ entailed by
+$\mathcal{T}$ is already optimal, in which case, the algorithm will just find
+one region for every leaf node in $\mathcal{T}$, or $\mathcal{A}$ is not
+optimal, meaning the algorithm will find fewer (but larger) regions. Therefore,
+the outer while loop is bounded by $O(KN)$ with $N$ being the number of leaf
+nodes in $\mathcal{T}$.
+
+Inside the while loop, we have two sorting operations and a for-loop. In line 6,
+we sort $\mathcal{P}$, but we ignore this in our analysis, as $\mathcal{P}$ is
+expected to at any time only contain a small subset of all the points entering
+and exiting $\mathcal{P}$ during the algorithm. Secondly, a smart data structure
+(eg.\ a heap) could sort the points at insertion and thus remove the need to
+sort every time.
+
+In line 11, however, we sort $\mathcal{C}$ according to the current $p^{\min}$.
+As presented here, this sorting is unavoidable as we cannot expect to know the
+correct sorting with respect to $p^{\min}$.\footnote{%
+    One could imagine, that $K$ lists with the bounds in $\mathcal{C}$ sorted
+    according their respective $V_i$ were stored and consulted in the following
+    for-loop, thus alleviating the need to sort $\mathcal{C}$ in every
+    iteration. This approach is not pursued here.
+} If we assume that the sorting operation is $O(C\log C)$ with $C$ being the
+size of $\mathcal{C}$, then question becomes one of estimating $C$. Also here we
+have that $C$ is proportional to $N$ and $K$, as $\mathcal{C}$ is constructed
+from all the predicates of the branch nodes in $\mathcal{T}$. This is at most
+$N$ , or rather $N-1$. Something something $\approx O(KN^2\log N)$.
 
 \subsection{From regions to decision tree}%
 \label{sub:regionsToDT}
@@ -318,41 +359,6 @@ the discrete states are irrelevant (in the sense that they are never actually
 visited). This can be remedied if close care is taken to designing the
 discretization, but this would in itself impose bias onto the learning.
 
-\paragraph{} \textit{Example 1} As a running example, we consider an articifial
-strategy $\sigma$ with a Q-table given by Table~\ref{tab:exStrategyQTable}. The
-state space $\mathcal{S} \in \mathbb{R}^2 $ of the underlying environment is
-given by $x \in [0,3]$ and $y \in [0,3]$ and the set of possible actions is $Act
-= \{ a, b, c \}$. Each entry in the Q-table is a tuple $(a,b,c)$ representing
-the Q-value (cost) of each of the three actions in that state. The
-dimensionality of the Q-table is $3 \times 3 \times 3$ and it has 27 Q-entries.
-
-\begin{table}[htpb]
-    \centering
-    \caption{%
-        Q-table for example strategy. Each entry is a tuple of the Q-values
-        (expected cost) of action $a$, $b$ and $c$ respectively for some
-        configuration of $x$ and $y$.
-    }\label{tab:exStrategyQTable}
-    \begin{tabular}{l@{\quad}c@{\quad}c@{\quad}c}
-        \toprule
-         & $0 < x \le 1$ & $1 < x \le 2$ & $2 < x \le 3$ \\
-        \midrule
-        $0 < y \le 1$ & (2, 7, 3) & (4, 3, 1) & (6, 8, 1) \\
-        $1 < y \le 2$  & (3, 4, 4) & (3, 2, 4) & (3, 5, 9) \\
-        $2 < y \le 3$  & (3, 3, 1) & (4, 3, 1) & (2, 7, 3) \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-For any given state $s \in \mathcal{S}$ we obtain the optimal action by
-$\sigma(s) = \argmin_{a \in Act} Q(s,a)$. This means that $\sigma$ is
-deterministic. Therefore, a more compact representation can easily be obtained
-by discarding the Q-values and only store the optimal action in each state. If
-we do this, we can see that there is a continuous region $x \in [0,1]$, $y \in
-[0, 2]$ in which the same action $a$ is the optimal but which is represented by
-two different discrete states.
-
-\paragraph{}
 UPPAAL Stratego approaches the task of discretizing the state space in a
 different way. Instead of schematically discretizing $\mathcal{S}$ \textit{a
 priori} to the training, discretization is part of the Q-value estimation. What
@@ -369,18 +375,6 @@ and we define $\mathcal{T}_A(s) = Q(s,a)$ when $A=a$. Given the complete set of 
 the matter of choosing the optimal action in a state $s$ can --- for a greedy
 policy $\pi$ and with the Q-values representing expected cost --- be defined as
 $\pi(s) = \argmin_{a\in Act} \mathcal{T}_A(s)$.
-
-\begin{definition}[Q-tree]%
-\label{def:qTree}
-    A Q-tree over the domain $\mathcal{S} \in \mathbb{R}^K$ is a tuple
-    $\mathcal{T}_A = (T, \rho, q)$ where $T$ is a full binary tree, $\rho$
-    assigns a predicate to each branch node of the form $x_i \le c$ where $c \in
-    \mathcal{S}_i$ for each $i = 1, \ldots, K$ and $q$ assigns to each leaf node
-    a real number representing the Q-value of action $A \in Act$ in the state
-    determined by the constraints enforced by $\rho$ at each branch node from
-    the root node to the leaf. For leaf $l$ we denote the state derived this way
-    $s = \lambda(l)$.
-\end{definition}
 
 
 \subsection{Converting to decision tree}%

@@ -30,14 +30,13 @@ class State:
 
         return center if point else vcenters
 
-
     def greater_than(self, var, bound):
         self.min[var] = bound
 
     def less_than(self, var, bound):
         self.max[var] = bound
 
-    def min_max(self, var, limit_val='default'):
+    def min_max(self, var, min_limit=-math.inf, max_limit=math.inf):
         """
         Return a tuple of the min and max values of `var` in this state
 
@@ -46,12 +45,9 @@ class State:
             limit_val:  (optional) the value to return if `var` has no limit
                         (defaults to `math.inf` or `-math.inf`)
         """
-        if limit_val != 'default':
-            var_min = self.min[var] if self.min[var] != -math.inf else limit_val
-            var_max = self.max[var] if self.max[var] != math.inf else limit_val
-            return var_min, var_max
-        else:
-            return self.min[var], self.max[var]
+        var_min = self.min[var] if self.min[var] != -math.inf else min_limit
+        var_max = self.max[var] if self.max[var] != math.inf else max_limit
+        return var_min, var_max
 
     def copy(self):
         state = State(self.variables)
@@ -79,6 +75,73 @@ class State:
         return self.__str__()
 
 
+class Path:
+    def __init__(self, vertices=(), edges=()):
+        self.vertices = vertices
+        self.edges = vertices
+
+    def add_vertex(self, vertex, left):
+        vertices = self.vertices + (vertex,)
+        edges = self.edges if vertex.is_leaf else self.edges + (left,)
+        return Path(vertices=vertices, edges=edges)
+
+    def __str__(self):
+        s = ''
+        for v, e in zip(self.vertices, self.edges):
+            s += f'({v.variable}: {v.bound})'
+            s += f' -{"l" if e else "h"}-> '
+
+        if self.vertices[-1].is_leaf:
+            s += v.action
+
+        return s
+
+class Tree:
+    def __init__(self, variables, actions, root=None):
+        self.variables = variables
+        self.actions = actions
+        self.root = root
+
+    def get_paths(self):
+        if self.root is None:
+            raise ValueError('Tree has no root node')
+
+        return self._get_paths(self.root, ())
+
+    def _get_paths(self, node, path):
+        if node.is_leaf:
+            return path + (node,)
+
+        path = path + (node,)
+        lps = self._get_paths(node.low, path)
+        hps = self._get_paths(node.high, path)
+        return lps + hps
+
+    def advanced_prune(self):
+        assert self.root is not None
+
+
+        res = self._advanced_prune(self.root, [])
+        return res
+
+    def _advanced_prune(self, node, path):
+        if node.is_leaf:
+            state = { v: [None, None] for v in self.variables }
+            for i in range(len(path) - 1, -1, -1):
+                n, sub = path[i]
+                if state[n.variable][sub] is None:
+                    state[n.variable][sub] = n
+            return ((state, node.action),)
+
+        lres = self._advanced_prune(node.low, path + [(node, 1)])
+        hres = self._advanced_prune(node.high, path + [(node, 0)])
+
+        if len(lres) == len(hres) == 1:
+            if lres[0][1] == hres[0][1]:
+                pass
+
+        return lres + hres
+
 class Node:
     def __init__(self, variable, bound, low=None, high=None, state=None):
         self.variable = variable
@@ -91,6 +154,34 @@ class Node:
     @property
     def size(self):
         return self.count_leafs()
+
+    def advanced_prune(self, variables, actions):
+        state = [ ( None, None ) for _ in variables ]
+
+        amap = { a: state for a in actions }
+        vmap = { v: i for i, v in enumerate(variables) }
+
+        self.low._advanced_prune(state, vmap, amap.copy())
+
+    def _advanced_prune(self, state, vmap, amap):
+        vi = vmap[self.variable]
+
+        lstate = state[:vi] + [(state[vi][0], self)] + state[vi+1:]
+        hstate = state[:vi] + [(self, state[vi][1])] + state[vi+1:]
+
+        if self.low.is_leaf:
+            low_amap = amap.copy()
+            low_amap[self.action] = lstate
+        else:
+            low_amap = self.low._advanced_prune(lstate, vmap, amap.copy())
+
+        if self.high.is_leaf:
+            high_amap = amap.copy()
+            high_amap[self.action] = hstate
+        else:
+            high_amap = self.high._advanced_prune(hstate, vmap, amap.copy())
+
+        return
 
     def count_leafs(self):
         low_count = 1 if self.low.is_leaf else self.low.count_leafs()
@@ -186,20 +277,20 @@ class Node:
         self.high.set_state(high_state)
 
     def prune(self):
-        if not Node.is_leaf(self.low):
+        if not self.low.is_leaf:
             self.low = self.low.prune()
 
-        if not Node.is_leaf(self.high):
+        if not self.high.is_leaf:
             self.high = self.high.prune()
 
-        if Node.is_leaf(self.low) and Node.is_leaf(self.high):
+        if self.low.is_leaf and self.high.is_leaf:
             if self.low.action == self.high.action:
                 return Leaf(
                     max(self.low.cost, self.high.cost),
                     action=self.low.action
                 )
 
-        elif not (Node.is_leaf(self.low) or Node.is_leaf(self.high)):
+        elif not (self.low.is_leaf or self.high.is_leaf):
             if Node.equivalent(self.low, self.high):
                 # arbitrary if we here choose high or low
                 return self.low
@@ -374,7 +465,9 @@ class Node:
         root = None
         last = None
         for var in leaf.state.variables:
-            var_min, var_max = leaf.state.min_max(var, limit_val=None)
+            var_min, var_max = leaf.state.min_max(
+                var, min_limit=None, max_limit=None
+            )
             if var_min is not None:
                 new_node = Node(var, var_min)
                 new_node.low = Leaf(math.inf, action=None)
@@ -423,10 +516,10 @@ class Node:
         Test if `node1` and `node2` are equivalent. Requires both nodes to
         have leafs at both their `low` and `high` directions.
         """
-        if not (Node.is_leaf(node1.low) and Node.is_leaf(node1.high)):
+        if not (node1.low.is_leaf and node1.high.is_leaf):
             return False
 
-        if not (Node.is_leaf(node2.low) and Node.is_leaf(node2.high)):
+        if not (node2.low.is_leaf and node2.high.is_leaf):
             return False
 
         if not node1.variable == node2.variable:

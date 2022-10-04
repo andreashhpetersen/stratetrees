@@ -42,3 +42,31 @@ be impossible to even run get running in these systems. Therefore, we also
 provide an algorithm for minimizing the number of leaf nodes the decision tree
 by inspecting the Euclidean state space of the system under consideration and
 the partitions that the strategy entails.
+
+\paragraph{Example 1}\label{ex:runningExample} As a running example, we consider
+an articifial strategy $\sigma$ with a Q-table given by
+Table~\ref{tab:exStrategyQTable}. The state space $\mathcal{S} \in \mathbb{R}^2
+$ of the underlying environment is given by $x \in [0,3]$ and $y \in [0,3]$ and
+the set of possible actions is $Act = \{ a, b, c \}$. Each entry in the Q-table
+is a tuple $(a,b,c)$ representing the Q-value (cost) of each of the three
+actions in that state. The dimensionality of the Q-table is $3 \times 3 \times
+3$ and it has 27 Q-entries.
+
+\begin{table}[htpb]
+    \centering
+    \caption{%
+        Q-table for example strategy. Each entry is a tuple of the Q-values
+        (expected cost) of action $a$, $b$ and $c$ respectively for some
+        configuration of $x$ and $y$.
+    }\label{tab:exStrategyQTable}
+    \begin{tabular}{l@{\quad}c@{\quad}c@{\quad}c}
+        \toprule
+         & $0 < x \le 1$ & $1 < x \le 2$ & $2 < x \le 3$ \\
+        \midrule
+        $0 < y \le 1$ & (2, 7, 3) & (4, 3, 1) & (6, 8, 1) \\
+        $1 < y \le 2$  & (3, 4, 4) & (3, 2, 4) & (3, 5, 9) \\
+        $2 < y \le 3$  & (3, 3, 1) & (4, 3, 1) & (2, 7, 3) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+

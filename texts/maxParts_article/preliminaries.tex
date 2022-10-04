@@ -1,0 +1,72 @@
+\section{Preliminaries}%
+\label{sec:preliminaries}
+
+We start by defining some relevant concepts.
+
+\begin{definition}[Strategy]%
+    A strategy $\sigma : S \to A$ over the state space $\mathcal{S}$ is a
+    mapping from any state $s \in \mathcal{S}$ to an action $a \in Act$ where
+    $Act$ is a finite set of allowed actions. We say that $\sigma$ is
+    deterministic if for any $s \in \mathcal{S}$ the probability
+    $P(a\mid\sigma(s)) = 1$ for only a single element $a \in Act$ and
+    $P(a'\mid\sigma(s)) = 0$ for all $a' \in Act$ where $a' \neq a$.
+\end{definition}
+
+A strategy can be represented in several different ways. In
+Q-learning~\cite{Sutton1998}, the approach is to estimate a function $Q : S, A
+\to \mathbb{R}$ that maps a state-action pair $(s,a)$ to a real number, that is
+an estimation of the expected cost of taking action $a$ in state
+$s$.\footnote{The Q-value can also be the expected reward.} Choosing an action
+in state $s$ under the deterministic strategy $\sigma$ is then given by
+$\sigma(s) = \argmin_{a \in Act}Q(s,a)$.
+
+For a discrete state space, the Q-function can either estimated using function
+approxmiation techniques or by discretization of the state space. In the latter
+case, the state space is considered as consisting of a set of discrete, bounded
+subspaces $S \subset \mathbb{R}^K$ and the Q-value is then regarded as equal
+among all possible configurations within a single discrete state $S$, ie.\
+$Q(s,a) = Q(s',a)$ for all $s,s' \in S$. This allows for a tabular
+representation of the Q-function, as in the toy example in
+Table~\ref{tab:exStrategyQTable}.
+
+\begin{definition}[Partitions]%
+    A partitioning $\mathcal{A}$ of the state space $\mathcal{S} \in
+    \mathbb{R}^K$ is a set of regions $\nu$ that divides $\mathcal{S}$ such that
+    $\bigcup_{\nu \in \mathcal{A}}\nu = \mathcal{S}$ and for any two regions
+    $\nu, \nu' \in \mathcal{A}$ where $\nu \neq \nu'$ it holds that $\nu \cap
+    \nu' = \emptyset$. Each region $\nu$ can be expressed in terms of two
+    points, $p^{\min}$ and $p^{\max}$, so that for each $p = (p_1, \ldots, p_K)
+    \in \nu$ it holds that $p^{\min}_i < p_i \le  p^{\max}_i$ for $i =
+    1,\ldots,K$.
+\end{definition}
+
+Evidently, any discretization of a state space $\mathcal{S} \in \mathbb{R}^K$ is
+effectively a partitioning. For example, the Q-table in
+Table~\ref{tab:exStrategyQTable} corresponds to the partitioning $\mathcal{A} =
+\{ ((0,0),(1,1)), ((1,0),(2,1)),\ldots, ((1,2),(2,3)), ((2,2),(3,3)) \} $
+
+
+\begin{definition}[Decision tree]%
+\label{def:decisionTree}
+    A binary decision tree over the domain $\mathcal{S} \in \mathbb{R}^K$ is a
+    tuple $\mathcal{T} = (T, \rho, \ell)$ where $T$ is a full binary tree,
+    $\rho$ assigns to each branch node a predicate function of the form $\rho(s)
+    = s_i \le c$ where $s \in \mathcal{S}$ and $c \in \mathcal{S}_i$ for each $i
+    = 1, \ldots, K$ and $\ell$ assigns to each leaf node a label (categorical or
+    numerical).
+\end{definition}
+
+For a decision tree $\mathcal{T}$, we can obtain a decision $\delta =
+\mathcal{T}(s)$ from any state $s \in \mathcal{S}$ by following the
+\textit{path} from the root node to a leaf by evaluating $\rho(s)$ at every
+branch node and following the left path if the predicate is true and the right
+path otherwise. For each node $\eta$ in the tree (branching or leaf) the path to
+this node defines a bounded subspace $S$ of $\mathcal{S}$ and we denote this as
+$S = \lambda(\eta)$.
+
+Further, for a euclidean domain we also allow evaluating a region of
+$\mathcal{S}$. Given a region $\nu = (p^{\min}, p^{\max})$, $[\delta]_{\nu} =
+\mathcal{T}(\nu)$ is the set of all decisions that can be obtained evaluating
+configurations of $\nu$, ie. $\mathcal{T}(\nu) = \{ \mathcal{T}(s) \mid s \in \nu
+\}$.
+

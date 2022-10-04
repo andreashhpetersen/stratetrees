@@ -8,6 +8,11 @@ A.~David, P.~G. Jensen, K.~G. Larsen, M.~Mikucionis, and J.~H. Taankvist,
 R.~S. Sutton and A.~G. Barto, {\em Reinforcement Learning: An Introduction}.
 \newblock The MIT Press, second~ed., 2018.
 
+\bibitem{HYAFIL197615}
+L.~Hyafil and R.~L. Rivest, ``Constructing optimal binary decision trees is
+  np-complete,'' {\em Information Processing Letters}, vol.~5, no.~1,
+  pp.~15--17, 1976.
+
 \bibitem{Manfred2019}
 M.~Jaeger, P.~G. Jensen, K.~Guldstrand~Larsen, A.~Legay, S.~Sedwards, and J.~H.
   Taankvist, ``Teaching stratego to play ball: Optimal synthesis for continuous

@@ -2,8 +2,13 @@ import json
 import math
 import random
 import drawSvg as draw
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
 from decimal import *
+from collections import defaultdict
 from trees.models import Node, Leaf, State
+from matplotlib.patches import Rectangle
 
 
 def build_state(intervals):
@@ -37,6 +42,9 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
         v: m for v, m in zip(variables, min_vals)
     }
 
+    # for numerically safe addition/subtraction
+    eps = Decimal(str(eps))
+
     # build the list of constraints
     constraints = []
     all_bounds = root.get_bounds()  # assumed to be sorted in ascending order
@@ -66,7 +74,7 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
         p = points.pop(0)
 
         # add epsilon to 'enter' the box
-        p = tuple(Decimal(str(x)) + Decimal(str(eps)) for x in p)
+        p = tuple(Decimal(str(x)) + eps for x in p)
 
         # define the state
         state = { v: p[var2id[v]] for v in variables }
@@ -138,7 +146,7 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
 
                 # otherwise, store the big box as a leaf
                 box = build_state({
-                    v: (float(p[var2id[v]] - Decimal(str(eps))), state[v])
+                    v: (float(p[var2id[v]] - eps), state[v])
                     for v in variables
                 })
                 leaf = Leaf(cost=0, action=action, state=box)
@@ -155,14 +163,33 @@ def get_boxes(root, variables, eps=0.001, max_vals=None, min_vals=None):
                 for v in variables:
                     if p[var2id[v]] != state[v] and state[v] < max_var_vals[v]:
                         points.append(tuple(
-                            float(
-                                p[var2id[w]] - Decimal(str(eps))
-                            ) if w != v else state[w]
+                            float(p[var2id[w]] - eps)
+                            if w != v else state[w]
                             for w in variables
                         ))
                 break
 
     return boxes
+
+
+def split_box(leaf, v, c):
+    vmin, vmax = leaf.state.min_max(v)
+    if vmin < c < vmax:
+        lstate = leaf.state.copy()
+        lstate.less_than(v, c)
+        hstate = leaf.state.copy()
+        hstate.greater_than(v, c)
+
+        low = Leaf(0, action=leaf.action, state=lstate)
+        high = Leaf(0, action=leaf.action, state=hstate)
+
+    elif vmax <= c:
+        low, high = leaf, None
+
+    else:  # vmin > c
+        low, high = None, leaf
+
+    return low, high
 
 
 def find_best_cut_2(boxes, variables):
@@ -196,12 +223,15 @@ def find_best_cut_2(boxes, variables):
         curr_l = max_sorted[v]
 
         # go through each index in the sorted list
-        for i in range(len(curr_l)):
+        for i in range(len(curr_l) - 1):
 
             # this is the lowest max value for v in the rest of the list (ie.
             # boxes[curr_l[i]].state.max[v] <= boxes[curr_l[j]].state.max[v]
             # for all j > i)
             max_v = boxes[curr_l[i]].state.max[v]
+
+            if max_v == boxes[curr_l[i+1]].state.max[v]:
+                continue
 
             # ideally, we'd split at i == len(boxes) / 2, so we start by
             # defining impurity as the difference between `i' and the optimal
@@ -220,6 +250,10 @@ def find_best_cut_2(boxes, variables):
             # add the triplet to our list of possible cuts
             cuts.append((v, i, impurity))
 
+    if len(cuts) == 0:
+        assert len(set([l.action for l in boxes]))
+        return Leaf(0, action=boxes[0].action)
+
     # sort according to impurity and take the 'most pure' cut
     v, b_id, _ = sorted(cuts, key=lambda x: x[2])[0]
 
@@ -230,11 +264,16 @@ def find_best_cut_2(boxes, variables):
     # that are higher or both if it falls on both sides of the cut
     low, high = [], []
     for b in boxes:
-        if b.state.min[v] < max_val:
-            low.append(b)
+        l, h = split_box(b, v, max_val)
+        if l is not None:
+            low.append(l)
+        if h is not None:
+            high.append(h)
+        # if b.state.min[v] < max_val:
+        #     low.append(b)
 
-        if b.state.max[v] > max_val:
-            high.append(b)
+        # if b.state.max[v] > max_val:
+        #     high.append(b)
 
     # something went wrong if we end up here
     if len(low) == 0 or len(high) == 0:
@@ -282,21 +321,28 @@ def find_best_cut(boxes, variables):
     return node, low, high
 
 
-def cut_to_node(boxes, variables):
+def cut_to_node(boxes, variables, lvl):
     if len(boxes) == 1:
         return Leaf(0.0, action=boxes[0].action)
 
-    node, low, high = find_best_cut_2(boxes, variables)
-    node.low = cut_to_node(low, variables)
-    node.high = cut_to_node(high, variables)
+    res = find_best_cut_2(boxes, variables)
+    if isinstance(res, Leaf):
+        return res
+
+    # else
+    node, low, high = res
+    if len(low) == 3 and len(high) == 1 and lvl == 843:
+        import ipdb; ipdb.set_trace()
+    node.low = cut_to_node(low, variables, lvl+1)
+    node.high = cut_to_node(high, variables, lvl+1)
     return node
 
 
 def boxes_to_tree(boxes, variables):
-    return cut_to_node(boxes, variables).prune()
+    return cut_to_node(boxes, variables, 1).prune()
 
 
-def draw_grid(d, xk, yk, min_x, min_y, max_x, max_y, conv_x, conv_y, lines=True):
+def draw_grid_lines(d, xk, yk, min_x, min_y, max_x, max_y, conv_x, conv_y, lines=True):
     """
     d: a Drawing object
     """
@@ -329,13 +375,54 @@ def draw_grid(d, xk, yk, min_x, min_y, max_x, max_y, conv_x, conv_y, lines=True)
         conv_x(0), conv_y(min_y), conv_x(0), conv_y(max_y),
         stroke='black', stroke_width=2
     )
+    d.append(draw.Text('velocity', 26, x=(max_x - min_x) / 2, y=2, center=True,
+                       fill='blue'))
+    d.append(draw.Text('VELOCITY', 10, path=xax, center=True, fill='black'))
+    d.append(draw.Text('JUST SOMETHING', 15, x=0, y=100, center=True))
     d.append(xax)
     d.append(yax)
 
 
+def draw_partition(
+    leaves, x_var, y_var, xlim, ylim, cmap,
+    dpi=100, lw=0, show=False, out_fp='./tmp.svg'
+):
+    min_x, max_x = xlim
+    min_y, max_y = ylim
+
+    fig, ax = plt.subplots()
+
+    for l in leaves:
+        s = l.state
+        x_start, x_end = s.min_max(x_var, min_limit=min_x, max_limit=max_x)
+        y_start, y_end = s.min_max(y_var, min_limit=min_y, max_limit=max_y)
+        width = x_end - x_start
+        height = y_end - y_start
+        c = cmap[l.action]
+        ax.add_patch(
+            Rectangle(
+                (x_start, y_start), width, height, color=c, ec='black', lw=lw
+            )
+        )
+
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+
+    plt.xlabel(x_var)
+    plt.ylabel(y_var)
+
+    if show:
+        plt.show()
+
+    if out_fp is not None:
+        plt.savefig(out_fp, dpi=dpi)
+
+    plt.close()
+
+
 def draw_2d_partition(
         leafs, varX, varY,
-        min_xy=(0,0), max_padding=1, stroke_width=1,
+        min_xy=(0,0), max_padding=1, stroke_width=1, draw_grid=True,
         actions=None, can_width=2400, can_height=1900, out_fp='./tmp.svg'
 ):
     if actions is None:
@@ -356,6 +443,7 @@ def draw_2d_partition(
 
     min_x, min_y = min_xy
     max_x, max_y = max_x + max_padding, max_y + max_padding
+    max_x, max_y = 14.2, 14.5
 
     boxes = []
     for i, ((x1, y1), (x2, y2)) in enumerate(boxes_pairs):
@@ -391,10 +479,11 @@ def draw_2d_partition(
         )
         d.append(r)
 
-    draw_grid(
-        d, 1, 1, min_x, min_y, math.ceil(max_x), math.ceil(max_y),
-        conv_x, conv_y, lines=True
-    )
+    if draw_grid:
+        draw_grid_lines(
+            d, 1, 1, min_x, min_y, math.ceil(max_x), math.ceil(max_y),
+            conv_x, conv_y, lines=True
+        )
     d.saveSvg(out_fp)
 
 
@@ -448,11 +537,14 @@ def prune_subtree(root, action):
             root.high = subtree
             return root, None
 
-        if leaf.state.min[root.variable] > root.bound:
-            return subtree, leaf
-        else:
-            root.high = subtree
-            return root, leaf
+        try:
+            if leaf.state.min[root.variable] > root.bound:
+                return subtree, leaf
+            else:
+                root.high = subtree
+                return root, leaf
+        except:
+            import ipdb; ipdb.set_trace()
 
     # right child is leaf, lef is new subtree
     #
