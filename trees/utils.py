@@ -2,7 +2,11 @@ import csv
 import json
 import pydot
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
 from collections import defaultdict
+from matplotlib.patches import Rectangle
 
 from trees.models import Node, Leaf, State
 
@@ -97,6 +101,46 @@ def draw_graph(trees, labels=None, out_fp='graph_drawing.png',
     else:
         print('format not supported')
 
+def draw_partitioning(
+    leaves, x_var, y_var, xlim, ylim, cmap,
+    dpi=100, lw=0, show=False, out_fp='./tmp.svg'
+):
+    min_x, max_x = xlim
+    min_y, max_y = ylim
+
+    fig, ax = plt.subplots()
+
+    for l in leaves:
+        s = l.state
+        try:
+            x_start, x_end = s.min_max(x_var, min_limit=min_x, max_limit=max_x)
+            y_start, y_end = s.min_max(y_var, min_limit=min_y, max_limit=max_y)
+        except:
+            import ipdb; ipdb.set_trace()
+        width = x_end - x_start
+        height = y_end - y_start
+        c = cmap[l.action]
+        ax.add_patch(
+            Rectangle(
+                (x_start, y_start), width, height, color=c, ec='black', lw=lw
+            )
+        )
+
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+
+    plt.xlabel(x_var)
+    plt.ylabel(y_var)
+
+    if show:
+        plt.show()
+
+    if out_fp is not None:
+        plt.savefig(out_fp, dpi=dpi)
+
+    plt.close()
+
+
 
 ####### Functions to load and add statistics to a tree #######
 
@@ -147,8 +191,8 @@ def count_visits(root, data, variables, step=1):
         a dictionary counting the times each action was chosen
     """
 
-    leafs = root.get_leafs()
-    for l in leafs:
+    leaves = root.get_leaves()
+    for l in leaves:
         l.visits = 0
         l.ratio = 0
 
@@ -168,7 +212,7 @@ def count_visits(root, data, variables, step=1):
             # import ipdb; ipdb.set_trace()
         last_a = leaf.action
 
-    for l in leafs:
+    for l in leaves:
         l.ratio = l.visits / total
 
     return actions
@@ -182,8 +226,8 @@ def add_stats(trees, stats, variables, max_ts, step_sz):
                 statistic
     """
     actions = defaultdict(int)
-    leafs = [l for ls in [t.get_leafs() for t in trees] for l in ls]
-    for l in leafs:
+    leaves = [l for ls in [t.get_leaves() for t in trees] for l in ls]
+    for l in leaves:
         l.visits = 0
         l.ratio = 0
         l.best = 0
@@ -217,7 +261,7 @@ def add_stats(trees, stats, variables, max_ts, step_sz):
                 l.visits += 1
 
     total = len(stats) * (max_ts / step_sz)
-    for l in leafs:
+    for l in leaves:
         try:
             l.ratio = l.visits / total
         except ZeroDivisionError:

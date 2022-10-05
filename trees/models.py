@@ -75,27 +75,6 @@ class State:
         return self.__str__()
 
 
-class Path:
-    def __init__(self, vertices=(), edges=()):
-        self.vertices = vertices
-        self.edges = vertices
-
-    def add_vertex(self, vertex, left):
-        vertices = self.vertices + (vertex,)
-        edges = self.edges if vertex.is_leaf else self.edges + (left,)
-        return Path(vertices=vertices, edges=edges)
-
-    def __str__(self):
-        s = ''
-        for v, e in zip(self.vertices, self.edges):
-            s += f'({v.variable}: {v.bound})'
-            s += f' -{"l" if e else "h"}-> '
-
-        if self.vertices[-1].is_leaf:
-            s += v.action
-
-        return s
-
 class Tree:
     def __init__(self, variables, actions, root=None):
         self.variables = variables
@@ -142,6 +121,7 @@ class Tree:
 
         return lres + hres
 
+
 class Node:
     def __init__(self, variable, bound, low=None, high=None, state=None):
         self.variable = variable
@@ -153,39 +133,11 @@ class Node:
 
     @property
     def size(self):
-        return self.count_leafs()
+        return self.count_leaves()
 
-    def advanced_prune(self, variables, actions):
-        state = [ ( None, None ) for _ in variables ]
-
-        amap = { a: state for a in actions }
-        vmap = { v: i for i, v in enumerate(variables) }
-
-        self.low._advanced_prune(state, vmap, amap.copy())
-
-    def _advanced_prune(self, state, vmap, amap):
-        vi = vmap[self.variable]
-
-        lstate = state[:vi] + [(state[vi][0], self)] + state[vi+1:]
-        hstate = state[:vi] + [(self, state[vi][1])] + state[vi+1:]
-
-        if self.low.is_leaf:
-            low_amap = amap.copy()
-            low_amap[self.action] = lstate
-        else:
-            low_amap = self.low._advanced_prune(lstate, vmap, amap.copy())
-
-        if self.high.is_leaf:
-            high_amap = amap.copy()
-            high_amap[self.action] = hstate
-        else:
-            high_amap = self.high._advanced_prune(hstate, vmap, amap.copy())
-
-        return
-
-    def count_leafs(self):
-        low_count = 1 if self.low.is_leaf else self.low.count_leafs()
-        high_count = 1 if self.high.is_leaf else self.high.count_leafs()
+    def count_leaves(self):
+        low_count = 1 if self.low.is_leaf else self.low.count_leaves()
+        high_count = 1 if self.high.is_leaf else self.high.count_leaves()
         return low_count + high_count
 
     def put_leaf(self, leaf, state):
@@ -213,20 +165,20 @@ class Node:
         else:
             return self.low.get_leaf(state)
 
-    def get_leafs(self):
+    def get_leaves(self):
         """
-        return a list of all leafs of this tree
+        return a list of all leaves of this tree
         """
-        leafs = []
-        self.low._get_leafs(leafs)
-        self.high._get_leafs(leafs)
-        return leafs
+        leaves = []
+        self.low._get_leaves(leaves)
+        self.high._get_leaves(leaves)
+        return leaves
 
-    def _get_leafs(self, leafs=[]):
-        self.low._get_leafs(leafs=leafs)
-        self.high._get_leafs(leafs=leafs)
+    def _get_leaves(self, leaves=[]):
+        self.low._get_leaves(leaves=leaves)
+        self.high._get_leaves(leaves=leaves)
 
-    def get_leafs_at_symbolic_state(self, state, pairs=[]):
+    def get_leaves_at_symbolic_state(self, state, pairs=[]):
         """
         Takes a symbolic state (of type `State`) and returns a list of tuples
         indicating each action/state combination found
@@ -235,10 +187,10 @@ class Node:
         var_min = float(var_min)
         var_max = float(var_max)
         if var_min <= self.bound:
-            pairs = self.low.get_leafs_at_symbolic_state(state, pairs)
+            pairs = self.low.get_leaves_at_symbolic_state(state, pairs)
 
         if var_max > self.bound:
-            pairs = self.high.get_leafs_at_symbolic_state(state, pairs)
+            pairs = self.high.get_leaves_at_symbolic_state(state, pairs)
 
         return pairs
 
@@ -350,8 +302,8 @@ class Node:
 
         # generate each tree
         for root, action in zip(roots, actions):
-            leafs = root.get_leafs()
-            for leaf in leafs:
+            leaves = root.get_leaves()
+            for leaf in leaves:
 
                 # if another action is here, make it very expensive
                 if leaf.action != action:
@@ -379,6 +331,12 @@ class Node:
 
         with open(path, 'w') as f:
             json.dump(meta, f, indent=4)
+
+    def __str__(self):
+        return f'Node(var: {self.variable}, bound: {self.bound})'
+
+    def __repr__(self):
+        return self.__str__()
 
     def __copy__(self):
         return type(self)(
@@ -514,7 +472,7 @@ class Node:
     def equivalent(cls, node1, node2):
         """
         Test if `node1` and `node2` are equivalent. Requires both nodes to
-        have leafs at both their `low` and `high` directions.
+        have leaves at both their `low` and `high` directions.
         """
         if not (node1.low.is_leaf and node1.high.is_leaf):
             return False
@@ -537,25 +495,25 @@ class Node:
         return True
 
     @classmethod
-    def get_all_leafs(cls, roots, sort=True):
-        leafs = [l for ls in [root.get_leafs() for root in roots] for l in ls]
+    def get_all_leaves(cls, roots, sort=True):
+        leaves = [l for ls in [root.get_leaves() for root in roots] for l in ls]
         if sort:
-            leafs.sort(key=lambda x: x.cost)
-        return leafs
+            leaves.sort(key=lambda x: x.cost)
+        return leaves
 
     @classmethod
-    def make_decision_tree_from_leafs(cls, leafs):
-        variables = leafs[0].state.variables
-        leafs.sort(key=lambda x: x.cost)
-        root = Node.make_root_from_leaf(leafs[0])
-        for i in range(1, len(leafs)):
-            root = root.put_leaf(leafs[i], State(variables))
+    def make_decision_tree_from_leaves(cls, leaves):
+        variables = leaves[0].state.variables
+        leaves.sort(key=lambda x: x.cost)
+        root = Node.make_root_from_leaf(leaves[0])
+        for i in range(1, len(leaves)):
+            root = root.put_leaf(leaves[i], State(variables))
 
         return root.prune()
 
     @classmethod
     def make_decision_tree_from_roots(cls, roots):
-        return cls.make_decision_tree_from_leafs(cls.get_all_leafs(roots))
+        return cls.make_decision_tree_from_leaves(cls.get_all_leaves(roots))
 
     @classmethod
     def get_var_data(cls, root, variables=None):
@@ -612,12 +570,6 @@ class Node:
         node.low = low
         node.high = high
         return node.prune()
-
-    def __str__(self):
-        return f'Node(var: {self.variable}, bound: {self.bound})'
-
-    def __repr__(self):
-        return self.__str__()
 
 
 class Leaf:
@@ -695,13 +647,13 @@ class Leaf:
             memo[id_self] = _copy
         return _copy
 
-    def _get_leafs(self, leafs=[]):
-        leafs.append(self)
+    def _get_leaves(self, leaves=[]):
+        leaves.append(self)
 
     def get_leaf(self, state):
         return self
 
-    def get_leafs_at_symbolic_state(self, state, pairs=[]):
+    def get_leaves_at_symbolic_state(self, state, pairs=[]):
         """
         Append the local state of the leaf to `pairs` and return the list
         """
