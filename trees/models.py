@@ -178,6 +178,19 @@ class Node:
         self.low._get_leaves(leaves=leaves)
         self.high._get_leaves(leaves=leaves)
 
+    def get_leaves_at_symbolic_state2(self, min_state, max_state, pairs=[]):
+        if min_state[self.variable] < self.bound:
+            pairs = self.low.get_leaves_at_symbolic_state2(
+                min_state, max_state, pairs
+            )
+
+        if max_state[self.variable] > self.bound:
+            pairs = self.high.get_leaves_at_symbolic_state2(
+                min_state, max_state, pairs
+            )
+
+        return pairs
+
     def get_leaves_at_symbolic_state(self, state, pairs=[]):
         """
         Takes a symbolic state (of type `State`) and returns a list of tuples
@@ -652,6 +665,20 @@ class Leaf:
 
     def get_leaf(self, state):
         return self
+
+    def get_leaves_at_symbolic_state2(self, min_state, max_state, pairs=[]):
+        """
+        Append the local state of the leaf to `pairs` and return the list
+        """
+        pairs.append(self)
+        return pairs
+
+    def get_leaves_at_symbolic_state(self, state, pairs=[]):
+        """
+        Append the local state of the leaf to `pairs` and return the list
+        """
+        pairs.append(self)
+        return pairs
 
     def get_leaves_at_symbolic_state(self, state, pairs=[]):
         """

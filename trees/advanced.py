@@ -1,11 +1,22 @@
 import json
 import math
+import heapq
 import random
-import drawSvg as draw
+import numpy as np
 
 from decimal import *
 from collections import defaultdict
 from trees.models import Node, Leaf, State
+
+class Point:
+    def __init__(self, p):
+        self.p = p
+
+    def __lt__(self, other):
+        return tuple(self.p) < tuple(other.p)
+
+    def __eq__(self, orhter):
+        return self.p == other.p
 
 
 def build_state(intervals):
@@ -15,6 +26,45 @@ def build_state(intervals):
         state.greater_than(var, min_v)
         state.less_than(var, max_v)
     return state
+
+def get_next_np(p, bs, max_i):
+    """
+    p:  (K,) array of indicies
+    bs: (K, M) array of bounds, where M is the padded max number of bounds
+    max_i: (K,) array of max number of bounds for each dimension
+    """
+    dims = np.arange(len(p))
+    args = np.argsort(np.abs(bs[dims, p+1] - bs[dims, p]))
+    i = args[np.logical_and(bs[args,-1] == 0, p[args] + 1 <= max_i[args])][0]
+    p[i] += 1
+    return p, i
+
+def get_next_pidxs(p_idxs, bounds, variables, exhausted):
+    best_d = math.inf
+    best_v = None
+
+    for i in range(len(p_idxs)):
+        if i in exhausted or p_idxs[i] == len(bounds[i]) - 1:
+            continue
+
+        dist = bounds[i][p_idxs[i] + 1] - bounds[i][p_idxs[i]]
+        if dist < best_d:
+            best_d = dist
+            best_v = i
+
+    if best_v is not None:
+        p_idxs[best_v] += 1
+
+    return p_idxs, best_v
+
+def is_explored(min_state, max_state, tree):
+    if tree is None:
+        return False
+    return len([
+        l for l in tree.get_leaves_at_symbolic_state2(
+            min_state, max_state, pairs=[]
+        ) if l.action is not None
+    ]) > 0
 
 
 def max_parts2(root, variables, eps=0.001, max_vals=None, min_vals=None):
@@ -28,9 +78,6 @@ def max_parts2(root, variables, eps=0.001, max_vals=None, min_vals=None):
                   provided, the minimum values will be calculated by subtracting
                   1 from the smallest bound for each variable
     """
-    var2id = { v: i for i, v in enumerate(variables) }
-    id2var = { i: v for i, v in enumerate(variables) }
-
     if max_vals is None:
         max_vals = [math.inf for _ in variables]
 
@@ -39,27 +86,35 @@ def max_parts2(root, variables, eps=0.001, max_vals=None, min_vals=None):
         v: m for v, m in zip(variables, min_vals)
     }
 
-    # for numerically safe addition/subtraction
-    eps = Decimal(str(eps))
+    K = len(variables)
+    dims = np.arange(K)
+    max_i = np.zeros((K,), dtype=int)
 
     # build the list of constraints
-    constraints = []
-    all_bounds = root.get_bounds()  # assumed to be sorted in ascending order
-    for var, bounds in all_bounds.items():
+    bounds_list = []
+    vbounds = root.get_bounds()  # assumed to be sorted in ascending order
+    for i in range(K):
+        v = variables[i]
         if min_vals is None:
-            min_var_vals[var] = bounds[0] - 1
-        constraints += [((var2id[var]), min_var_vals[var])] +[
-            (var2id[var], b) for b in bounds
-        ] + [(var2id[var], max_var_vals[var])]
+            min_var_vals[v] = vbounds[v][0] - 1
 
-    # a point is given by the index of the bounds in place
-    start_point = tuple(0 for _ in variables)
+        vbounds[v].insert(0, min_var_vals[v])
+        vbounds[v].append(max_var_vals[v])
+
+        max_i[i] = len(vbounds[v]) - 1
+        bounds_list.append(vbounds[v])
+
+    bounds = np.zeros((K, max_i.max() + 2))
+    bounds[:,:-1] -= 1
+    for i in range(K):
+        bounds[i,:max_i[i]+1] = bounds_list[i]
 
     # start the list of points from the minimum values
-    points = [start_point]
+    points = [[0 for _ in range(K)]]
+    heapq.heapify(points)
 
     # store the boxes
-    boxes = []
+    regions = []
 
     # define a tree to keep track of what has been covered
     tree = None
@@ -67,112 +122,81 @@ def max_parts2(root, variables, eps=0.001, max_vals=None, min_vals=None):
     while len(points) > 0:
 
         # reset exhausted variables
-        exhausted = []
+        bounds[:,-1] = 0
 
         # sort points 'from left to right' and get first one
-        points.sort()
-        p_idxs = points.pop(0)
+        p_min = np.array(heapq.heappop(points), dtype=int)
+        p_max = p_min.copy() + 1
 
-        # real p
-        p = tuple(all_bounds[v][p_idxs[var2id[v]]] for v in variables)
-
-        # add epsilon to 'enter' the box
-        p = tuple(Decimal(str(x)) + eps for x in p)
+        # set exhausted
+        bounds[:,-1][p_max == max_i] = 1
 
         # define the state
-        state = { v: p[var2id[v]] for v in variables }
+        min_state = { variables[i]: bounds[i][p_min[i]] for i in range(K) }
+        max_state = { variables[i]: bounds[i][p_max[i]] for i in range(K) }
 
         # check if we have already explored this state
-        if tree is not None:
-            leaf = tree.get_leaf(state)
-            if leaf.action is not None:
-                continue
+        if is_explored(min_state, max_state, tree):
+            continue
 
-        # sort constraints according to our current point
-        constraints.sort(key=lambda x: -(p[x[0]] - Decimal(str(x[1]))))
+        while True:
+            # save old p_max and grow in some direction
+            old_p_max = p_max.copy()
+            p_max, v = get_next_np(p_max, bounds, max_i)
 
-        # get action at state
-        action = root.get_leaf(state).action
-
-        # go through constrains
-        for i in range(len(constraints)):
-
-            # extract constraint values (variable and bound)
-            var, bound = constraints[i]
-
-            # since we don't remove constraints, we should skip those, that we have
-            # already checked previously (ie. those smaller than our current point)
-            if bound <= p[var]:
-                continue
-
-            # continue if var is exhausted
-            if var in exhausted:
-                continue
-
-            # remember our old state, if we have to roll back
-            old_val = state[variables[var]]
-
-            # update the state with the bound of the new constraint
-            state[variables[var]] = bound
-
-            # construct a symbolic state
-            sym_state = build_state({
-                v: (p[var2id[v]], state[v]) for v in variables
-            })
-
-            # check if we have already explored this state
-            explored = False
-            if tree is not None:
-                explored = [
-                    l for l in tree.get_leaves_at_symbolic_state(sym_state, pairs=[])
-                    if l.action is not None
-                ]
+            # check if new p_max is explored
+            max_state[variables[v]] = bounds[v][p_max[v]]
+            explored = is_explored(min_state, max_state, tree)
 
             # check if our new state returns a different action
-            state_actions = []
-            if not explored:  # but skip
-                leaves = root.get_leaves_at_symbolic_state(sym_state, pairs=[])
-                state_actions = set([l.action for l in leaves])
+            leaves = root.get_leaves_at_symbolic_state2(
+                min_state, max_state, pairs=[]
+            )
+            actions = set([l.action for l in leaves])
 
-            if len(state_actions) > 1 or explored or bound == max_var_vals[variables[var]]:
-
-                # roll back to last state
-                if len(state_actions) > 1 or explored:
-                    state[variables[var]] = old_val
+            if (len(actions) > 1 or explored or p_max[v] == max_i[v]):
 
                 # mark variable as exhausted
-                exhausted.append(var)
+                bounds[v,-1] = 1
+
+                # roll back to last state
+                if len(actions) > 1 or explored:
+                    p_max = old_p_max
+                    max_state[variables[v]] = bounds[v][p_max[v]]
 
                 # continue if we still have unexhausted variables
-                if len(exhausted) < len(variables):
+                if np.sum(bounds[:,-1]) < K:
                     continue
-
-                # otherwise, store the big box as a leaf
-                box = build_state({
-                    v: (float(p[var2id[v]] - eps), state[v])
-                    for v in variables
-                })
-                leaf = Leaf(cost=0, action=action, state=box)
-                boxes.append(leaf)
-
-                # add to the tree, so we know not to explore this part again
-                if tree is not None:
-                    tree.put_leaf(leaf, State(variables))
-                # or create the tree if we haven't done so yet
                 else:
-                    tree = Node.make_root_from_leaf(leaf)
+                    break
 
-                # add new points from which to start later
-                for v in variables:
-                    if p[var2id[v]] != state[v] and state[v] < max_var_vals[v]:
-                        points.append(tuple(
-                            float(p[var2id[w]] - eps)
-                            if w != v else state[w]
-                            for w in variables
-                        ))
-                break
+        # otherwise, store the big box as a leaf
+        state = build_state({
+            variables[i]: (bounds[i][p_min[i]], bounds[i][p_max[i]])
+            for i in range(K)
+        })
+        action = root.get_leaf(state.center(point=False)).action
+        leaf = Leaf(cost=0, action=action, state=state)
+        regions.append(leaf)
 
-    return boxes
+        # add to the tree, so we know not to explore this part again
+        if tree is not None:
+            tree.put_leaf(leaf, State(variables))
+        # or create the tree if we haven't done so yet
+        else:
+            tree = Node.make_root_from_leaf(leaf)
+
+        # add new points from which to start later
+        for i in range(K):
+            if (p_min[i] != p_max[i] and
+                p_max[i] < max_i[i]):
+
+                new_p = [idx for idx in p_min]
+                new_p[i] = p_max[i]
+                heapq.heappush(points, new_p)
+                # points.append(Point(np.array(new_p)))
+
+    return regions
 
 
 def max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
