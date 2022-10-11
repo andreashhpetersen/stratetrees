@@ -112,11 +112,8 @@ def draw_partitioning(
 
     for l in leaves:
         s = l.state
-        try:
-            x_start, x_end = s.min_max(x_var, min_limit=min_x, max_limit=max_x)
-            y_start, y_end = s.min_max(y_var, min_limit=min_y, max_limit=max_y)
-        except:
-            import ipdb; ipdb.set_trace()
+        x_start, x_end = s.min_max(x_var, min_limit=min_x, max_limit=max_x)
+        y_start, y_end = s.min_max(y_var, min_limit=min_y, max_limit=max_y)
         width = x_end - x_start
         height = y_end - y_start
         c = cmap[l.action]
@@ -277,15 +274,17 @@ def add_stats(trees, stats, variables, max_ts, step_sz):
 
 ####### Function to load and build tree #######
 
-def build_tree(tree, a, variables=None):
+def build_tree(tree, a, varmap):
     if isinstance(tree, float) or isinstance(tree, int):
         return Leaf(float(tree), action=a)
 
     return Node(
-        tree['var'] if variables is None else variables[tree['var']],
+        tree['var'],
+        varmap[tree['var']],
+        # tree['var'] if variables is None else variables[tree['var']],
         tree['bound'],
-        low=build_tree(tree['low'], a, variables),
-        high=build_tree(tree['high'], a, variables)
+        low=build_tree(tree['low'], a, varmap),
+        high=build_tree(tree['high'], a, varmap)
     )
 
 def get_uppaal_data(data):
@@ -302,11 +301,12 @@ def load_tree(fp, loc='(1)', verbosity=0):
         data = json.load(f)
 
     variables = data['pointvars']
+    varmap = { v: i for i, v in enumerate(variables) }
     roots = []
     trees = data['regressors'][loc]['regressor']
     actions = []
     for action, tree in trees.items():
-        root = build_tree(tree, action, variables)
+        root = build_tree(tree, action, varmap)
         root.set_state(State(variables))
         roots.append(root)
         actions.append(action)

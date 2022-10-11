@@ -5,18 +5,9 @@ import random
 import numpy as np
 
 from decimal import *
+from time import perf_counter
 from collections import defaultdict
-from trees.models import Node, Leaf, State
-
-class Point:
-    def __init__(self, p):
-        self.p = p
-
-    def __lt__(self, other):
-        return tuple(self.p) < tuple(other.p)
-
-    def __eq__(self, orhter):
-        return self.p == other.p
+from trees.models import Node, Leaf, State, Tree
 
 
 def build_state(intervals):
@@ -27,47 +18,31 @@ def build_state(intervals):
         state.less_than(var, max_v)
     return state
 
-def get_next_np(p, bs, max_i):
+def grow(p, bs, max_i):
     """
+    Finds the next dimension `i' from point `p' that minimizes the difference
+    between bounds `bs_i[p_i]' and `bs_i[p_i + 1]'. Only unexhausted dimensions
+    (ie. where `bs[i][-1] != 0') that are not already at max (ie. `where p[i] +
+    1 <= max_i[i]') are considered. Returns the new point and the update
+    dimension.
+
     p:  (K,) array of indicies
     bs: (K, M) array of bounds, where M is the padded max number of bounds
     max_i: (K,) array of max number of bounds for each dimension
     """
     dims = np.arange(len(p))
-    args = np.argsort(np.abs(bs[dims, p+1] - bs[dims, p]))
-    i = args[np.logical_and(bs[args,-1] == 0, p[args] + 1 <= max_i[args])][0]
+    idxs = np.argsort(np.abs(bs[dims, p+1] - bs[dims, p]))
+    i = idxs[np.logical_and(bs[idxs,-1] == 0, p[idxs] + 1 <= max_i[idxs])][0]
     p[i] += 1
     return p, i
 
-def get_next_pidxs(p_idxs, bounds, variables, exhausted):
-    best_d = math.inf
-    best_v = None
-
-    for i in range(len(p_idxs)):
-        if i in exhausted or p_idxs[i] == len(bounds[i]) - 1:
-            continue
-
-        dist = bounds[i][p_idxs[i] + 1] - bounds[i][p_idxs[i]]
-        if dist < best_d:
-            best_d = dist
-            best_v = i
-
-    if best_v is not None:
-        p_idxs[best_v] += 1
-
-    return p_idxs, best_v
-
 def is_explored(min_state, max_state, tree):
-    if tree is None:
+    if tree.root is None:
         return False
-    return len([
-        l for l in tree.get_leaves_at_symbolic_state2(
-            min_state, max_state, pairs=[]
-        ) if l.action is not None
-    ]) > 0
+    return len(tree.get_for_region(min_state, max_state)) > 0
 
 
-def max_parts2(root, variables, eps=0.001, max_vals=None, min_vals=None):
+def max_parts2(tree, min_vals=None, max_vals=None, padding=1):
     """
     Args:
         root: the root `Node` from which to extract boxes
@@ -78,91 +53,114 @@ def max_parts2(root, variables, eps=0.001, max_vals=None, min_vals=None):
                   provided, the minimum values will be calculated by subtracting
                   1 from the smallest bound for each variable
     """
+
+    # the number of state dimensions
+    K = len(tree.variables)
+
+    if min_vals is None:
+        min_vals = [None for _ in range(K)]
+
     if max_vals is None:
-        max_vals = [math.inf for _ in variables]
+        max_vals = [None for _ in range(K)]
 
-    max_var_vals = { v: m for v, m in zip(variables, max_vals) }
-    min_var_vals = {} if min_vals is None else {
-        v: m for v, m in zip(variables, min_vals)
-    }
+    # each element in vbounds is a list of constraints for a specific dimension
+    vbounds = tree.get_bounds()  # assumed to be sorted in ascending order
 
-    K = len(variables)
-    dims = np.arange(K)
+    # store the number of constraints for any dimension i (for indexing)
     max_i = np.zeros((K,), dtype=int)
 
-    # build the list of constraints
-    bounds_list = []
-    vbounds = root.get_bounds()  # assumed to be sorted in ascending order
+    # build list of constraints
+    bounds = []
     for i in range(K):
-        v = variables[i]
-        if min_vals is None:
-            min_var_vals[v] = vbounds[v][0] - 1
+        bs = np.array(vbounds[i])
 
-        vbounds[v].insert(0, min_var_vals[v])
-        vbounds[v].append(max_var_vals[v])
+        # add min and max values if there are none
+        if min_vals[i] is None:
+            min_vals[i] = np.amin(bs) - padding
 
-        max_i[i] = len(vbounds[v]) - 1
-        bounds_list.append(vbounds[v])
+        if max_vals[i] is None:
+            max_vals[i] = np.amax(bs) + padding
 
-    bounds = np.zeros((K, max_i.max() + 2))
-    bounds[:,:-1] -= 1
+        # make list of constraints in range [min_val, max_val] (inclusive)
+        bs = np.hstack((
+            min_vals[i],
+            bs[np.logical_and(bs > min_vals[i], bs < max_vals[i])],
+            max_vals[i]
+        ))
+
+        # register number of constraints minus 1 (ie. the index of the last
+        # constraint)
+        max_i[i] = bs.shape[0] - 1
+
+        # add the array to the list of bounds
+        bounds.append(bs)
+
+    # arrange the constraints in a (K,M) matrix, where M is the length of the
+    # largest list of constraints + 1. The + 1 is for marking the dimension as
+    # exhausted
+    max_len = np.amax(max_i) + 2
     for i in range(K):
-        bounds[i,:max_i[i]+1] = bounds_list[i]
+        bounds[i] = np.pad(bounds[i], (0, max_len - bounds[i].shape[0]))
+    bounds = np.vstack(bounds)
 
     # start the list of points from the minimum values
     points = [[0 for _ in range(K)]]
+
+    # we use a heap to process the points in a lexical order
     heapq.heapify(points)
 
-    # store the boxes
+    # define a tree to keep track of what has been covered
+    track = Tree.empty_tree(tree.variables, [])  # actions arg doesn't matter
+
+    # this is what we return in the end - lets start!
     regions = []
 
-    # define a tree to keep track of what has been covered
-    tree = None
-
+    # we keep going for as long as there are points
     while len(points) > 0:
 
-        # reset exhausted variables
-        bounds[:,-1] = 0
-
-        # sort points 'from left to right' and get first one
+        # p_min and p_max contains indicies of the current constraints
         p_min = np.array(heapq.heappop(points), dtype=int)
         p_max = p_min.copy() + 1
 
-        # set exhausted
-        bounds[:,-1][p_max == max_i] = 1
-
-        # define the state
-        min_state = { variables[i]: bounds[i][p_min[i]] for i in range(K) }
-        max_state = { variables[i]: bounds[i][p_max[i]] for i in range(K) }
+        # define the region spanned by min_state and max_state
+        min_state = bounds[np.arange(K),p_min]
+        max_state = bounds[np.arange(K),p_max]
 
         # check if we have already explored this state
-        if is_explored(min_state, max_state, tree):
+        if is_explored(min_state, max_state, track):
             continue
 
+        # get the action that the entire region must agree on
+        action = tree.get(max_state)
+
+        # reset exhausted variables
+        bounds[:,-1] = 0
+        bounds[:,-1][p_max == max_i] = 1
+
         while True:
-            # save old p_max and grow in some direction
-            old_p_max = p_max.copy()
-            p_max, v = get_next_np(p_max, bounds, max_i)
+            # grow in dimension w and update p_max and max_state
+            p_max, v = grow(p_max, bounds, max_i)
+            max_state[v] = bounds[v][p_max[v]]
 
-            # check if new p_max is explored
-            max_state[variables[v]] = bounds[v][p_max[v]]
-            explored = is_explored(min_state, max_state, tree)
+            # state to express difference between previous max_state and current
+            diff_state = min_state.copy()
+            diff_state[v] = bounds[v][p_max[v] - 1]
 
-            # check if our new state returns a different action
-            leaves = root.get_leaves_at_symbolic_state2(
-                min_state, max_state, pairs=[]
-            )
-            actions = set([l.action for l in leaves])
+            # check if new region is explored
+            explored = is_explored(diff_state, max_state, track)
 
-            if (len(actions) > 1 or explored or p_max[v] == max_i[v]):
+            # check if our new region returns a more than one action
+            actions = tree.get_for_region(diff_state, max_state)
+
+            if (actions != set(action) or explored or p_max[v] == max_i[v]):
 
                 # mark variable as exhausted
                 bounds[v,-1] = 1
 
                 # roll back to last state
-                if len(actions) > 1 or explored:
-                    p_max = old_p_max
-                    max_state[variables[v]] = bounds[v][p_max[v]]
+                if actions != set(action) or explored:
+                    p_max[v] -= 1
+                    max_state[v] = diff_state[v]
 
                 # continue if we still have unexhausted variables
                 if np.sum(bounds[:,-1]) < K:
@@ -170,31 +168,26 @@ def max_parts2(root, variables, eps=0.001, max_vals=None, min_vals=None):
                 else:
                     break
 
-        # otherwise, store the big box as a leaf
-        state = build_state({
-            variables[i]: (bounds[i][p_min[i]], bounds[i][p_max[i]])
-            for i in range(K)
-        })
-        action = root.get_leaf(state.center(point=False)).action
+        # create the region as a leaf with a state spanned by min_state and
+        # max_state
+        state = State(tree.variables, np.vstack((min_state, max_state)).T)
         leaf = Leaf(cost=0, action=action, state=state)
         regions.append(leaf)
 
-        # add to the tree, so we know not to explore this part again
-        if tree is not None:
-            tree.put_leaf(leaf, State(variables))
-        # or create the tree if we haven't done so yet
+        # create the root of the tracking tree if we haven't done so yet
+        if track.root is None:
+            track.root = Tree.make_root_from_leaf(track, leaf)
+        # or add to the tree, so we know not to explore this part again
         else:
-            tree = Node.make_root_from_leaf(leaf)
+            track.put_leaf(leaf)
 
         # add new points from which to start later
         for i in range(K):
-            if (p_min[i] != p_max[i] and
-                p_max[i] < max_i[i]):
+            if (p_min[i] != p_max[i] and p_max[i] < max_i[i]):
 
                 new_p = [idx for idx in p_min]
                 new_p[i] = p_max[i]
                 heapq.heappush(points, new_p)
-                # points.append(Point(np.array(new_p)))
 
     return regions
 
@@ -371,7 +364,7 @@ def split_box(leaf, v, c):
     return low, high
 
 
-def find_best_cut(boxes, variables):
+def find_best_cut(boxes, variables, vmap):
 
     # map each variable to a sorted list of indicies of the leaves in `boxes'
     # where the sorting is done according to maximum value of the respective
@@ -384,7 +377,7 @@ def find_best_cut(boxes, variables):
 
             # this sorts the above indicies in ascending order according to the
             # maximum value of v in the box that the index corresponds to
-            key=lambda x: (boxes[x].state.max[v], boxes[x].state.min[v])
+            key=lambda x: list(boxes[x].state.min_max(v))[::-1]
         )
 
         # iterate the variables
@@ -405,11 +398,11 @@ def find_best_cut(boxes, variables):
         for i in range(len(curr_l) - 1):
 
             # this is the lowest max value for v in the rest of the list (ie.
-            # boxes[curr_l[i]].state.max[v] <= boxes[curr_l[j]].state.max[v]
+            # boxes[curr_l[i]].state.max(v) <= boxes[curr_l[j]].state.max(v)
             # for all j > i)
-            max_v = boxes[curr_l[i]].state.max[v]
+            max_v = boxes[curr_l[i]].state.max(v)
 
-            if max_v == boxes[curr_l[i+1]].state.max[v]:
+            if max_v == boxes[curr_l[i+1]].state.max(v):
                 continue
 
             # ideally, we'd split at i == len(boxes) / 2, so we start by
@@ -423,7 +416,7 @@ def find_best_cut(boxes, variables):
                 # if the min value for v in curr_l[j] is less that max_v, we
                 # know that the box will be cut in 2, since it's max value for
                 # v by design must be greater than max_v
-                if boxes[curr_l[j]].state.min[v] < max_v:
+                if boxes[curr_l[j]].state.min(v) < max_v:
                     impurity += 1
 
             # add the triplet to our list of possible cuts
@@ -437,7 +430,7 @@ def find_best_cut(boxes, variables):
     v, b_id, _ = sorted(cuts, key=lambda x: x[2])[0]
 
     # grab that optimal value
-    max_val = boxes[max_sorted[v][b_id]].state.max[v]
+    max_val = boxes[max_sorted[v][b_id]].state.max(v)
 
     # separate the boxes into list of those that are lower than our cut, those
     # that are higher or both if it falls on both sides of the cut
@@ -454,29 +447,32 @@ def find_best_cut(boxes, variables):
         import ipdb; ipdb.set_trace()
 
     # create the new branch node with a cut on v <= max_val
-    node = Node(v, max_val)
+    node = Node(v, vmap[v], max_val)
 
     return node, low, high
 
 
-def cut_to_node(boxes, variables, lvl):
+def cut_to_node(boxes, variables, vmap):
     if len(boxes) == 1:
         return Leaf(0.0, action=boxes[0].action)
 
-    res = find_best_cut(boxes, variables)
+    res = find_best_cut(boxes, variables, vmap)
     if isinstance(res, Leaf):
         return res
 
     # else
     node, low, high = res
-    node.low = cut_to_node(low, variables, lvl+1)
-    node.high = cut_to_node(high, variables, lvl+1)
+    node.low = cut_to_node(low, variables, vmap)
+    node.high = cut_to_node(high, variables, vmap)
     return node
 
 
-def boxes_to_tree(boxes, variables):
-    tree = cut_to_node(boxes, variables, 1).prune()
-    tree.set_state(State(variables))
+def boxes_to_tree(boxes, variables, actions=[]):
+    tree = Tree.empty_tree(variables, actions)
+    root = cut_to_node(boxes, variables, tree.var2id).prune()
+    root.set_state(State(variables))
+    tree.root = root
+    tree.size = root.size
     return tree
 
 

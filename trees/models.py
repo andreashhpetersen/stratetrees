@@ -1,15 +1,34 @@
 import json
 import math
 import pydot
+import numpy as np
 from copy import deepcopy
 from random import shuffle
 
 
 class State:
-    def __init__(self, variables):
+    def __init__(self, variables, constraints=None):
         self.variables = variables
-        self.min = { v: -math.inf for v in variables }
-        self.max = { v: math.inf  for v in variables }
+        self.var2id = { v: i for i, v in enumerate(variables) }
+
+        if constraints is None:
+            constraints = np.vstack(
+                (
+                    np.ones((len(variables),)) * -np.inf,
+                    np.ones((len(variables),)) * np.inf,
+                )
+            ).T
+        self.constraints = constraints
+
+    def min(self, var):
+        if isinstance(var, str):
+            var = self.var2id[var]
+        return self.constraints[var,0]
+
+    def max(self, var):
+        if isinstance(var, str):
+            var = self.var2id[var]
+        return self.constraints[var,1]
 
     def center(self, point=True):
         """
@@ -31,42 +50,38 @@ class State:
         return center if point else vcenters
 
     def greater_than(self, var, bound):
-        self.min[var] = bound
+        if isinstance(var, str):
+            var = self.var2id[var]
+        self.constraints[var,0] = bound
 
     def less_than(self, var, bound):
-        self.max[var] = bound
+        if isinstance(var, str):
+            var = self.var2id[var]
+        self.constraints[var,1] = bound
 
     def min_max(self, var, min_limit=-math.inf, max_limit=math.inf):
         """
-        Return a tuple of the min and max values of `var` in this state
+        Return a np.arry of the min and max values of `var` in this state
 
         params:
             var:        the variable to check
             limit_val:  (optional) the value to return if `var` has no limit
                         (defaults to `math.inf` or `-math.inf`)
         """
-        var_min = self.min[var] if self.min[var] != -math.inf else min_limit
-        var_max = self.max[var] if self.max[var] != math.inf else max_limit
-        return var_min, var_max
+        if isinstance(var, str):
+            var = self.var2id[var]
+        vbounds = self.constraints[var]
+        vmin = vbounds[0] if vbounds[0] > -np.inf else min_limit
+        vmax = vbounds[1] if vbounds[0] < np.inf else max_limit
+        return vmin, vmax
 
     def copy(self):
-        state = State(self.variables)
-        state.min = self.min.copy()
-        state.max = self.max.copy()
+        state = State(self.variables, constraints=self.constraints.copy())
         return state
-
-    def contains(self, other):
-        for var in self.variables:
-            if not (
-                self.min[var] <= other.min[var] and
-                    self.max[var] >= other.max[var]
-            ):
-                return False
-        return True
 
     def __str__(self):
         ranges = [
-            '{}: [{},{}]'.format(var, self.min[var], self.max[var])
+            '{}: [{},{}]'.format(var, self.min(var), self.max(var))
             for var in self.variables
         ]
         return f"State({', '.join(ranges)})"
@@ -76,60 +91,159 @@ class State:
 
 
 class Tree:
-    def __init__(self, variables, actions, root=None):
-        self.variables = variables
-        self.actions = actions
+    def __init__(self, root, variables, actions, size=None):
         self.root = root
+        self.variables = variables
+        self.var2id = { v: i for i, v in enumerate(variables) }
+        self.actions = actions
+        self.act2id = { a: i for i, a in enumerate(actions) }
+        self.size = size
 
-    def get_paths(self):
-        if self.root is None:
-            raise ValueError('Tree has no root node')
+    def get(self, state, leaf=False):
+        """
+        Get the action/decision associated with `state'. If `leaf=True', the
+        entire `Leaf' is returned.
+        """
+        l = self.root.get(state)
+        if leaf:
+            return l
+        return l.action
 
-        return self._get_paths(self.root, ())
+    def get_for_region(self, min_state, max_state, actions=True):
+        return self.root.get_for_region(
+            min_state, max_state, actions=actions, collect=set()
+        )
 
-    def _get_paths(self, node, path):
-        if node.is_leaf:
-            return path + (node,)
+    def get_bounds(self):
+        bounds = self.root.get_bounds([set() for _ in self.variables])
+        return [sorted(list(vbounds)) for vbounds in bounds]
 
-        path = path + (node,)
-        lps = self._get_paths(node.low, path)
-        hps = self._get_paths(node.high, path)
-        return lps + hps
+    def get_leaves(self):
+        return self.root.get_leaves()
 
-    def advanced_prune(self):
-        assert self.root is not None
+    def put_leaf(self, leaf):
+        self.root.put_leaf(leaf, State(self.variables))
 
+    def save_as(self, filepath):
+        """
+        Save tree as json to a file at `filepath`.
+        """
+        data = {
+            'variables': self.variables,
+            'actions': self.actions,
+            'root': self.root.as_dict()
+        }
+        with open(filepath, 'w') as f:
+            json.dump(data, f, indent=4)
 
-        res = self._advanced_prune(self.root, [])
-        return res
+    @classmethod
+    def empty_tree(cls, variables, actions):
+        """
+        Initialize and return an empty tree with given `variables' and
+        `actions'
+        """
+        return Tree(None, variables, actions)
 
-    def _advanced_prune(self, node, path):
-        if node.is_leaf:
-            state = { v: [None, None] for v in self.variables }
-            for i in range(len(path) - 1, -1, -1):
-                n, sub = path[i]
-                if state[n.variable][sub] is None:
-                    state[n.variable][sub] = n
-            return ((state, node.action),)
+    @classmethod
+    def get_all_leaves(cls, roots, sort=True):
+        leaves = [l for ls in [root.get_leaves() for root in roots] for l in ls]
+        if sort:
+            leaves.sort(key=lambda x: x.cost)
+        return leaves
 
-        lres = self._advanced_prune(node.low, path + [(node, 1)])
-        hres = self._advanced_prune(node.high, path + [(node, 0)])
+    @classmethod
+    def build_from_leaves(cls, leaves, variables, actions):
+        tree = Tree.empty_tree(variables, actions)
+        leaves.sort(key=lambda x: x.cost)
+        root = Tree.make_root_from_leaf(tree, leaves[0])
+        for i in range(1, len(leaves)):
+            root = root.put_leaf(leaves[i], State(variables))
 
-        if len(lres) == len(hres) == 1:
-            if lres[0][1] == hres[0][1]:
-                pass
+        tree.root = root.prune()
+        tree.size = root.size
+        return tree
 
-        return lres + hres
+    @classmethod
+    def build_from_roots(cls, roots, variables, actions):
+        return cls.build_from_leaves(cls.get_all_leaves(roots))
+
+    @classmethod
+    def make_root_from_leaf(cls, tree, leaf):
+        root = None
+        last = None
+        for var in tree.variables:
+            var_min, var_max = leaf.state.min_max(
+                var, min_limit=None, max_limit=None
+            )
+            if var_min is not None:
+                new_node = Node(var, tree.var2id[var], var_min)
+                new_node.low = Leaf(math.inf, action=None)
+
+                if last is None:
+                    last = new_node
+                else:
+                    if last.low is None:
+                        last.low = new_node
+                    else:
+                        last.high = new_node
+
+                    last = new_node
+
+                if root is None:
+                    root = last
+
+            if var_max is not None:
+                new_node = Node(var, tree.var2id[var], var_max)
+                new_node.high = Leaf(math.inf, action=None)
+
+                if last is None:
+                    last = new_node
+                else:
+                    if last.low is None:
+                        last.low = new_node
+                    else:
+                        last.high = new_node
+
+                    last = new_node
+
+                if root is None:
+                    root = last
+
+        if last.low is None:
+            last.low = leaf
+        else:
+            last.high = leaf
+
+        root.set_state(State(tree.variables))
+        return root
+
+    @classmethod
+    def load_from_file(cls, filepath):
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+
+        variables = data['variables']
+        actions = data['actions']
+
+        var2id = { v: i for i, v in enumerate(variables) }
+        act2id = { a: i for i, a in enumerate(actions) }
+
+        root = Node.build_from_dict(data['root'], var2id, act2id)
+        root.set_state(State(variables))
+        return Tree(root, variables, actions, size=root.size)
 
 
 class Node:
-    def __init__(self, variable, bound, low=None, high=None, state=None):
+    def __init__(self, variable, var_id, bound, low=None, high=None, state=None):
         self.variable = variable
         self.bound = bound
         self.state = state
         self.low = low
         self.high = high
         self.is_leaf = False
+
+        self.var_name = variable
+        self.var_id = var_id
 
     @property
     def size(self):
@@ -156,6 +270,12 @@ class Node:
 
         return self
 
+    def get(self, state):
+        if state[self.var_id] <= self.bound:
+            return self.low.get(state)
+        else:
+            return self.high.get(state)
+
     def get_leaf(self, state):
         """
         Get a particular leaf corresponding to the given `state`
@@ -177,6 +297,19 @@ class Node:
     def _get_leaves(self, leaves=[]):
         self.low._get_leaves(leaves=leaves)
         self.high._get_leaves(leaves=leaves)
+
+    def get_for_region(self, min_state, max_state, actions, collect):
+        if min_state[self.var_id] < self.bound:
+            collect = self.low.get_for_region(
+                min_state, max_state, actions, collect
+            )
+
+        if max_state[self.var_id] > self.bound:
+            collect = self.high.get_for_region(
+                min_state, max_state, actions, collect
+            )
+
+        return collect
 
     def get_leaves_at_symbolic_state2(self, min_state, max_state, pairs=[]):
         if min_state[self.variable] < self.bound:
@@ -207,24 +340,16 @@ class Node:
 
         return pairs
 
-    def get_bounds(self):
-        bounds = self._get_bounds(bounds={})
-        for var, bs in bounds.items():
-            bounds[var] = sorted(list(set(bs)))
-        return bounds
-
-    def _get_bounds(self, bounds={}):
-        if self.variable not in bounds:
-            bounds[self.variable] = []
-        bounds[self.variable].append(self.bound)
+    def get_bounds(self, collect):
+        collect[self.var_id].add(self.bound)
 
         if not self.low.is_leaf:
-            bounds = self.low._get_bounds(bounds)
+            collect = self.low.get_bounds(collect)
 
         if not self.high.is_leaf:
-            bounds = self.high._get_bounds(bounds)
+            collect = self.high.get_bounds(collect)
 
-        return bounds
+        return collect
 
     def set_state(self, state):
         """
@@ -346,14 +471,15 @@ class Node:
             json.dump(meta, f, indent=4)
 
     def __str__(self):
-        return f'Node(var: {self.variable}, bound: {self.bound})'
+        return f'Node(var: {self.var_name}, bound: {self.bound})'
 
     def __repr__(self):
         return self.__str__()
 
     def __copy__(self):
         return type(self)(
-            self.variable, self.bound, self.low, self.high, self.state
+            self.variable, self.var_id, self.var_name, self.bound,
+            self.low, self.high, self.state
         )
 
     def __deepcopy__(self, memo):
@@ -362,6 +488,8 @@ class Node:
         if _copy is None:
             _copy = type(self)(
                 deepcopy(self.variable, memo),
+                deepcopy(self.var_id, memo),
+                deepcopy(self.var_name, memo),
                 deepcopy(self.bound, memo),
                 deepcopy(self.low, memo),
                 deepcopy(self.high, memo),
@@ -412,7 +540,7 @@ class Node:
         return nodes[0]
 
     @classmethod
-    def build_from_dict(cls, node_dict, variables, actions):
+    def build_from_dict(cls, node_dict, var2id, act2id):
         """
         Recursively build a tree using the top level in `node_dict` as root and
         keep track of variables and actions
@@ -420,66 +548,17 @@ class Node:
 
         # is this a leaf?
         if not 'low' in node_dict:
-            actions.add(node_dict['action'])
-            return Leaf(node_dict['cost'], action=node_dict['action'])
+            action = node_dict['action']
+            return Leaf(node_dict['cost'], action=action, act_id=act2id[action])
 
-        variables.add(node_dict['var'])
+        var = node_dict['var']
         return Node(
-            node_dict['var'],
+            var,
+            var2id[var],
             node_dict['bound'],
-            low=cls.build_from_dict(node_dict['low'], variables, actions),
-            high=cls.build_from_dict(node_dict['high'], variables, actions)
+            low=cls.build_from_dict(node_dict['low'], var2id, act2id),
+            high=cls.build_from_dict(node_dict['high'], var2id, act2id)
         )
-
-    @classmethod
-    def make_root_from_leaf(cls, leaf):
-        root = None
-        last = None
-        for var in leaf.state.variables:
-            var_min, var_max = leaf.state.min_max(
-                var, min_limit=None, max_limit=None
-            )
-            if var_min is not None:
-                new_node = Node(var, var_min)
-                new_node.low = Leaf(math.inf, action=None)
-
-                if last is None:
-                    last = new_node
-                else:
-                    if last.low is None:
-                        last.low = new_node
-                    else:
-                        last.high = new_node
-
-                    last = new_node
-
-                if root is None:
-                    root = last
-
-            if var_max is not None:
-                new_node = Node(var, var_max)
-                new_node.high = Leaf(math.inf, action=None)
-
-                if last is None:
-                    last = new_node
-                else:
-                    if last.low is None:
-                        last.low = new_node
-                    else:
-                        last.high = new_node
-
-                    last = new_node
-
-                if root is None:
-                    root = last
-
-        if last.low is None:
-            last.low = leaf
-        else:
-            last.high = leaf
-
-        root.set_state(State(leaf.state.variables))
-        return root
 
     @classmethod
     def equivalent(cls, node1, node2):
@@ -506,55 +585,6 @@ class Node:
             return False
 
         return True
-
-    @classmethod
-    def get_all_leaves(cls, roots, sort=True):
-        leaves = [l for ls in [root.get_leaves() for root in roots] for l in ls]
-        if sort:
-            leaves.sort(key=lambda x: x.cost)
-        return leaves
-
-    @classmethod
-    def make_decision_tree_from_leaves(cls, leaves):
-        variables = leaves[0].state.variables
-        leaves.sort(key=lambda x: x.cost)
-        root = Node.make_root_from_leaf(leaves[0])
-        for i in range(1, len(leaves)):
-            root = root.put_leaf(leaves[i], State(variables))
-
-        return root.prune()
-
-    @classmethod
-    def make_decision_tree_from_roots(cls, roots):
-        return cls.make_decision_tree_from_leaves(cls.get_all_leaves(roots))
-
-    @classmethod
-    def get_var_data(cls, root, variables=None):
-        """
-        class function to fetch data (`bound` values as of now) for each
-        variable in `variables`
-        """
-        if variables is None:
-            try:
-                variables = root.variables
-            except AttributeError:
-                raise ValueError(
-                    "argument `variables` cannot be None if argument \
-                    `root` has no attribute `variables`"
-                )
-
-        data = { v: { 'bounds': [] } for v in variables }
-        return cls._get_var_data(root, data)
-
-    @classmethod
-    def _get_var_data(cls, tree, data):
-        if cls.is_leaf(tree):
-            return data
-
-        data[tree.variable]['bounds'].append(tree.bound)
-        data = cls._get_var_data(tree.high, data)
-        data = cls._get_var_data(tree.low, data)
-        return data
 
     @classmethod
     def is_leaf(cls, tree):
@@ -586,15 +616,16 @@ class Node:
 
 
 class Leaf:
-    def __init__(self, cost, action=None, state=None):
+    def __init__(self, cost, action=None, act_id=None, state=None):
         self.cost = cost
         self.action = action
+        self.act_id = act_id
         self.state = state
         self.visits = 0
         self.is_leaf = True
 
     def split(self, variable, bound, state):
-        new_node = Node(variable, bound)
+        new_node = Node(variable, state.var2id[variable], bound)
 
         low_state = state.copy()
         low_state.less_than(variable, bound)
@@ -632,39 +663,25 @@ class Leaf:
         # all variables are checked
         return Leaf.copy(leaf)
 
-    @classmethod
-    def copy(cls, leaf):
-        """
-        Returns a new Leaf that is a copy of `leaf`
-        """
-        return Leaf(leaf.cost, action=leaf.action, state=leaf.state.copy())
-
-    def __copy__(self):
-        return type(self)(self.cost, self.action, self.state.copy)
-
-    def __deepcopy__(self, memo):
-        id_self = id(self)
-        _copy = memo.get(id_self)
-        if _copy is None:
-            _copy = type(self)(
-                deepcopy(self.cost, memo),
-                deepcopy(self.action, memo),
-                deepcopy(self.state, memo)
-            )
-
-            if hasattr(self, 'visits'):
-                _copy.visits = self.visits
-            if hasattr(self, 'ratio'):
-                _copy.ratio = self.ratio
-
-            memo[id_self] = _copy
-        return _copy
-
-    def _get_leaves(self, leaves=[]):
-        leaves.append(self)
+    def get(self, *args):
+        return self
 
     def get_leaf(self, state):
         return self
+
+    def get_for_region(self, s1, s2, actions, collect):
+        """
+        Add this `Leaf' (or its associated action if `actions=True') to the set
+        `collect'.
+        """
+        if self.action is None:
+            return collect
+
+        if actions:
+            collect.add(self.action)
+        else:
+            collect.add(self)
+        return collect
 
     def get_leaves_at_symbolic_state2(self, min_state, max_state, pairs=[]):
         """
@@ -687,6 +704,9 @@ class Leaf:
         pairs.append(self)
         return pairs
 
+    def _get_leaves(self, leaves=[]):
+        leaves.append(self)
+
     def set_state(self, state):
         self.state = state
 
@@ -695,6 +715,35 @@ class Leaf:
             'action': self.action,
             'cost': self.cost
         }
+
+    @classmethod
+    def copy(cls, leaf):
+        """
+        Returns a new Leaf that is a copy of `leaf`
+        """
+        return Leaf(leaf.cost, action=leaf.action, state=leaf.state.copy())
+
+    def __copy__(self):
+        return type(self)(self.cost, self.action, self.act_id, self.state.copy)
+
+    def __deepcopy__(self, memo):
+        id_self = id(self)
+        _copy = memo.get(id_self)
+        if _copy is None:
+            _copy = type(self)(
+                deepcopy(self.cost, memo),
+                deepcopy(self.action, memo),
+                deepcopy(self.act_id, memo),
+                deepcopy(self.state, memo)
+            )
+
+            if hasattr(self, 'visits'):
+                _copy.visits = self.visits
+            if hasattr(self, 'ratio'):
+                _copy.ratio = self.ratio
+
+            memo[id_self] = _copy
+        return _copy
 
     def __str__(self):
         return f'Leaf(action: {self.action}, cost: {self.cost}, {self.state})'
