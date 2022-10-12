@@ -42,7 +42,7 @@ def is_explored(min_state, max_state, tree):
     return len(tree.get_for_region(min_state, max_state)) > 0
 
 
-def max_parts2(tree, min_vals=None, max_vals=None, padding=1):
+def max_parts(tree, min_vals=None, max_vals=None, padding=1):
     """
     Args:
         root: the root `Node` from which to extract boxes
@@ -192,7 +192,7 @@ def max_parts2(tree, min_vals=None, max_vals=None, padding=1):
     return regions
 
 
-def max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
+def old_max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
     """
     Args:
         root: the root `Node` from which to extract boxes

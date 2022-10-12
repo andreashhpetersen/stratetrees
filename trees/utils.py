@@ -168,7 +168,7 @@ def test_equivalence(tree, forest, data, variables, step=1):
             return False
     return True
 
-def count_visits(root, data, variables, step=1):
+def count_visits(tree, data, step=1):
     """
     Evaluate every state given by `data`, and mark the resulting leaf in `root`
     as visited. Counts the total number of visits and the frequency each leaf
@@ -188,7 +188,7 @@ def count_visits(root, data, variables, step=1):
         a dictionary counting the times each action was chosen
     """
 
-    leaves = root.get_leaves()
+    leaves = tree.get_leaves()
     for l in leaves:
         l.visits = 0
         l.ratio = 0
@@ -197,16 +197,11 @@ def count_visits(root, data, variables, step=1):
     actions = defaultdict(int)
     last_a = None
     for i in range(0, len(data), step):
-        state = { var: val for var, val in zip(variables, data[i][1:]) }
-        leaf = root.get_leaf(state)
+        state = data[i][1:]
+        leaf = tree.get(state, leaf=True)
         leaf.visits += 1
         actions[leaf.action] += 1
         total += 1
-        # if leaf.action == '1':
-        #     print('Sample: {}\nState: {}\nAction: {}'.format(
-        #         data[i], state, leaf.action
-        #     ))
-            # import ipdb; ipdb.set_trace()
         last_a = leaf.action
 
     for l in leaves:
@@ -274,17 +269,16 @@ def add_stats(trees, stats, variables, max_ts, step_sz):
 
 ####### Function to load and build tree #######
 
-def build_tree(tree, a, varmap):
+def build_tree(tree, a, variables):
     if isinstance(tree, float) or isinstance(tree, int):
         return Leaf(float(tree), action=a)
 
     return Node(
-        tree['var'],
-        varmap[tree['var']],
-        # tree['var'] if variables is None else variables[tree['var']],
+        variables[tree['var']],
+        tree['var'],  # var_id
         tree['bound'],
-        low=build_tree(tree['low'], a, varmap),
-        high=build_tree(tree['high'], a, varmap)
+        low=build_tree(tree['low'], a, variables),
+        high=build_tree(tree['high'], a, variables)
     )
 
 def get_uppaal_data(data):
@@ -292,7 +286,7 @@ def get_uppaal_data(data):
         data['regressors'][reg]['regressor'] = {}
     return data
 
-def load_tree(fp, loc='(1)', verbosity=0):
+def load_trees(fp, loc='(1)', verbosity=0):
     """
     If `verbosity=1`, also return a dict with the UPPAAL specific strategy data
     (relevant for later exporting back to the UPPAAL forma). Default 0.
@@ -301,12 +295,11 @@ def load_tree(fp, loc='(1)', verbosity=0):
         data = json.load(f)
 
     variables = data['pointvars']
-    varmap = { v: i for i, v in enumerate(variables) }
     roots = []
     trees = data['regressors'][loc]['regressor']
     actions = []
     for action, tree in trees.items():
-        root = build_tree(tree, action, varmap)
+        root = build_tree(tree, action, variables)
         root.set_state(State(variables))
         roots.append(root)
         actions.append(action)

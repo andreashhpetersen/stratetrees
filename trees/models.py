@@ -124,6 +124,10 @@ class Tree:
     def put_leaf(self, leaf):
         self.root.put_leaf(leaf, State(self.variables))
 
+    def emp_prune(self):
+        self.root = Node.emp_prune(self.root)
+        self.size = self.root.size
+
     def save_as(self, filepath):
         """
         Save tree as json to a file at `filepath`.
@@ -135,6 +139,28 @@ class Tree:
         }
         with open(filepath, 'w') as f:
             json.dump(data, f, indent=4)
+
+    def copy(self):
+        return deepcopy(self)
+
+    def __copy__(self):
+        return type(self)(
+            self.root, self.variables, self.actions, self.size
+        )
+
+    def __deepcopy__(self, memo):
+        id_self = id(self)
+        _copy = memo.get(id_self)
+        if _copy is None:
+            _copy = type(self)(
+                deepcopy(self.root, memo),
+                deepcopy(self.variables, memo),
+                deepcopy(self.actions, memo),
+                deepcopy(self.size, memo),
+            )
+            memo[id_self] = _copy
+        return _copy
+
 
     @classmethod
     def empty_tree(cls, variables, actions):
@@ -165,7 +191,9 @@ class Tree:
 
     @classmethod
     def build_from_roots(cls, roots, variables, actions):
-        return cls.build_from_leaves(cls.get_all_leaves(roots))
+        return cls.build_from_leaves(
+            cls.get_all_leaves(roots), variables, actions
+        )
 
     @classmethod
     def make_root_from_leaf(cls, tree, leaf):
@@ -489,7 +517,6 @@ class Node:
             _copy = type(self)(
                 deepcopy(self.variable, memo),
                 deepcopy(self.var_id, memo),
-                deepcopy(self.var_name, memo),
                 deepcopy(self.bound, memo),
                 deepcopy(self.low, memo),
                 deepcopy(self.high, memo),
@@ -593,10 +620,7 @@ class Node:
     @classmethod
     def emp_prune(cls, node, thresh=0.0):
         if isinstance(node, Leaf):
-            if node.ratio <= thresh:
-                return None
-            else:
-                return node
+            return None if node.ratio <= thresh else node
 
         low = cls.emp_prune(node.low, thresh)
         high = cls.emp_prune(node.high, thresh)
