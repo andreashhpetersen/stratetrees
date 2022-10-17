@@ -39,15 +39,22 @@ def color_gradient(weight, start="#FFFFFF", end="#000000"):
 
 ####### Functions to draw a tree and save it to png #######
 
-def draw_leaf(graph, leaf, n, print_action=False):
+def draw_leaf(
+    graph, leaf, n,
+    print_action=False, print_cost=False, print_ratio=False
+):
     label = ''
     font_color = 'black'
     color = 'white'
 
     if print_action:
-        label += f'Action: {leaf.action}\n'
-    label += f'Cost: {round(leaf.cost, 2)}'
-    if hasattr(leaf, 'ratio'):
+        if hasattr(leaf, 'verbose_action'):
+            label += f'Action: {leaf.verbose_action}\n'
+        else:
+            label += f'Action: {leaf.action}\n'
+    if print_cost:
+        label += f'Cost: {round(leaf.cost, 2)}'
+    if print_ratio and hasattr(leaf, 'ratio'):
         label += f'\nFreq: {round(leaf.ratio * 100, 2)}'
         color = color_gradient(leaf.ratio, start="#FFFFFF", end="#FF0000")
         if leaf.ratio == 0:
@@ -62,12 +69,19 @@ def draw_leaf(graph, leaf, n, print_action=False):
     graph.add_node(node)
     return node, n
 
-def draw_node(graph, root, n, print_action=False):
-    if isinstance(root, Leaf):
-        return draw_leaf(graph, root, n, print_action=print_action)
+def draw_node(graph, root, n, print_action=False, print_cost=False):
+    if root.is_leaf:
+        return draw_leaf(
+            graph, root, n, print_action=print_action, print_cost=print_cost
+        )
 
-    low_node, low_n = draw_node(graph, root.low, n, print_action=print_action)
-    high_node, high_n = draw_node(graph, root.high, low_n + 1, print_action=print_action)
+    low_node, low_n = draw_node(
+        graph, root.low, n, print_action=print_action, print_cost=print_cost
+    )
+    high_node, high_n = draw_node(
+        graph, root.high, low_n + 1, print_action=print_action,
+        print_cost=print_cost
+    )
 
     new_n = high_n + 1
     label = f'{root.variable}: {round(root.bound, 2)}'
@@ -80,17 +94,22 @@ def draw_node(graph, root, n, print_action=False):
     graph.add_edge(pydot.Edge(str(new_n), str(high_n), label='high'))
     return node, new_n
 
-def draw_graph(trees, labels=None, out_fp='graph_drawing.png',
-               print_action=False):
+def draw_graph(
+    trees, labels=None, out_fp='graph_drawing.png', print_action=True,
+    print_cost=False
+):
     graph = pydot.Dot(graph_type='digraph')
     root = pydot.Node('root')
     iterator = zip(labels, trees) if labels is not None else enumerate(trees)
 
     n = 0
     for label, tree in iterator:
-        node, n = draw_node(graph, tree, n, print_action=print_action)
-        graph.add_edge(pydot.Edge('actions', str(n), label=label))
-        n += 1
+        node, n = draw_node(
+            graph, tree, n, print_action=print_action, print_cost=print_cost
+        )
+        if len(trees) > 1:
+            graph.add_edge(pydot.Edge('action', str(n), label=label))
+            n += 1
 
     if out_fp.endswith('.dot'):
         graph.write_dot(out_fp)
@@ -309,3 +328,26 @@ def load_trees(fp, loc='(1)', verbosity=0):
         return roots, variables, actions, misc
 
     return roots, variables, actions
+
+def import_uppaal_strategy(fp):
+    with open(fp, 'r') as f:
+        data = json.load(f)
+
+    variables = data['pointvars']
+    actions = data['actions'].keys()
+    regressors = data['regressors']
+    locations = regressors.keys()
+
+    trees_at_location = {}
+    for location in locations:
+        qtrees = regressors[location]['regressor']
+        roots = {}
+        for action, qtree in qtrees.items():
+            root = build_tree(qtree, action, variables)
+            root.set_state(State(variables))
+            roots[action] = root
+
+        trees_at_location[location] = roots
+
+    meta = get_uppaal_data(data)
+    return trees_at_location, variables, actions, meta
