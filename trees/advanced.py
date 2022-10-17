@@ -137,8 +137,8 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
         bounds[:,-1] = 0
         bounds[:,-1][p_max == max_i] = 1
 
-        while True:
-            # grow in dimension w and update p_max and max_state
+        while np.sum(bounds[:,-1]) < K:
+            # grow in dimension v and update p_max and max_state
             p_max, v = grow(p_max, bounds, max_i)
             max_state[v] = bounds[v][p_max[v]]
 
@@ -161,12 +161,6 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
                 if actions != set(action) or explored:
                     p_max[v] -= 1
                     max_state[v] = diff_state[v]
-
-                # continue if we still have unexhausted variables
-                if np.sum(bounds[:,-1]) < K:
-                    continue
-                else:
-                    break
 
         # create the region as a leaf with a state spanned by min_state and
         # max_state
@@ -220,9 +214,12 @@ def old_max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
     # build the list of constraints
     constraints = []
     all_bounds = root.get_bounds()  # assumed to be sorted in ascending order
-    for var, bounds in all_bounds.items():
+    for var_id in range(len(all_bounds)):
+        var = id2var[var_id]
+        bounds = all_bounds[var_id]
+    # for var, bounds in all_bounds.items():
         if min_vals is None:
-            min_var_vals[var] = bounds[0] - 1
+            min_var_vals[var] = -math.inf if len(bounds) == 0 else bounds[0] - 1
         constraints += [
             (var2id[var], b) for b in bounds
         ] + [(var2id[var], max_var_vals[var])]
@@ -253,7 +250,7 @@ def old_max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
 
         # check if we have already explored this state
         if tree is not None:
-            leaf = tree.get_leaf(state)
+            leaf = tree.root.get_leaf(state)
             if leaf.action is not None:
                 continue
 
@@ -261,7 +258,7 @@ def old_max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
         constraints.sort(key=lambda x: -(p[x[0]] - Decimal(str(x[1]))))
 
         # get action at state
-        action = root.get_leaf(state).action
+        action = root.root.get_leaf(state).action
 
         # go through constrains
         for i in range(len(constraints)):
@@ -293,14 +290,14 @@ def old_max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
             explored = False
             if tree is not None:
                 explored = [
-                    l for l in tree.get_leaves_at_symbolic_state(sym_state, pairs=[])
+                    l for l in tree.root.get_leaves_at_symbolic_state(sym_state, pairs=[])
                     if l.action is not None
                 ]
 
             # check if our new state returns a different action
             state_actions = []
             if not explored:  # but skip
-                leaves = root.get_leaves_at_symbolic_state(sym_state, pairs=[])
+                leaves = root.root.get_leaves_at_symbolic_state(sym_state, pairs=[])
                 state_actions = set([l.action for l in leaves])
 
             if len(state_actions) > 1 or explored or bound == max_var_vals[variables[var]]:
@@ -326,10 +323,11 @@ def old_max_parts(root, variables, eps=0.001, max_vals=None, min_vals=None):
 
                 # add to the tree, so we know not to explore this part again
                 if tree is not None:
-                    tree.put_leaf(leaf, State(variables))
+                    tree.root.put_leaf(leaf, State(variables))
                 # or create the tree if we haven't done so yet
                 else:
-                    tree = Node.make_root_from_leaf(leaf)
+                    tree = Tree.empty_tree(variables, root.actions)
+                    tree.root = Tree.make_root_from_leaf(tree, leaf)
 
                 # add new points from which to start later
                 for v in variables:
