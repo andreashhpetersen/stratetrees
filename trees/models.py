@@ -145,10 +145,21 @@ class Tree:
         with open(filepath, 'w') as f:
             json.dump(data, f, indent=4)
 
-    def export_to_uppaal(self, filepath, meta):
-        self.root.export_to_uppaal(
-            self.actions, self.variables, meta, path=filepath
-        )
+    def update_meta(self, meta, loc='(1)'):
+        roots = self.root.to_q_trees(self.actions)
+        for action, root in roots:
+            meta['regressors'][loc]['regressor'][action] = root.to_uppaal(
+                self.var2id
+            )
+        return meta
+
+    def export_to_uppaal(self, filepath, meta, loc='(1)'):
+        meta = self.update_meta(meta, loc=loc)
+        with open(filepath, 'w') as f:
+            json.dump(meta, f, indent=4)
+        # self.root.export_to_uppaal(
+        #     self.actions, self.variables, meta, path=filepath
+        # )
 
     def copy(self):
         return deepcopy(self)
@@ -635,7 +646,7 @@ class Node:
 
     @classmethod
     def emp_prune(cls, node, thresh=0.0):
-        if isinstance(node, Leaf):
+        if node.is_leaf:
             return None if node.ratio <= thresh else node
 
         low = cls.emp_prune(node.low, thresh)
