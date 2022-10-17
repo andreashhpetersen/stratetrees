@@ -72,7 +72,7 @@ class State:
             var = self.var2id[var]
         vbounds = self.constraints[var]
         vmin = vbounds[0] if vbounds[0] > -np.inf else min_limit
-        vmax = vbounds[1] if vbounds[0] < np.inf else max_limit
+        vmax = vbounds[1] if vbounds[1] < np.inf else max_limit
         return vmin, vmax
 
     def copy(self):
@@ -118,6 +118,11 @@ class Tree:
         bounds = self.root.get_bounds([set() for _ in self.variables])
         return [sorted(list(vbounds)) for vbounds in bounds]
 
+    def get_branches(self):
+        nodes = []
+        self.root.get_branches(nodes)
+        return nodes
+
     def get_leaves(self):
         return self.root.get_leaves()
 
@@ -140,6 +145,11 @@ class Tree:
         with open(filepath, 'w') as f:
             json.dump(data, f, indent=4)
 
+    def export_to_uppaal(self, filepath, meta):
+        self.root.export_to_uppaal(
+            self.actions, self.variables, meta, path=filepath
+        )
+
     def copy(self):
         return deepcopy(self)
 
@@ -160,7 +170,6 @@ class Tree:
             )
             memo[id_self] = _copy
         return _copy
-
 
     @classmethod
     def empty_tree(cls, variables, actions):
@@ -312,6 +321,13 @@ class Node:
             return self.high.get_leaf(state)
         else:
             return self.low.get_leaf(state)
+
+    def get_branches(self, nodes=[]):
+        nodes.append(self)
+        if not self.low.is_leaf:
+            self.low.get_branches(nodes)
+        if not self.high.is_leaf:
+            self.high.get_branches(nodes)
 
     def get_leaves(self):
         """
