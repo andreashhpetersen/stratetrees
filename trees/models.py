@@ -210,7 +210,7 @@ class Tree:
         return tree
 
     @classmethod
-    def build_from_roots(cls, roots, variables, actions):
+    def merge_qtrees(cls, roots, variables, actions):
         return cls.build_from_leaves(
             cls.get_all_leaves(roots), variables, actions
         )
