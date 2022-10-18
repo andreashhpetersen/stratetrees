@@ -119,74 +119,109 @@ $V^{\max}_i$. If it is, that means that we have to roll back the last update,
 which we do in line 20.
 
 \begin{algorithm}[!ht]
+    \caption{Grow}\label{alg:Grow}
+
+    \begin{algorithmic}[1]
+        \Function{Grow}{$p, E, s^{\min}$}
+            \State{%
+                $active \gets \{
+                    i \mid i \notin  E, \quad p_i + 1 \leq M_i, \quad i = 1,\ldots, K
+                \}$ 
+            }
+            \State{%
+                $i = \argmin_{i \in active}
+                     abs(\mathcal{C}_{i,p_i + 1} - \mathcal{C}_{i,p_i})$
+            }
+
+            \State{%
+                $s' \gets (\mathcal{C}_{1,p_1}, \ldots,
+                \mathcal{C}_{i,p_i + 1},\ldots, \mathcal{C}_{K,p_K})$
+            }
+
+            \If{%
+                $|\mathcal{T}((s^{\min},s'))|$ $>$ 1 \textbf{or}
+                $s'$ is explored \textbf{or} $p_i + 1 = M_i$ 
+            }
+                \State{\textbf{return} $p, E \cup {\{i\}}$}
+            \Else%
+                \State{%
+                    \textbf{return} $(p_1, \ldots, p_i + 1, \ldots, p_K), E$
+                }
+            \EndIf%
+        \EndFunction
+    \end{algorithmic}
+
+\end{algorithm}
+
+\begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
 
     \begin{algorithmic}[1]
-        \Function{MaxPartitions}{$\mathcal{T}$, $\mathcal{C}$, $\mathcal{V}$, $p_{start}$}
+        \Function{MaxPartitions}{$\mathcal{T}$, $\mathcal{C}$, $K$}
 
-        \State{$regions \gets \{\}$}
-        \State{$\mathcal{P} \gets \{ p_{start} \} $}
+        \State{$\mathcal{R} \gets \{\}$}
+        \State{%
+            $p^0 \gets (p_1, p_2, \ldots, p_K)$
+            where $p_i = 0$ for all $i = 1, 2, \ldots, K$
+        }
+        \State{$\mathcal{P} \gets \{ p^0 \} $}
 
         \While{$\mathcal{P}$ is not empty}
-            \State{$exhausted \gets \{\}$}
             \State{$p^{\min} \gets \min \mathcal{P}$}
+            \State{%
+                $p^{\max} \gets
+                (p^{\min}_1 + 1, p^{\min}_2 + 1, \ldots, p^{\min}_K + 1)
+            $}
+            \item
+
+            \State{%
+                $s^{\min} \gets (\mathcal{C}_{1,p^{\min}_1},
+                \mathcal{C}_{2,p^{\min}_2},\ldots, \mathcal{C}_{K,p^{\min}_K})$
+            }
+            \State{%
+                $s^{\max} \gets (\mathcal{C}_{1,p^{\max}_1},
+                \mathcal{C}_{2,p^{\max}_2},\ldots, \mathcal{C}_{K,p^{\max}_K})$
+            }
+            \item
+
             \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}
+            \State{$E \gets \{\}$}
+            \item
 
-            \If{$p^{\min}$ is explored}
-                \State{continue}
-            \EndIf%
+            \While{$|E| < K$}
 
-            \State{$p^{\max} \gets p^{\min}$}
-
-            \item\Comment{The list also need to be sorted according to distance
-                to $p^{\min}$ }
-            \For{$V_i, c$ in $\{(V_i, c) \mid (V_i, c) \in \mathcal{C},
-                c > p^{\min}_i,  V_i \notin  exhausted \} $}
-
-                \item
-                \State{$oldVal \gets p^{\max}_i$}
-
-                \State{$p^{\max}_i \gets c$}
-
-                \item
-                \If{%
-                    $|\mathcal{T}((p^{\min},p^{\max}))|$ $>$ 1 \textbf{or}
-                    $p^{\max}$ is explored \textbf{or} $p^{\max}_i = V^{\max}_i$ 
-                }
-
-                    \State{$exhausted \gets exhausted \cup V_i$}
-
-                    \If{$p^{\max}_i < V^{\max}_i$}
-                        \State{$p^{\max}_i \gets oldVal$}
-                    \EndIf%
-
-                    \If{$|exhausted| < |\mathcal{V}|$}
-                        \State{continue from 12}
-                    \EndIf%
-
-                    \State{$regions \gets regions \cup \{(p^{\min},p^{\max})\}$}
-
-                    \item
-                    \For{$V_i$ in $\mathcal{V}$}
-                        \If{%
-                            $p^{\min}_i \neq p^{\max}_i$
-                            \textbf{and} $p^{\max}_i < V^{\max}_i$
+                    \State{%
+                        $p^{\max}, E \gets$ \Call{Grow}{%
+                            $p^{\max}, E, s^{\min}$
                         }
-                            \State{$\mathcal{P} \gets \mathcal{P} \cup
-                            \{(p^{\min}_1, \ldots, p^{\max}_i, \ldots,
-                            p^{\min}_k)\
-                        $}
-                        \EndIf%
-                    \EndFor%
+                    }
+                \item
 
-                    \State{\textbf{continue line 4}}%
+            \EndWhile%
 
+            \State{%
+                $s^{\max} \gets (\mathcal{C}_{1,p^{\max}_1},
+                \mathcal{C}_{2,p^{\max}_2},\ldots, \mathcal{C}_{K,p^{\max}_K})$
+            }
+            \State{$\mathcal{R} \gets \mathcal{R} \cup \{(s^{\min},s^{\max})\}$}
+
+            \item
+            \For{$i = 1, 2, \ldots, K$}
+                \If{%
+                    $p^{\min}_i \neq p^{\max}_i$
+                    \textbf{and} $p^{\max}_i < M_i$
+                }
+                    \State{$\mathcal{P} \gets \mathcal{P} \cup
+                    \{(p^{\min}_1, \ldots, p^{\max}_i, \ldots,
+                    p^{\min}_k)\}
+                $}
                 \EndIf%
-
             \EndFor%
+
+
         \EndWhile%
 
-        \State{\textbf{return} $regions$}
+        \State{\textbf{return} $\mathcal{R}$}
 
         \EndFunction%
     \end{algorithmic}
