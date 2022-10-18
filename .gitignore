@@ -5,6 +5,7 @@ uppaal_models/*
 dtcontrol/*
 papers/*
 random/*
+constructed_*
 
 
 ## Core latex/pdflatex auxiliary files:
