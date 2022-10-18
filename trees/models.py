@@ -157,9 +157,6 @@ class Tree:
         meta = self.update_meta(meta, loc=loc)
         with open(filepath, 'w') as f:
             json.dump(meta, f, indent=4)
-        # self.root.export_to_uppaal(
-        #     self.actions, self.variables, meta, path=filepath
-        # )
 
     def copy(self):
         return deepcopy(self)
@@ -210,9 +207,9 @@ class Tree:
         return tree
 
     @classmethod
-    def merge_qtrees(cls, roots, variables, actions):
+    def merge_qtrees(cls, qtrees, variables, actions):
         return cls.build_from_leaves(
-            cls.get_all_leaves(roots), variables, actions
+            cls.get_all_leaves(qtrees), variables, actions
         )
 
     @classmethod
