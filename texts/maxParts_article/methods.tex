@@ -138,8 +138,6 @@ which we do in line 20.
 
             \State{$p^{\max} \gets p^{\min}$}
 
-            % \State{\Call{SortAccordingToDistance}{$\mathcal{C}$, $p^{\min}$}}
-
             \item\Comment{The list also need to be sorted according to distance
                 to $p^{\min}$ }
             \For{$V_i, c$ in $\{(V_i, c) \mid (V_i, c) \in \mathcal{C},
@@ -251,7 +249,14 @@ correct sorting with respect to $p^{\min}$.\footnote{%
 size of $\mathcal{C}$, then question becomes one of estimating $C$. Also here we
 have that $C$ is proportional to $N$ and $K$, as $\mathcal{C}$ is constructed
 from all the predicates of the branch nodes in $\mathcal{T}$. This is at most
-$N$ , or rather $N-1$. Something something $\approx O(KN^2\log N)$.
+$N$, or rather $N-1$. Something something $\approx O(KN^2\log N)$.
+
+\begin{theorem}
+    Given a partitioning $\mathcal{A}_{\mathcal{T}}$ induced by the decision
+    tree $\mathcal{T}$, the \texttt{MaxPartitions} algorithm finds the minimal
+    partitioning $\mathcal{B}$ such that for any region $\nu \in \mathcal{B}$,
+    $\mathcal{T}(p)$ assigns the same action $a \in Act$ to each $p \in \nu$.
+\end{theorem}
 
 \subsection{From regions to decision tree}%
 \label{sub:regionsToDT}
