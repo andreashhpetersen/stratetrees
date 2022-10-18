@@ -76,10 +76,16 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
 
         # add min and max values if there are none
         if min_vals[i] is None:
-            min_vals[i] = np.amin(bs) - padding
+            if bs.shape[0] == 0:
+                min_vals[i] = -math.inf
+            else:
+                min_vals[i] = np.amin(bs) - padding
 
         if max_vals[i] is None:
-            max_vals[i] = np.amax(bs) + padding
+            if bs.shape[0] == 0:
+                max_vals[i] = math.inf
+            else:
+                max_vals[i] = np.amax(bs) + padding
 
         # make list of constraints in range [min_val, max_val] (inclusive)
         bs = np.hstack((
