@@ -21,5 +21,6 @@ for f in $D/* ; do
     echo "E[<=100;100] (max:Q) under s" >> $Q
     CMD="$V model.xml $Q -s -W -q -y >> results.txt"
     echo "Evaluate $f"
+    echo "EVALUATE $f:" >> ./results.txt
     eval "$CMD"
 done
