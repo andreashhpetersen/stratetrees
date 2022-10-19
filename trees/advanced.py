@@ -31,10 +31,11 @@ def grow(p, bs, max_i):
     max_i: (K,) array of max number of bounds for each dimension
     """
     dims = np.arange(len(p))
-    idxs = np.argsort(np.abs(bs[dims, p+1] - bs[dims, p]))
-    i = idxs[np.logical_and(bs[idxs,-1] == 0, p[idxs] + 1 <= max_i[idxs])][0]
+    idxs = np.argsort(bs[dims, p+1] - bs[dims, p])
+    i = idxs[np.logical_and(bs[idxs,-1] == 0, p[idxs] < max_i[idxs])][0]
     p[i] += 1
     return p, i
+
 
 def is_explored(min_state, max_state, tree):
     if tree.root is None:
@@ -129,8 +130,8 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
         p_max = p_min.copy() + 1
 
         # define the region spanned by min_state and max_state
-        min_state = bounds[np.arange(K),p_min]
-        max_state = bounds[np.arange(K),p_max]
+        min_state = bounds[np.arange(K), p_min]
+        max_state = bounds[np.arange(K), p_max]
 
         # check if we have already explored this state
         if is_explored(min_state, max_state, track):
