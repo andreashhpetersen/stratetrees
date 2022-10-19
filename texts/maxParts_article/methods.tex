@@ -124,13 +124,13 @@ which we do in line 20.
     \begin{algorithmic}[1]
         \Function{Grow}{$p, E, s^{\min}$}
             \State{%
-                $active \gets \{
-                    i \mid i \notin  E, \quad p_i + 1 \leq M_i, \quad i = 1,\ldots, K
+                $D \gets \{
+                    i \mid i \notin  E, \quad p_i < M_i, \quad i = 1,\ldots, K
                 \}$ 
             }
             \State{%
-                $i = \argmin_{i \in active}
-                     abs(\mathcal{C}_{i,p_i + 1} - \mathcal{C}_{i,p_i})$
+                $i \gets \argmin_{i \in D}
+                    \mathcal{C}_{i,p_i + 1} - \mathcal{C}_{i,p_i}$
             }
 
             \State{%
@@ -140,9 +140,14 @@ which we do in line 20.
 
             \If{%
                 $|\mathcal{T}((s^{\min},s'))|$ $>$ 1 \textbf{or}
-                $s'$ is explored \textbf{or} $p_i + 1 = M_i$ 
+                $s'$ is explored
             }
                 \State{\textbf{return} $p, E \cup {\{i\}}$}
+            \ElsIf{$p_i + 1 = M_i$}
+                \State{\textbf%
+                    {return}
+                    $(p_1, \ldots, p_i + 1, \ldots, p_K), E \cup \{i\}$
+                }
             \Else%
                 \State{%
                     \textbf{return} $(p_1, \ldots, p_i + 1, \ldots, p_K), E$
@@ -157,7 +162,20 @@ which we do in line 20.
     \caption{MaxPartitions}\label{alg:MaxPartitions}
 
     \begin{algorithmic}[1]
-        \Function{MaxPartitions}{$\mathcal{T}$, $\mathcal{C}$, $K$, $M$}
+        \Require{%
+            $\mathcal{T}$: A binary decision tree over the domain
+            $\mathbb{R}^K$ inducing the partitioning $\mathcal{A}_{\mathcal{T}}$
+        }
+        \Require{%
+            $M$: A $K$-dimensional vector, where $M_i$ is the number of
+            constraints on dimension $i$ in $\mathcal{A}_{\mathcal{T}}$
+        }
+        \Require{%
+            $\mathcal{C}$: A $K \times M$ matrix of the constraints on each
+            dimension $i$ sorted in ascending order, such that
+            $\mathcal{C}_{i,j}$ is the $j$th smallest constraint in dimension
+            $i$ for all $j = 1,2,\ldots,M_i$.
+        }
 
         \State{$\mathcal{R} \gets \{\}$}
         \State{%
@@ -223,7 +241,6 @@ which we do in line 20.
 
         \State{\textbf{return} $\mathcal{R}$}
 
-        \EndFunction%
     \end{algorithmic}
 
 \end{algorithm}
