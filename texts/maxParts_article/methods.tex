@@ -61,102 +61,82 @@ Algorithm~\ref{alg:MaxPartitions}.
 \subsection{Description of the algorithm}%
 \label{sub:maxPartsDescription}
 
-The algorithm takes 4 inputs as arguments. $\mathcal{T}$ is a decision tree
-representing a strategy $\sigma$ and a complete partitioning of the state space
-$\mathcal{S} \in \mathbb{R}^K$; $\mathcal{C}$ is the set of constraints entailed
-by $\mathcal{T}$ so that each element of $\mathcal{C}$ is a tuple $(V_i, c)$
-representing the predicate $\rho(x) = x_i \le c$ of a branch node in
-$\mathcal{T}$; $\mathcal{V}$ is the set of variables (dimensions); and
-$p_{start}$ is the initial point the algorithm should start from.
+\[
+    grow(p, E \mid \theta) = 
+    \begin{cases}
+        p & \text{if } |E|  =  K \\
+        grow(p, E \cup \{i\}) &
+            \text{if } |\mathcal{T}((s, s'))| > 1
+            \text{ or $s'$ is explored} \\
+        grow(p', E \cup \{i\}) & \text{if } p_i + 1 = M_i \\
+        grow(p', E) & \text{otherwise}
+    \end{cases}
+\] 
 
-In line 2 and 3 we define two lists. $regions$ is where we will store the
-regions we identify during the algorith, and $\mathcal{P}$ is used to keep track
-of points from where we will search the state space. We initialize
-$\mathcal{P}$ with the single point $p_{start}$. In line 4, we start our main
-loop which terminates when $\mathcal{P}$ is empty.
+\noindent where $grow$ is parametized by $\theta = (\mathcal{T}, M, \mathcal{C},
+s)$ with $\mathcal{T}$ being a binary decision tree over the domain
+$\mathbb{R}^K$ inducing a partitioning $\mathcal{A}_{\mathcal{T}}$, $M$ being a
+$K$-dimensional vector of the number of constraints on each dimension $i$ in
+$\mathcal{A}_{\mathcal{T}}$, $\mathcal{C}$ being an $K \times m$ matrix of the
+sorted constraints, such that  $\mathcal{C}_{i,j}$ is the $j$th smallest
+constraint on dimension $i$ for each $j = 1,2,\ldots,M_i$ and $s \in
+\mathbb{R}^K$ is a point in the domain. Further, to avoid cluttering the
+expression for $grow$, we use $i, s'$ and $p'$ defined as
 
-Line 5-11 sets up the search we are about to do from the next point in
-$\mathcal{P}$. First, we initialize an empty list $exhausted$ to keep track of
-the dimensions that we are done exploring. Then we sort $\mathcal{P}$ so that we
-process the points in a consistent order. We then pop the first element of
-$\mathcal{P}$ and uses this as $p^{\min}$ for the region we are about to create.
-However, if we have already covered $p^{\min}$ in a previous iteration (by
-constructing a region $\nu$ in which $p^{\min}$ is contained), we skip this
-iteration and continue at line 4. Otherwise, we define $p^{\max} = p^{\min}$ so
-we now have an infinitesimally small region $\nu = (p^{\min},p^{\max})$, and
-finally we sort $\mathcal{C}$ in ascending order with respect to the distance to
-$p^{\min}$. That is, we order $\mathcal{C}$ so that for any two consecutive
-tuples $(V^m_i, c^m), (V^{m+1}_j, c^{m+1}) \in \mathcal{C}$ it holds that
-$abs(c^m - p^{\min}_i) \le  abs(c^{m+1} - p^{\min}_j)$.\todo{This last part
-    about sorting $\mathcal{C}$ currently isn't in the pseudocode, as it got cut
-during refactoring --- but it needs to go back in!}
+\begin{align*}
+    i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i < M_i \}}
+        \mathcal{C}_{i,p_i+1} - \mathcal{C}_{i,p_i} \\
+    s' &= (\mathcal{C}_{i,p_1}, \ldots, \mathcal{C}_{i,p_i + 1},\ldots,
+           \mathcal{C}_{i,p_K}) \\
+    p' &= (p_1, \ldots, p_i + 1, \ldots, p_K)
+\end{align*}
 
-In line 12 we begin our search through $\mathcal{C}$ for possible candidate
-bounds to grow our new region with. As mentioned, each bound is a tuple giving a
-dimension $V_i$ and a constraint value $c$. We only look at the subset of
-$\mathcal{C}$ where $V_i$ is not exhausted and $c > p^{\min}_i$, and we process
-these bounds in sorted order according to their distance to $p^{\min}$
-(currently not reflected in the pseudocode). When we find a candidate bound, we
-store the current value of $p^{\max}_i$ in a variable $oldValue$ (line 14)
-before updating it with the new bound (line 15).
+\noindent
+The \texttt{MaxPartitions} algorithm is given in
+Algorithm~\ref{alg:MaxPartitions}.
 
-In line 17 we do 3 different checks to see if our current region $\nu =
-(p^{\min}, p^{\max})$ is now violating any requirements. First, we check if
-evaluating $\nu$ in $\mathcal{T}$ only returns 1 action.  Secondly, we check if
-we have moved $p^{\max}$ into an area already explored earlier (akin to the
-check in line 8). And lastly, we check if the latest update to $p^{\max}_i$
-moved it to the limit of the values $V_i$ can attain (denoted $V^{\max}_i$). If
-neither of these are true, we continue our attempt at updating $p^{\max}$ from
-line 12.
+% \begin{algorithm}[!ht]
+%     \caption{Grow}\label{alg:Grow}
 
-If any of the conditions are true, we proceed to check if and how we should
-store the region spanned by $p^{\min}$ and $p^{\max}$. First, in line 18, we add
-$V_i$ to the list of exhausted dimensions. This is because we know, that in one
-way or another, expanding $p^{\max}$ in the direction of $V_i$ has violated on
-of the requirements in line 17 and as such, $V_i$ should be ignored going
-forward. Then in line 19, we check if $p^{\max}_i$ is still smaller than
-$V^{\max}_i$. If it is, that means that we have to roll back the last update,
-which we do in line 20.
+%     \begin{algorithmic}[1]
+%         \Function{Grow}{$p, E$}
+%             \If{$|E| = K$} \Return $p$ \EndIf%
 
-\begin{algorithm}[!ht]
-    \caption{Grow}\label{alg:Grow}
+%             \State{%
+%                 $\displaystyle i \gets \argmin_{i \in \{
+%                     i \mid i \notin  E, p_i < M_i, i = 1,\ldots, K
+%                 \}}
+%                     \mathcal{C}_{i,p_i + 1} - \mathcal{C}_{i,p_i}$
+%             }
 
-    \begin{algorithmic}[1]
-        \Function{Grow}{$p, E, s^{\min}$}
-            \State{%
-                $D \gets \{
-                    i \mid i \notin  E, \quad p_i < M_i, \quad i = 1,\ldots, K
-                \}$ 
-            }
-            \State{%
-                $i \gets \argmin_{i \in D}
-                    \mathcal{C}_{i,p_i + 1} - \mathcal{C}_{i,p_i}$
-            }
+%             \State{%
+%                 $s' \gets (\mathcal{C}_{1,p_1}, \ldots,
+%                 \mathcal{C}_{i,p_i + 1},\ldots, \mathcal{C}_{K,p_K})$
+%             }
 
-            \State{%
-                $s' \gets (\mathcal{C}_{1,p_1}, \ldots,
-                \mathcal{C}_{i,p_i + 1},\ldots, \mathcal{C}_{K,p_K})$
-            }
+%             \If{%
+%                 $|\mathcal{T}((s^{\min},s'))|$ $>$ 1 \textbf{or}
+%                 $s'$ is explored
+%             }
+%                 \State{%
+%                     \Return \Call{Grow}{$p, E \cup {\{i\}}$}
+%                 }
+%             \ElsIf{$p_i + 1 = M_i$}
+%                 \State{%
+%                     \Return \Call{Grow}
+%                         {$(p_1, \ldots, p_i + 1, \ldots, p_K), E \cup \{i\}$}
+%                 }
+%             \Else
+%                 \State{%
+%                     \Return \Call{Grow}
+%                         {$(p_1, \ldots, p_i + 1, \ldots, p_K), E$}
+%                 }
+%             \EndIf%
+%         \EndFunction%
+%     \end{algorithmic}
 
-            \If{%
-                $|\mathcal{T}((s^{\min},s'))|$ $>$ 1 \textbf{or}
-                $s'$ is explored
-            }
-                \State{\textbf{return} $p, E \cup {\{i\}}$}
-            \ElsIf{$p_i + 1 = M_i$}
-                \State{\textbf%
-                    {return}
-                    $(p_1, \ldots, p_i + 1, \ldots, p_K), E \cup \{i\}$
-                }
-            \Else%
-                \State{%
-                    \textbf{return} $(p_1, \ldots, p_i + 1, \ldots, p_K), E$
-                }
-            \EndIf%
-        \EndFunction
-    \end{algorithmic}
+% \end{algorithm}
 
-\end{algorithm}
 
 \begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
@@ -176,54 +156,46 @@ which we do in line 20.
             $\mathcal{C}_{i,j}$ is the $j$th smallest constraint in dimension
             $i$ for all $j = 1,2,\ldots,M_i$.
         }
+        \Require{%
+            $\mathbf{0}^K$: A $K$-dimensional point with all elements being 0.
+        }
 
         \State{$\mathcal{R} \gets \{\}$}
-        \State{%
-            $p^0 \gets (p_1, p_2, \ldots, p_K)$
-            where $p_i = 0$ for all $i = 1, 2, \ldots, K$
-        }
-        \State{$\mathcal{P} \gets \{ p^0 \} $}
+        \State{$\mathcal{P} \gets \{ \mathbf{0}^K \} $}
 
         \While{$\mathcal{P}$ is not empty}
-            \State{$p^{\min} \gets \min \mathcal{P}$}
+            \State{$p^{\min} \gets \min \mathcal{P}$}\Comment{Lexicographic min}
             \State{%
                 $p^{\max} \gets
-                (p^{\min}_1 + 1, p^{\min}_2 + 1, \ldots, p^{\min}_K + 1)
-            $}
+                (p^{\min}_1 + 1, p^{\min}_2 + 1, \ldots, p^{\min}_K + 1)$
+            }
+            \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}
             \item
 
             \State{%
                 $s^{\min} \gets (\mathcal{C}_{1,p^{\min}_1},
                 \mathcal{C}_{2,p^{\min}_2},\ldots, \mathcal{C}_{K,p^{\min}_K})$
             }
+
+            \If{$s^{\min}$ is explored}
+                \State{continue at line 3}
+            \EndIf%
+            \item
+
+            % call grow(p^{\max}, {})
+            \State{%
+                $p^{\max} \gets grow(
+                    p^{\max}, \{\} \mid (\mathcal{T}, M, \mathcal{C}, s^{\min})
+                )$
+            }
+
             \State{%
                 $s^{\max} \gets (\mathcal{C}_{1,p^{\max}_1},
                 \mathcal{C}_{2,p^{\max}_2},\ldots, \mathcal{C}_{K,p^{\max}_K})$
             }
             \item
 
-            \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}
-            \State{$E \gets \{\}$}
-            \item
-
-            \While{$|E| < K$}
-
-                    \State{%
-                        $p^{\max}, E \gets$ \Call{Grow}{%
-                            $p^{\max}, E, s^{\min}$
-                        }
-                    }
-                \item
-
-            \EndWhile%
-
-            \State{%
-                $s^{\max} \gets (\mathcal{C}_{1,p^{\max}_1},
-                \mathcal{C}_{2,p^{\max}_2},\ldots, \mathcal{C}_{K,p^{\max}_K})$
-            }
             \State{$\mathcal{R} \gets \mathcal{R} \cup \{(s^{\min},s^{\max})\}$}
-
-            \item
             \For{$i = 1, 2, \ldots, K$}
                 \If{%
                     $p^{\min}_i \neq p^{\max}_i$
@@ -244,19 +216,6 @@ which we do in line 20.
     \end{algorithmic}
 
 \end{algorithm}
-
-Then in line 21-22, we check if there are still unexhausted dimensions, and if
-so, we continue the search from line 12. Otherwise, we have have found
-$p^{\max}$ that spans the largest area from $p^{\min}$ that only prescribes one
-action in $\mathcal{T}$ and neither exceeds any dimensional upper limits of the
-state space or expands into other found regions. We can therefore, in line 23,
-add the region $\nu = (p^{\min},p^{\max})$ to the list of regions.
-
-The last thing needed is to add new starting points to $\mathcal{P}$. This is
-done in line 25-27. For every $V_i$ in $\mathcal{V}$ we create a new point $p' =
-(p^{\min}_1, \ldots, p^{\max}_i, \ldots, p^{\min}_k)$ and add it to
-$\mathcal{P}$ as long as long as some basic properties hold. Then we break (line
-28) and continue processing the next point in $\mathcal{P}$.
 
 
 \subsection{Analyzing the algorithm}%
