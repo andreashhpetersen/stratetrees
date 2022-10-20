@@ -334,7 +334,7 @@ def import_uppaal_strategy(fp):
         data = json.load(f)
 
     variables = data['pointvars']
-    actions = data['actions'].keys()
+    actions = list(data['actions'].keys())
     regressors = data['regressors']
     locations = regressors.keys()
 
