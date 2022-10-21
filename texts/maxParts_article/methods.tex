@@ -61,34 +61,63 @@ Algorithm~\ref{alg:MaxPartitions}.
 \subsection{Description of the algorithm}%
 \label{sub:maxPartsDescription}
 
+We introduce a new notation to refer to individual bounds on the dimensions in
+$\mathcal{T}$. We denote by $\mathcal{T}_i$ the sorted list of bounds on
+dimension $i$ and by $\mathcal{T}_{i,j}$ the $j$th smallest bound on dimension
+$i$ for each $j = 1,2,\ldots,|\mathcal{T}_i|$. This can be precomputed as a
+matrix in log-linear time by collecting and sorting the bounds on all branch
+nodes in $\mathcal{T}$ and allows accessing $\mathcal{T}_{i,j}$ in constant
+time.
+
+Exploiting this notation, if $p$ is a $K$-dimensional vector of index pointers
+to bounds in $\mathcal{T}$, such that $p_i$ is a pointer to
+$\mathcal{T}_{i,p_i}$ then we can define a point at an intersection of bounds in
+all $K$ dimensions as $s^{p}_{\mathcal{T}} =
+(\mathcal{T}_{1,p_1},\mathcal{T}_{2,p_2},\ldots,\mathcal{T}_{K,p_K})$.
+
+For the algorithm, we require that the domain of $\mathcal{T}$ is bounded in all
+$K$ dimensions. This can be achieved by including a minimum and a maximum bound
+for each dimension $i$, which is not represented by a branch node in
+$\mathcal{T}$. These limit bounds can be negative and positive infinity, in
+which case we say $\mathcal{T}_{i,1} = -\infty$ and
+$\mathcal{T}_{i,|\mathcal{T}_{i}|} = \infty$.
+
+Further, in a slight abuse of notation, we define
+$\mathcal{T}_{i,|\mathcal{T}_i| + 1}$ to be some \textit{sentinel} value that
+represents, that we are outside boundaries of dimension $i$. Correspondingly, we
+define a sentinel action $\alpha$, and we say that
+$\mathcal{T}(s^p_{\mathcal{T}}) = \alpha$ if and only if $\exists p_i \in p, p_i
+= |\mathcal{T}_i| + 1$.
+
+Let $\mathbf{\hat{e}}_i$ denote the unit vector parallel to axis $i$, such that
+$p + \mathbf{\hat{e}}_i = (p_1,\ldots,p_i + 1,\ldots,p_K)$. We can then define
+the following recursive function to \textit{grow} a region from a point
+$s^{p^{\min}}_{\mathcal{T}}$ to its maximal size while retaining the invariants
+that the region can only span areas mapping to a single action:
+
 \[
     grow(p, E \mid \theta) = 
     \begin{cases}
         p & \text{if } |E|  =  K \\
         grow(p, E \cup \{i\}) &
-            \text{if } |\mathcal{T}((s, s'))| > 1
-            \text{ or $s'$ is explored} \\
-        grow(p', E \cup \{i\}) & \text{if } p_i + 1 = M_i \\
-        grow(p', E) & \text{otherwise}
+            \text{if }
+                |\mathcal{T}((s^{p^{\min}}, s^{p + \mathbf{\hat{e}}_i}))| > 1
+                \text{~or $s^{p + \mathbf{\hat{e}}_i}$ is explored} \\
+        grow(p + \mathbf{\hat{e}}_i, E) & \text{otherwise}
     \end{cases}
 \] 
 
-\noindent where $grow$ is parametized by $\theta = (\mathcal{T}, M, \mathcal{C},
-s)$ with $\mathcal{T}$ being a binary decision tree over the domain
-$\mathbb{R}^K$ inducing a partitioning $\mathcal{A}_{\mathcal{T}}$, $M$ being a
-$K$-dimensional vector of the number of constraints on each dimension $i$ in
-$\mathcal{A}_{\mathcal{T}}$, $\mathcal{C}$ being an $K \times m$ matrix of the
-sorted constraints, such that  $\mathcal{C}_{i,j}$ is the $j$th smallest
-constraint on dimension $i$ for each $j = 1,2,\ldots,M_i$ and $s \in
-\mathbb{R}^K$ is a point in the domain. Further, to avoid cluttering the
-expression for $grow$, we use $i, s'$ and $p'$ defined as
+\noindent where $grow$ is parametized by $\theta = (\mathcal{T}, p^{\min})$ with
+$\mathcal{T}$ being a binary decision tree over the domain $\mathbb{R}^K$
+inducing a partitioning $\mathcal{A}_{\mathcal{T}}$ and $p^{\min}$ is
+a vector of index pointers giving the left lowest point of the region we are
+currently expanding. Further, to avoid cluttering the expression for $grow$,
+we use $i$ defined as
 
 \begin{align*}
-    i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i < M_i \}}
-        \mathcal{C}_{i,p_i+1} - \mathcal{C}_{i,p_i} \\
-    s' &= (\mathcal{C}_{i,p_1}, \ldots, \mathcal{C}_{i,p_i + 1},\ldots,
-           \mathcal{C}_{i,p_K}) \\
-    p' &= (p_1, \ldots, p_i + 1, \ldots, p_K)
+    i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i <
+    |\mathcal{T}_i| \}}
+        \mathcal{T}_{i,p_i+1} - \mathcal{T}_{i,p_i} \\
 \end{align*}
 
 \noindent
@@ -146,16 +175,16 @@ Algorithm~\ref{alg:MaxPartitions}.
             $\mathcal{T}$: A binary decision tree over the domain
             $\mathbb{R}^K$ inducing the partitioning $\mathcal{A}_{\mathcal{T}}$
         }
-        \Require{%
-            $M$: A $K$-dimensional vector, where $M_i$ is the number of
-            constraints on dimension $i$ in $\mathcal{A}_{\mathcal{T}}$
-        }
-        \Require{%
-            $\mathcal{C}$: A $K \times M$ matrix of the constraints on each
-            dimension $i$ sorted in ascending order, such that
-            $\mathcal{C}_{i,j}$ is the $j$th smallest constraint in dimension
-            $i$ for all $j = 1,2,\ldots,M_i$.
-        }
+        % \Require{%
+        %     $M$: A $K$-dimensional vector, where $M_i$ is the number of
+        %     constraints on dimension $i$ in $\mathcal{A}_{\mathcal{T}}$
+        % }
+        % \Require{%
+        %     $\mathcal{C}$: A $K \times M$ matrix of the constraints on each
+        %     dimension $i$ sorted in ascending order, such that
+        %     $\mathcal{C}_{i,j}$ is the $j$th smallest constraint in dimension
+        %     $i$ for all $j = 1,2,\ldots,M_i$.
+        % }
         \Require{%
             $\mathbf{0}^K$: A $K$-dimensional point with all elements being 0.
         }
@@ -173,8 +202,8 @@ Algorithm~\ref{alg:MaxPartitions}.
             \item
 
             \State{%
-                $s^{\min} \gets (\mathcal{C}_{1,p^{\min}_1},
-                \mathcal{C}_{2,p^{\min}_2},\ldots, \mathcal{C}_{K,p^{\min}_K})$
+                $s^{\min} \gets (\mathcal{T}_{1,p^{\min}_1},
+                \mathcal{T}_{2,p^{\min}_2},\ldots, \mathcal{T}_{K,p^{\min}_K})$
             }
 
             \If{$s^{\min}$ is explored}
@@ -185,13 +214,13 @@ Algorithm~\ref{alg:MaxPartitions}.
             % call grow(p^{\max}, {})
             \State{%
                 $p^{\max} \gets grow(
-                    p^{\max}, \{\} \mid (\mathcal{T}, M, \mathcal{C}, s^{\min})
+                    p^{\max}, \{\} \mid (\mathcal{T}, \mathcal{T}, s^{\min})
                 )$
             }
 
             \State{%
-                $s^{\max} \gets (\mathcal{C}_{1,p^{\max}_1},
-                \mathcal{C}_{2,p^{\max}_2},\ldots, \mathcal{C}_{K,p^{\max}_K})$
+                $s^{\max} \gets (\mathcal{T}_{1,p^{\max}_1},
+                \mathcal{T}_{2,p^{\max}_2},\ldots, \mathcal{T}_{K,p^{\max}_K})$
             }
             \item
 
@@ -199,7 +228,7 @@ Algorithm~\ref{alg:MaxPartitions}.
             \For{$i = 1, 2, \ldots, K$}
                 \If{%
                     $p^{\min}_i \neq p^{\max}_i$
-                    \textbf{and} $p^{\max}_i < M_i$
+                    \textbf{and} $p^{\max}_i < |\mathcal{T}_i|$
                 }
                     \State{$\mathcal{P} \gets \mathcal{P} \cup
                     \{(p^{\min}_1, \ldots, p^{\max}_i, \ldots,
