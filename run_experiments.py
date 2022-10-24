@@ -1,5 +1,6 @@
 import os
 import re
+import csv
 import json
 import argparse
 import numpy as np
@@ -32,6 +33,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 EXPORT_UPPAAL = args.store_uppaal
+S_ID, T_ID = 0, 1   # size and time
 
 
 class performance:
@@ -43,12 +45,41 @@ class performance:
         self.stop = perf_counter()
         self.time = self.stop - self.start
 
+
 def dump_json(strategy, fp):
     if not EXPORT_UPPAAL:
         return
 
     with open(fp, 'w') as f:
         json.dump(strategy, f, indent=4)
+
+
+def write_results(data, model_names, model_dir):
+    smallest = np.argmin(data[:,1,S_ID])
+    with open(f'{model_dir}/smallest.txt', 'w') as f:
+        f.write(f'constructed_{smallest}')
+
+    headers = [
+        'model_name', 'time (best)', 'time (avg)', 'time (std)',
+        'size (best)', 'size (avg)', 'size (std)'
+    ]
+    with open(f'{model_dir}/dt_results.csv', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+
+        for i in range(len(model_names)):
+            row = [model_names[i]]
+            model_d = data[:,i].T
+            row.extend([
+                model_d[T_ID].min(),
+                model_d[T_ID].mean(),
+                model_d[T_ID].std(),
+                model_d[S_ID].min(),
+                model_d[S_ID].mean(),
+                model_d[S_ID].std(),
+            ])
+            writer.writerow(row)
+
 
 def run_experiment(model_dir, k=10):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
@@ -84,7 +115,9 @@ def run_experiment(model_dir, k=10):
         data.append(np.vstack((q_tree_data, res)))
 
     data = np.array(data)
+    write_results(data, model_names, model_dir)
     return model_names, data
+
 
 def run_single_experiment(
         loc_qtrees, variables, actions, meta, sample_logs, store_path
@@ -146,17 +179,17 @@ def run_single_experiment(
 
 
 if __name__=='__main__':
-    s_id, t_id = 0, 1
     model, k = args.MODEL_NAME, args.repeats
+    res = parse_uppaal_results(f'./automated/{model}')
     model_names, data = run_experiment(f'./automated/{model}', k=k)
     for i in range(len(model_names)):
         model_d = data[:,i].T
         print(model_names[i])
         print('\tTime:\t\t(avg)\t\t(std)\t\t(best)')
         print('\t     \t\t{:0.2f}\t\t{:0.2f}\t\t{:0.2f}'.format(
-            model_d[t_id].mean(), model_d[t_id].std(), model_d[t_id].min()
+            model_d[T_ID].mean(), model_d[T_ID].std(), model_d[T_ID].min()
         ))
         print('\tSize:\t\t(avg)\t\t(std)\t\t(best)')
         print('\t     \t\t{:0.2f}\t\t{:0.2f}\t\t{}'.format(
-            model_d[s_id].mean(), model_d[s_id].std(), int(model_d[s_id].min())
+            model_d[S_ID].mean(), model_d[S_ID].std(), int(model_d[S_ID].min())
         ))
