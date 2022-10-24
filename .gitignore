@@ -1,11 +1,18 @@
 */__pycache__/*
+__pycache__/*
 experiments/*
 uppaal_models/*
 .benchmark_suite/*
 dtcontrol/*
 papers/*
 random/*
+
+# ignore experiment results
 constructed_*
+dt_results.csv
+smallest.txt
+eval_results.txt
+combined_results.csv
 
 
 ## Core latex/pdflatex auxiliary files:
