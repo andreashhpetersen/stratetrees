@@ -7,20 +7,19 @@ import pandas as pd
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    'MODEL_NAME',
-    help='The name of the model to run experiments on. Expected to be in ' \
-    'folder ./automated/MODEL_NAME/'
+    'MODEL_DIR',
+    help='The directory containing the model to run experiments on.'
 )
 args = parser.parse_args()
 S_ID, T_ID = 0, 1   # size and time
 
 
 def parse_uppaal_results(model_dir):
-    with open(f'{model_dir}/results.txt', 'r') as f:
+    with open(f'{model_dir}/eval_results.txt', 'r') as f:
         plain_data = f.readlines()
 
     results = {}
-    model_ptr = r'constructed_[\d]+/([\w]+).json'
+    model_ptr = r'([\w]+).json'
     eval_ptr = r'^\([\d]+ runs\) E\([\w]+\) = ([\d]+.[\d]+) ± ([\d]+.[\d]+)'
 
     check_next = False
@@ -46,8 +45,7 @@ def parse_uppaal_results(model_dir):
 
 
 if __name__=='__main__':
-    model = args.MODEL_NAME
-    model_dir = f'./automated/{model}'
+    model_dir = args.MODEL_DIR
     eval_data = parse_uppaal_results(model_dir)
     dt_data = pd.read_csv(f'{model_dir}/dt_results.csv', index_col=0)
 
