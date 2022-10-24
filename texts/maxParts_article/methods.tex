@@ -71,8 +71,8 @@ time.
 
 Exploiting this notation, if $p$ is a $K$-dimensional vector of index pointers
 to bounds in $\mathcal{T}$, such that $p_i$ is a pointer to
-$\mathcal{T}_{i,p_i}$ then we can define a point at an intersection of bounds in
-all $K$ dimensions as $s^{p}_{\mathcal{T}} =
+$\mathcal{T}_{i,p_i}$, then we can define a point at an intersection of bounds
+in all $K$ dimensions as $s^{p}_{\mathcal{T}} =
 (\mathcal{T}_{1,p_1},\mathcal{T}_{2,p_2},\ldots,\mathcal{T}_{K,p_K})$.
 
 For the algorithm, we require that the domain of $\mathcal{T}$ is bounded in all
@@ -83,9 +83,9 @@ which case we say $\mathcal{T}_{i,1} = -\infty$ and
 $\mathcal{T}_{i,|\mathcal{T}_{i}|} = \infty$.
 
 Further, in a slight abuse of notation, we define
-$\mathcal{T}_{i,|\mathcal{T}_i| + 1}$ to be some \textit{sentinel} value that
-represents, that we are outside boundaries of dimension $i$. Correspondingly, we
-define a sentinel action $\alpha$, and we say that
+$\mathcal{T}_{i,|\mathcal{T}_i| + 1}$ to be some \textit{sentinel} value
+representing that we are outside the boundaries of dimension $i$.
+Correspondingly, we define a sentinel action $\alpha$, and we say that
 $\mathcal{T}(s^p_{\mathcal{T}}) = \alpha$ if and only if $\exists p_i \in p, p_i
 = |\mathcal{T}_i| + 1$.
 
@@ -185,46 +185,49 @@ Algorithm~\ref{alg:MaxPartitions}.
         %     $\mathcal{C}_{i,j}$ is the $j$th smallest constraint in dimension
         %     $i$ for all $j = 1,2,\ldots,M_i$.
         % }
-        \Require{%
-            $\mathbf{0}^K$: A $K$-dimensional point with all elements being 0.
-        }
 
         \State{$\mathcal{R} \gets \{\}$}
         \State{$\mathcal{P} \gets \{ \mathbf{0}^K \} $}
 
         \While{$\mathcal{P}$ is not empty}
             \State{$p^{\min} \gets \min \mathcal{P}$}\Comment{Lexicographic min}
-            \State{%
-                $p^{\max} \gets
-                (p^{\min}_1 + 1, p^{\min}_2 + 1, \ldots, p^{\min}_K + 1)$
-            }
+            % \State{%
+            %     $p^{\max} \gets
+            %     (p^{\min}_1 + 1, p^{\min}_2 + 1, \ldots, p^{\min}_K + 1)$
+            % }
             \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}
-            \item
+            \item[]
 
-            \State{%
-                $s^{\min} \gets (\mathcal{T}_{1,p^{\min}_1},
-                \mathcal{T}_{2,p^{\min}_2},\ldots, \mathcal{T}_{K,p^{\min}_K})$
-            }
+            % \State{%
+            %     $s^{\min} \gets (\mathcal{T}_{1,p^{\min}_1},
+            %     \mathcal{T}_{2,p^{\min}_2},\ldots, \mathcal{T}_{K,p^{\min}_K})$
+            % }
 
-            \If{$s^{\min}$ is explored}
+            \If{$s^{p^{\min}}_{\mathcal{T}}$ is explored}
                 \State{continue at line 3}
             \EndIf%
-            \item
+            \item[]
 
             % call grow(p^{\max}, {})
             \State{%
                 $p^{\max} \gets grow(
-                    p^{\max}, \{\} \mid (\mathcal{T}, \mathcal{T}, s^{\min})
+                    p^{\min} + \mathbf{1}^K,
+                    \emptyset \mid (\mathcal{T}, p^{\min})
                 )$
             }
+            \item[]
+
+            % \State{%
+            %     $s^{\max} \gets (\mathcal{T}_{1,p^{\max}_1},
+            %     \mathcal{T}_{2,p^{\max}_2},\ldots, \mathcal{T}_{K,p^{\max}_K})$
+            % }
+            % \item
 
             \State{%
-                $s^{\max} \gets (\mathcal{T}_{1,p^{\max}_1},
-                \mathcal{T}_{2,p^{\max}_2},\ldots, \mathcal{T}_{K,p^{\max}_K})$
-            }
-            \item
-
-            \State{$\mathcal{R} \gets \mathcal{R} \cup \{(s^{\min},s^{\max})\}$}
+                $\mathcal{R} \gets \mathcal{R} \cup \{
+                    (s^{p^{\min}}_{\mathcal{T}},s^{p^{\max}}_{\mathcal{T}})
+                \}
+            $}
             \For{$i = 1, 2, \ldots, K$}
                 \If{%
                     $p^{\min}_i \neq p^{\max}_i$
