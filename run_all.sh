@@ -9,9 +9,11 @@ else
 fi
 
 for MODEL_DIR in $DIRS ; do
-    model=$(echo $MODEL_DIR | cut -d '/' -f 3)
+    rm -rf $MODEL_DIR/constructed_*
+
+    model=${MODEL_DIR##*/}
     echo "BUILDING trees for model '$model'"
-    python run_experiments.py $MODEL_DIR -k 5 -u
+    python run_experiments.py $MODEL_DIR -k 10 -u
 
     echo "EVALUATE '$model' strategies"
     R=$MODEL_DIR/eval_results.txt
@@ -25,10 +27,7 @@ for MODEL_DIR in $DIRS ; do
     D=$(cat $MODEL_DIR/smallest.txt)
     strategies=($MODEL_DIR/qt_strategy.json $MODEL_DIR/$D/*)
     for S in "${strategies[@]}" ; do
-        strat=$(echo $S | cut -d '/' -f 5)
-        if [ -z $strat ] ; then
-            strat=$(echo $S | cut -d '/' -f 4)
-        fi
+        strat=${S##*/}
 
         echo -e "\t $strat"
         echo "EVALUATE $strat" >> $R
