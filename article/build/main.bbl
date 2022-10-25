@@ -1,0 +1,31 @@
+\begin{thebibliography}{1}
+
+\bibitem{David2015UppaalS}
+A.~David, P.~G. Jensen, K.~G. Larsen, M.~Mikucionis, and J.~H. Taankvist,
+  ``Uppaal stratego,'' in {\em TACAS}, 2015.
+
+\bibitem{Sutton1998}
+R.~S. Sutton and A.~G. Barto, {\em Reinforcement Learning: An Introduction}.
+\newblock The MIT Press, second~ed., 2018.
+
+\bibitem{HYAFIL197615}
+L.~Hyafil and R.~L. Rivest, ``Constructing optimal binary decision trees is
+  np-complete,'' {\em Information Processing Letters}, vol.~5, no.~1,
+  pp.~15--17, 1976.
+
+\bibitem{Manfred2019}
+M.~Jaeger, P.~G. Jensen, K.~Guldstrand~Larsen, A.~Legay, S.~Sedwards, and J.~H.
+  Taankvist, ``Teaching stratego to play ball: Optimal synthesis for continuous
+  space mdps,'' in {\em Automated Technology for Verification and Analysis}
+  (Y.-F. Chen, C.-H. Cheng, and J.~Esparza, eds.), (Cham), pp.~81--97, Springer
+  International Publishing, 2019.
+
+\bibitem{dtControl2}
+P.~Ashok, M.~Jackermeier, J.~K{\v{r}}et{\'i}nsk{\'y}, C.~Weinhuber,
+  M.~Weininger, and M.~Yadav, ``dtcontrol 2.0: Explainable strategy
+  representation via decision tree learning steered by experts,'' in {\em Tools
+  and Algorithms for the Construction and Analysis of Systems} (J.~F. Groote
+  and K.~G. Larsen, eds.), (Cham), pp.~326--345, Springer International
+  Publishing, 2021.
+
+\end{thebibliography}

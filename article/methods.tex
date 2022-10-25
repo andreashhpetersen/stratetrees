@@ -115,7 +115,7 @@ currently expanding. Further, to avoid cluttering the expression for $grow$,
 we use $i$ defined as
 
 \begin{align*}
-    i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i <
+    i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i \le 
     |\mathcal{T}_i| \}}
         \mathcal{T}_{i,p_i+1} - \mathcal{T}_{i,p_i} \\
 \end{align*}
@@ -123,49 +123,6 @@ we use $i$ defined as
 \noindent
 The \texttt{MaxPartitions} algorithm is given in
 Algorithm~\ref{alg:MaxPartitions}.
-
-% \begin{algorithm}[!ht]
-%     \caption{Grow}\label{alg:Grow}
-
-%     \begin{algorithmic}[1]
-%         \Function{Grow}{$p, E$}
-%             \If{$|E| = K$} \Return $p$ \EndIf%
-
-%             \State{%
-%                 $\displaystyle i \gets \argmin_{i \in \{
-%                     i \mid i \notin  E, p_i < M_i, i = 1,\ldots, K
-%                 \}}
-%                     \mathcal{C}_{i,p_i + 1} - \mathcal{C}_{i,p_i}$
-%             }
-
-%             \State{%
-%                 $s' \gets (\mathcal{C}_{1,p_1}, \ldots,
-%                 \mathcal{C}_{i,p_i + 1},\ldots, \mathcal{C}_{K,p_K})$
-%             }
-
-%             \If{%
-%                 $|\mathcal{T}((s^{\min},s'))|$ $>$ 1 \textbf{or}
-%                 $s'$ is explored
-%             }
-%                 \State{%
-%                     \Return \Call{Grow}{$p, E \cup {\{i\}}$}
-%                 }
-%             \ElsIf{$p_i + 1 = M_i$}
-%                 \State{%
-%                     \Return \Call{Grow}
-%                         {$(p_1, \ldots, p_i + 1, \ldots, p_K), E \cup \{i\}$}
-%                 }
-%             \Else
-%                 \State{%
-%                     \Return \Call{Grow}
-%                         {$(p_1, \ldots, p_i + 1, \ldots, p_K), E$}
-%                 }
-%             \EndIf%
-%         \EndFunction%
-%     \end{algorithmic}
-
-% \end{algorithm}
-
 
 \begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
