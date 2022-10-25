@@ -16,7 +16,7 @@ combined_results.csv
 
 
 ## Core latex/pdflatex auxiliary files:
-build/*
+article/build/*
 *.aux
 *.lof
 *.log
