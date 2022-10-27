@@ -33,7 +33,7 @@ for MODEL_DIR in $DIRS ; do
         echo "EVALUATE $strat" >> $R
 
         Q=$($MODEL_DIR/make_eval_query.sh $S)
-        eval $V $M $Q -sWqy >> $R
+        eval $V $M $Q --seed $RANDOM -sWqy >> $R
         rm $Q
     done
     echo "COMBINE results for '$model'"
