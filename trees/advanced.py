@@ -30,8 +30,8 @@ def grow(p, bs, max_i):
     bs: (K, M) array of bounds, where M is the padded max number of bounds
     max_i: (K,) array of max number of bounds for each dimension
     """
-    dims = np.arange(len(p))
-    idxs = np.argsort(bs[dims, p+1] - bs[dims, p])
+    idxs = np.arange(len(p))
+    np.random.shuffle(idxs)
     i = idxs[np.logical_and(bs[idxs,-1] == 0, p[idxs] < max_i[idxs])][0]
     p[i] += 1
     return p, i
