@@ -6,6 +6,7 @@ uppaal_models/*
 dtcontrol/*
 papers/*
 random/*
+.idea
 
 # ignore experiment results
 constructed_*

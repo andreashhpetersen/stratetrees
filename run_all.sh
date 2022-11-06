@@ -1,6 +1,12 @@
 #!/bin/bash
 
-V="~/uppaal-4.1.20-stratego-10-linux64/bin/verifyta"
+if [ -z "$UPPAAL_PATH" ] ; then
+    UPPAAL_PATH="$(pwd)/uppaal-4.1.20-stratego-11-beta1-linux64"
+    export UPPAAL_PATH
+fi
+
+VERIFYTA_PATH="$UPPAAL_PATH/bin/verifyta"
+export VERIFYTA_PATH
 
 if [ $# == 0 ] ; then
     DIRS=./automated/*
@@ -33,9 +39,10 @@ for MODEL_DIR in $DIRS ; do
         echo "EVALUATE $strat" >> $R
 
         Q=$($MODEL_DIR/make_eval_query.sh $S)
-        eval $V $M $Q --seed $RANDOM -sWqy >> $R
+        $VERIFYTA_PATH $M $Q --seed $RANDOM -sWqy >> $R
         rm $Q
     done
     echo "COMBINE results for '$model'"
     python combine_results.py $MODEL_DIR
+    exit
 done

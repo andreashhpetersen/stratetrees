@@ -87,8 +87,7 @@ def write_results(data, model_names, model_dir):
 
 def run_experiment(model_dir, k=10):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
-    # sample_logs = glob(f'{model_dir}/sample_*.log')
-    sample_logs = []
+    sample_logs = glob(f'{model_dir}/sample_*.log')
 
     # qtrees, variables, actions, meta = load_trees(qt_strat_file, verbosity=1)
     loc_qtrees, variables, actions, meta = import_uppaal_strategy(qt_strat_file)
@@ -126,7 +125,6 @@ def run_experiment(model_dir, k=10):
 def run_single_experiment(
         loc_qtrees, variables, actions, meta, sample_logs, store_path
 ):
-    data = {}
     results = []
     org_meta = meta
 
@@ -182,7 +180,7 @@ def run_single_experiment(
     return np.array(results)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     model_dir, k = args.MODEL_DIR, args.repeats
     model_names, data = run_experiment(model_dir, k=k)
     if args.print_results:
