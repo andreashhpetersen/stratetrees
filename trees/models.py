@@ -357,15 +357,6 @@ class Node:
         else:
             return self.high.get(state)
 
-    def get_leaf(self, state):
-        """
-        Get a particular leaf corresponding to the given `state`
-        """
-        if state[self.variable] > self.bound:
-            return self.high.get_leaf(state)
-        else:
-            return self.low.get_leaf(state)
-
     def get_branches(self, nodes=[]):
         nodes.append(self)
         if not self.low.is_leaf:
@@ -719,9 +710,6 @@ class Leaf:
         return Leaf.copy(leaf)
 
     def get(self, *args):
-        return self
-
-    def get_leaf(self, state):
         return self
 
     def get_for_region(self, s1, s2, actions, collect):

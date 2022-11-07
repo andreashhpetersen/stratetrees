@@ -174,19 +174,6 @@ def parse_from_sampling_log(filepath, as_numpy=True):
 
     return data
 
-def test_equivalence(tree, forest, data, variables, step=1):
-    for i in range(0, len(data), step):
-        state = { var: val for var, val in zip(variables, data[i][1:]) }
-        a1 = tree.get_leaf(state).action
-        a2 = sorted(
-            [r.get_leaf(state) for r in forest], key=lambda x: x.cost
-        )[0].action
-        if not a1 == a2:
-            print(f'Inconsistent at {state}')
-            print(f'Tree chose {a1}, forest chose {a2}')
-            return False
-    return True
-
 def count_visits(tree, data, step=1):
     """
     Evaluate every state given by `data`, and mark the resulting leaf in `root`
@@ -225,63 +212,6 @@ def count_visits(tree, data, step=1):
 
     for l in leaves:
         l.ratio = l.visits / total
-
-    return actions
-
-def add_stats(trees, stats, variables, max_ts, step_sz):
-    """
-
-    params:
-        stat -  a list of statistics, where each statistic should consist of
-                a list of tuples of (timestep, value) for each variable in the
-                statistic
-    """
-    actions = defaultdict(int)
-    leaves = [l for ls in [t.get_leaves() for t in trees] for l in ls]
-    for l in leaves:
-        l.visits = 0
-        l.ratio = 0
-        l.best = 0
-        l.best_ratio = 0
-
-    for stat in stats:
-        var_ptrs = [0 for _ in range(len(variables))]
-
-        for ts in range(0, max_ts, step_sz):
-            state = {}
-            for var in range(len(variables)):
-                var_data = stat[var]
-
-                # increase pointer if next timestep is larger
-                if not ts < var_data[var_ptrs[var]][0]:
-                    var_ptrs[var] += 1
-
-                # update state with value at pointer
-                state[variables[var]] = var_data[var_ptrs[var]][1]
-
-            # increase visited
-            visited = sorted(
-                [tree.get_leaf(state) for tree in trees],
-                key=lambda x: x.cost
-            )
-            best = visited[0]
-            visited[0].best += 1
-            actions[visited[0].action] += 1
-
-            for l in visited:
-                l.visits += 1
-
-    total = len(stats) * (max_ts / step_sz)
-    for l in leaves:
-        try:
-            l.ratio = l.visits / total
-        except ZeroDivisionError:
-            l.ratio = 0
-
-        try:
-            l.best_ratio = l.best / l.visits
-        except ZeroDivisionError:
-            l.best_ratio = 0
 
     return actions
 
