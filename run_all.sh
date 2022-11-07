@@ -13,7 +13,7 @@ for MODEL_DIR in $DIRS ; do
 
     model=${MODEL_DIR##*/}
     echo "BUILDING trees for model '$model'"
-    python run_experiments.py $MODEL_DIR -k 10 -u
+    python run_experiments.py $MODEL_DIR -k 10 -u -p
 
     echo "EVALUATE '$model' strategies"
     R=$MODEL_DIR/eval_results.txt
