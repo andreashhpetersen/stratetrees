@@ -277,6 +277,42 @@ class Tree:
         root.set_state(State(variables))
         return Tree(root, variables, actions, size=root.size)
 
+    @classmethod
+    def parse_from_dot(cls, filepath, varmap):
+        tree = Tree.empty_tree(list(varmap.values()), [])
+
+        graph = pydot.graph_from_dot_file(filepath)[0]
+
+        nodes = []
+        for node in graph.get_nodes():
+            try:
+                int(node.get_name())
+            except ValueError:
+                continue
+
+            label = node.get_attributes()['label'].strip('"').split(" ")
+            if len(label) == 1:
+                nodes.append(Leaf(0, action=int(float(label[0]))))
+            else:
+                var = varmap[label[0]]
+                var_id = tree.var2id[var]
+                bound = float(label[2])
+                nodes.append(Node(var, var_id, bound))
+
+        for edge in graph.get_edges():
+            src = nodes[int(edge.get_source())]
+            dst = nodes[int(edge.get_destination())]
+            low = True if edge.get_label().strip('"') == 'True' else False
+
+            if low:
+                src.low = dst
+            else:
+                src.high = dst
+
+        tree.root = nodes[0]
+        tree.size = tree.root.size
+        return tree
+
 
 class Node:
     def __init__(self, variable, var_id, bound, low=None, high=None, state=None):
@@ -362,35 +398,6 @@ class Node:
             )
 
         return collect
-
-    def get_leaves_at_symbolic_state2(self, min_state, max_state, pairs=[]):
-        if min_state[self.variable] < self.bound:
-            pairs = self.low.get_leaves_at_symbolic_state2(
-                min_state, max_state, pairs
-            )
-
-        if max_state[self.variable] > self.bound:
-            pairs = self.high.get_leaves_at_symbolic_state2(
-                min_state, max_state, pairs
-            )
-
-        return pairs
-
-    def get_leaves_at_symbolic_state(self, state, pairs=[]):
-        """
-        Takes a symbolic state (of type `State`) and returns a list of tuples
-        indicating each action/state combination found
-        """
-        var_min, var_max = state.min_max(self.variable)
-        var_min = float(var_min)
-        var_max = float(var_max)
-        if var_min <= self.bound:
-            pairs = self.low.get_leaves_at_symbolic_state(state, pairs)
-
-        if var_max > self.bound:
-            pairs = self.high.get_leaves_at_symbolic_state(state, pairs)
-
-        return pairs
 
     def get_bounds(self, collect):
         collect[self.var_id].add(self.bound)
@@ -730,27 +737,6 @@ class Leaf:
         else:
             collect.add(self)
         return collect
-
-    def get_leaves_at_symbolic_state2(self, min_state, max_state, pairs=[]):
-        """
-        Append the local state of the leaf to `pairs` and return the list
-        """
-        pairs.append(self)
-        return pairs
-
-    def get_leaves_at_symbolic_state(self, state, pairs=[]):
-        """
-        Append the local state of the leaf to `pairs` and return the list
-        """
-        pairs.append(self)
-        return pairs
-
-    def get_leaves_at_symbolic_state(self, state, pairs=[]):
-        """
-        Append the local state of the leaf to `pairs` and return the list
-        """
-        pairs.append(self)
-        return pairs
 
     def _get_leaves(self, leaves=[]):
         leaves.append(self)
