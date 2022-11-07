@@ -354,3 +354,44 @@ def import_uppaal_strategy(fp):
 
     meta = get_uppaal_data(data)
     return trees_at_location, variables, actions, meta
+
+def import_uppaal_strategy2(fp):
+    with open(fp, 'r') as f:
+        data = json.load(f)
+
+    actions = list(data['actions'].keys())
+    variables = data['pointvars'] + data['statevars']
+
+    regressors = data['regressors']
+    locations = regressors.keys()
+
+    # map locations to a list of possible actions
+    loc2actions = {
+        loc: list(data['regressors'][loc]['regressor'])
+        for loc in locations
+    }
+
+    # map actions to a dictionary of q-trees at each location
+    act2loc_trees = {
+        a: {
+            loc: data['regressors'][loc]['regressor'][a]
+        } for loc in locations for a in loc2actions[loc]
+    }
+
+    roots = []
+    for action, loc_trees in act2loc_trees.items():
+        # build the q-trees for `action` at each location
+        loc_trees = {
+            loc: build_tree(loc_trees[loc], action, variables)
+            for loc in loc_trees
+        }
+
+        # somehow create a tree structure that captures the locations and
+        # inserts the loc_trees as subtrees in their correct positions
+
+        # then add the one action-specific tree to roots (so the output becomes
+        # like that of `load_trees` above)
+
+
+    meta = get_uppaal_data(data)
+    return roots, variables, actions, meta
