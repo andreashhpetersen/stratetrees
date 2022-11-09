@@ -131,7 +131,7 @@ class SMCData:
         return m
 
 
-def parseEngineOuput(filename):
+def parseEngineOutput(filename):
     res = []
     with open(filename) as stream:
 
