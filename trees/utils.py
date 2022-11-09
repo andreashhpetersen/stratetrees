@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import smc2py
 
+from copy import deepcopy
 from collections import defaultdict
 from matplotlib.patches import Rectangle
 
@@ -291,16 +292,16 @@ def add_stats(trees, stats, variables, max_ts, step_sz):
 
 ####### Function to load and build tree #######
 
-def build_tree(tree, a, variables):
+def build_tree(tree, a, variables, S=0):
     if isinstance(tree, float) or isinstance(tree, int):
         return Leaf(float(tree), action=a)
 
     return Node(
-        variables[tree['var']],
-        tree['var'],  # var_id
+        variables[tree['var'] + S],
+        tree['var'] + S,  # var_id
         tree['bound'],
-        low=build_tree(tree['low'], a, variables),
-        high=build_tree(tree['high'], a, variables)
+        low=build_tree(tree['low'], a, variables, S),
+        high=build_tree(tree['high'], a, variables, S)
     )
 
 def get_uppaal_data(data):
@@ -360,10 +361,19 @@ def import_uppaal_strategy2(fp):
         data = json.load(f)
 
     actions = list(data['actions'].keys())
-    variables = data['pointvars'] + data['statevars']
+    variables = data['statevars'] + data['pointvars']
+    S = len(data['statevars'])
 
-    regressors = data['regressors']
-    locations = regressors.keys()
+    locations = data['regressors'].keys()
+
+    locs = [ list(map(int, l[1:-1].split(','))) for l in locations ]
+    locs.sort()
+
+    root = None
+    for loc in locs:
+        root = put_loc(root, loc, data['statevars'], 0)
+
+    org_root = deepcopy(root)
 
     # map locations to a list of possible actions
     loc2actions = {
@@ -380,18 +390,61 @@ def import_uppaal_strategy2(fp):
 
     roots = []
     for action, loc_trees in act2loc_trees.items():
-        # build the q-trees for `action` at each location
-        loc_trees = {
-            loc: build_tree(loc_trees[loc], action, variables)
-            for loc in loc_trees
-        }
+        root = deepcopy(org_root)
+        i = 0
+        for location in loc_trees:
+            tree = build_tree(loc_trees[location], action, variables, S)
+            loc = list(map(int, location[1:-1].split(',')))
 
-        # somehow create a tree structure that captures the locations and
-        # inserts the loc_trees as subtrees in their correct positions
+            put_tree(root, loc, Leaf(0, action=tree))
+            i += 1
 
-        # then add the one action-specific tree to roots (so the output becomes
-        # like that of `load_trees` above)
-
+        fix_tree(root, action)
+        root.set_state(State(variables))
+        roots.append(root)
 
     meta = get_uppaal_data(data)
     return roots, variables, actions, meta
+
+def fix_tree(node, action):
+    if not node.low.is_leaf:
+        node.low = fix_tree(node.low, action)
+    elif isinstance(node.low.action, Node):
+        node.low = node.low.action
+
+    if not node.high.is_leaf:
+        node.high = fix_tree(node.high, action)
+    elif isinstance(node.high.action, Node):
+        node.high = node.high.action
+
+    if node.low.is_leaf and node.high.is_leaf:
+        return Leaf(np.inf, action=action)
+    else:
+        return node
+
+
+def put_loc(node, loc, names, i):
+    if node is None or node.is_leaf:
+        if i < len(loc):
+            node = Node(names[i], i, loc[i], low=Leaf(np.inf), high=Leaf(np.inf))
+            return put_loc(node, loc, names, i + 1)
+        else:
+            return node
+
+    if loc[node.var_id] <= node.bound:
+        node.low = put_loc(node.low, loc, names, max(node.var_id, i))
+    else:
+        node.high = put_loc(node.high, loc, names, max(node.var_id, i))
+
+    return node
+
+def put_tree(node, loc, tree):
+    if node.is_leaf:
+        return tree
+
+    if loc[node.var_id] <= node.bound:
+        node.low = put_tree(node.low, loc, tree)
+    else:
+        node.high = put_tree(node.high, loc, tree)
+
+    return node
