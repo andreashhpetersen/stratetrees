@@ -12,7 +12,7 @@ from time import perf_counter
 from trees.advanced import max_parts, boxes_to_tree
 from trees.models import Tree
 from trees.utils import load_trees, parse_from_sampling_log, count_visits, \
-    import_uppaal_strategy
+    import_uppaal_strategy, import_uppaal_strategy2
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -50,12 +50,11 @@ class performance:
         self.time = self.stop - self.start
 
 
-def dump_json(strategy, fp):
+def dump_json(tree, meta, fp):
     if not EXPORT_UPPAAL:
         return
 
-    with open(fp, 'w') as f:
-        json.dump(strategy, f, indent=4)
+    tree.export_to_uppaal(meta, fp)
 
 
 def write_results(data, model_names, model_dir):
@@ -90,11 +89,9 @@ def run_experiment(model_dir, k=10):
     sample_logs = glob(f'{model_dir}/sample_*.log')
 
     # qtrees, variables, actions, meta = load_trees(qt_strat_file, verbosity=1)
-    loc_qtrees, variables, actions, meta = import_uppaal_strategy(qt_strat_file)
+    qtrees, variables, actions, meta = import_uppaal_strategy2(qt_strat_file)
 
-    size = 0
-    for loc, qtrees in loc_qtrees.items():
-        size += sum([r.size for r in qtrees.values()])
+    size = sum([t.size for t in qtrees])
 
     q_tree_data = np.array([size, 0])
 
@@ -113,7 +110,7 @@ def run_experiment(model_dir, k=10):
                 pass
 
         res = run_single_experiment(
-            loc_qtrees, variables, actions, meta, sample_logs, store_path
+            qtrees, variables, actions, meta, sample_logs, store_path
         )
         data.append(np.vstack((q_tree_data, res)))
 
@@ -123,48 +120,34 @@ def run_experiment(model_dir, k=10):
 
 
 def run_single_experiment(
-        loc_qtrees, variables, actions, meta, sample_logs, store_path
+        qtrees, variables, actions, meta, sample_logs, store_path
 ):
     results = []
     org_meta = meta
 
     with performance() as p:
-        loc_tree = {}
-        for loc, qtrees in loc_qtrees.items():
-            loc_tree[loc] = Tree.merge_qtrees(qtrees.values(), variables, actions)
+        tree = Tree.merge_qtrees(qtrees, variables, actions)
 
-    results.append([sum([t.size for t in loc_tree.values()]), p.time])
+    results.append([tree.size, p.time])
 
-    meta = deepcopy(org_meta)
-    for loc, tree in loc_tree.items():
-        meta = tree.update_meta(meta, loc=loc)
-    dump_json(meta, f'{store_path}/dt_original.json')
+    dump_json(tree, meta, f'{store_path}/dt_original.json')
 
     with performance() as p:
-        loc_leaves = {}
-        for loc, tree in loc_tree.items():
-            loc_leaves[loc] = max_parts(tree)
+        leaves = max_parts(tree)
 
-    results.append([sum([len(ls) for ls in loc_leaves.values()]), p.time])
+    results.append([len(leaves), p.time])
 
     with performance() as p:
-        mp_loc_tree = {}
-        for loc, leaves in loc_leaves.items():
-            mp_loc_tree[loc] = boxes_to_tree(leaves, variables, actions)
+        mp_tree = boxes_to_tree(leaves, variables, actions)
 
-    results.append([
-        sum([t.size for t in mp_loc_tree.values()]), p.time + results[-1][1]
-    ])
+    results.append([ mp_tree.size, p.time + results[-1][1] ])
 
-    meta = deepcopy(org_meta)
-    for loc, tree in mp_loc_tree.items():
-        meta = tree.update_meta(meta, loc=loc)
-    dump_json(meta, f'{store_path}/dt_max_parts.json')
+    dump_json(mp_tree, meta, f'{store_path}/dt_max_parts.json')
 
     for sample_log in sample_logs:
         prune_tree = mp_tree.copy()
         samples = parse_from_sampling_log(sample_log)
-        sample_size = len(samples)
+        sample_size = int(re.findall(r'\d+', sample_log)[0])
 
         with performance() as p:
             count_visits(prune_tree, samples)
@@ -173,9 +156,7 @@ def run_single_experiment(
             prune_tree = boxes_to_tree(leaves, variables, actions)
 
         results.append([prune_tree.size, p.time])
-        prune_tree.export_to_uppaal(
-            f'{store_path}/dt_prune_{sample_size}.json', meta
-        )
+        dump_json(prune_tree, meta, f'{store_path}/dt_prune_{sample_size}.json')
 
     return np.array(results)
 

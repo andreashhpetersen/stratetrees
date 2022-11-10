@@ -167,16 +167,17 @@ def parse_from_sampling_log(filepath, as_numpy=True):
     Return data as a list (or as a `np.array` if `as_numpy=True`) of floats
     parsed from a log file (of the format [timestep, var1, var2, ...])
     """
-    data = smc2py.parseEngineOuput(filepath)
-    #with open(filepath, 'r') as f:
-    #    data = f.readlines()
+    # import ipdb; ipdb.set_trace()
+    # data = smc2py.parseEngineOuput(filepath)
+    with open(filepath, 'r') as f:
+        data = f.readlines()
 
-    #data = [list(map(float, s.strip().split(' '))) for s in data]
-    #if as_numpy:
-    #    data = np.array(data)
-    print(data)
-    exit(0);
-    #return data
+    data = [list(map(float, s.strip().split(','))) for s in data]
+    if as_numpy:
+        data = np.array(data)
+    # print(data)
+    # exit(0);
+    return data
 
 def test_equivalence(tree, forest, data, variables, step=1):
     for i in range(0, len(data), step):
@@ -220,7 +221,7 @@ def count_visits(tree, data, step=1):
     actions = defaultdict(int)
     last_a = None
     for i in range(0, len(data), step):
-        state = data[i][1:]
+        state = data[i]
         leaf = tree.get(state, leaf=True)
         leaf.visits += 1
         actions[leaf.action] += 1
@@ -404,6 +405,16 @@ def import_uppaal_strategy2(fp):
         roots.append(root)
 
     meta = get_uppaal_data(data)
+    meta['statevars'] = []
+    meta['pointvars'] = variables
+    meta['regressors'] = {
+        '(1)': {
+            'type': 'act->point->val',
+            'representation': 'simpletree',
+            'minimize': 1,
+            'regressor': {}
+        }
+    }
     return roots, variables, actions, meta
 
 def fix_tree(node, action):
@@ -421,7 +432,6 @@ def fix_tree(node, action):
         return Leaf(np.inf, action=action)
     else:
         return node
-
 
 def put_loc(node, loc, names, i):
     if node is None or node.is_leaf:
