@@ -1,6 +1,6 @@
 #! /bin/bash
 
-S='10 100 1000'
+S='10'
 M=./model.xml
 
 for s in $S ; do

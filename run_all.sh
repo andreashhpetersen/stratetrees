@@ -6,7 +6,7 @@ if [ -z "$UPPAAL_PATH" ] ; then
 fi
 
 VERIFYTA_PATH="$UPPAAL_PATH/bin/verifyta"
-export VERIFYTA_PATH
+export VERIFYTA_PATH=$VERIFYTA_PATH
 
 if [ $# == 0 ] ; then
     DIRS=./automated/*
@@ -16,10 +16,18 @@ fi
 
 for MODEL_DIR in $DIRS ; do
     rm -rf $MODEL_DIR/constructed_*
+    rm "$MODEL_DIR"/sample_*.log
 
     model=${MODEL_DIR##*/}
+
+    echo "SAMPLING for '$model'"
+    $MODEL_DIR/make_samples.sh
+    for SAMPLE_FILE in "$MODEL_DIR"/sample_*.log ; do
+        python log2ctrl.py $SAMPLE_FILE $SAMPLE_FILE
+    done
+
     echo "BUILDING trees for model '$model'"
-    python run_experiments.py $MODEL_DIR -k 10 -u
+    python run_experiments.py $MODEL_DIR -k 1 -u
 
     echo "EVALUATE '$model' strategies"
     R=$MODEL_DIR/eval_results.txt
@@ -31,6 +39,7 @@ for MODEL_DIR in $DIRS ; do
     touch $R
 
     D=$(cat $MODEL_DIR/smallest.txt)
+
     strategies=($MODEL_DIR/qt_strategy.json $MODEL_DIR/$D/*)
     for S in "${strategies[@]}" ; do
         strat=${S##*/}

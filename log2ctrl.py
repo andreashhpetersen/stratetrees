@@ -13,7 +13,7 @@ if __name__ == '__main__':
     infile = sys.argv[1]
     outfile = sys.argv[2]
     # we just expect the control signal to be the first of the observed
-    
+
     from_engine = smc2py.parseEngineOutput(infile)
     trajectories = from_engine[-1]
     with open(outfile, "w") as out:
@@ -29,6 +29,3 @@ if __name__ == '__main__':
                         hints[d] = hint
                     out.write(",".join(values))
                     out.write("\n")
-            
-
-
