@@ -11,8 +11,8 @@ from time import perf_counter
 
 from trees.advanced import max_parts, boxes_to_tree
 from trees.models import Tree
-from trees.utils import load_trees, parse_from_sampling_log, count_visits, \
-    import_uppaal_strategy, import_uppaal_strategy2
+from trees.utils import parse_from_sampling_log, count_visits, \
+    import_uppaal_strategy
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -89,7 +89,7 @@ def run_experiment(model_dir, k=10):
     sample_logs = glob(f'{model_dir}/sample_*.log')
 
     # qtrees, variables, actions, meta = load_trees(qt_strat_file, verbosity=1)
-    qtrees, variables, actions, meta = import_uppaal_strategy2(qt_strat_file)
+    qtrees, variables, actions, meta = import_uppaal_strategy(qt_strat_file)
 
     size = sum([t.size for t in qtrees])
 

@@ -308,106 +308,10 @@ def build_tree(tree, a, variables, S=0):
 def get_uppaal_data(data):
     for reg in data['regressors']:
         data['regressors'][reg]['regressor'] = {}
-    return data
 
-def load_trees(fp, loc='(1)', verbosity=0):
-    """
-    If `verbosity=1`, also return a dict with the UPPAAL specific strategy data
-    (relevant for later exporting back to the UPPAAL forma). Default 0.
-    """
-    with open(fp, 'r') as f:
-        data = json.load(f)
-
-    variables = data['pointvars']
-    roots = []
-    trees = data['regressors'][loc]['regressor']
-    actions = []
-    for action, tree in trees.items():
-        root = build_tree(tree, action, variables)
-        root.set_state(State(variables))
-        roots.append(root)
-        actions.append(action)
-
-    if verbosity > 0:
-        misc = get_uppaal_data(data)
-        return roots, variables, actions, misc
-
-    return roots, variables, actions
-
-def import_uppaal_strategy(fp):
-    with open(fp, 'r') as f:
-        data = json.load(f)
-
-    variables = data['pointvars']
-    actions = list(data['actions'].keys())
-    regressors = data['regressors']
-    locations = regressors.keys()
-
-    trees_at_location = {}
-    for location in locations:
-        qtrees = regressors[location]['regressor']
-        roots = {}
-        for action, qtree in qtrees.items():
-            root = build_tree(qtree, action, variables)
-            root.set_state(State(variables))
-            roots[action] = root
-
-        trees_at_location[location] = roots
-
-    meta = get_uppaal_data(data)
-    return trees_at_location, variables, actions, meta
-
-def import_uppaal_strategy2(fp):
-    with open(fp, 'r') as f:
-        data = json.load(f)
-
-    actions = list(data['actions'].keys())
-    variables = data['statevars'] + data['pointvars']
-    S = len(data['statevars'])
-
-    locations = data['regressors'].keys()
-
-    locs = [ list(map(int, l[1:-1].split(','))) for l in locations ]
-    locs.sort()
-
-    root = None
-    for loc in locs:
-        root = put_loc(root, loc, data['statevars'], 0)
-
-    org_root = deepcopy(root)
-
-    # map locations to a list of possible actions
-    loc2actions = {
-        loc: list(data['regressors'][loc]['regressor'])
-        for loc in locations
-    }
-
-    # map actions to a dictionary of q-trees at each location
-    act2loc_trees = {
-        a: {
-            loc: data['regressors'][loc]['regressor'][a]
-        } for loc in locations for a in loc2actions[loc]
-    }
-
-    roots = []
-    for action, loc_trees in act2loc_trees.items():
-        root = deepcopy(org_root)
-        i = 0
-        for location in loc_trees:
-            tree = build_tree(loc_trees[location], action, variables, S)
-            loc = list(map(int, location[1:-1].split(',')))
-
-            put_tree(root, loc, Leaf(0, action=tree))
-            i += 1
-
-        fix_tree(root, action)
-        root.set_state(State(variables))
-        roots.append(root)
-
-    meta = get_uppaal_data(data)
-    meta['statevars'] = []
-    meta['pointvars'] = variables
-    meta['regressors'] = {
+    data['pointvars'] = data['statevars'] + data['pointvars']
+    data['statevars'] = []
+    data['regressors'] = {
         '(1)': {
             'type': 'act->point->val',
             'representation': 'simpletree',
@@ -415,23 +319,69 @@ def import_uppaal_strategy2(fp):
             'regressor': {}
         }
     }
-    return roots, variables, actions, meta
+    return data
+
+def import_uppaal_strategy(fp):
+    with open(fp, 'r') as f:
+        data = json.load(f)
+
+    locations = sorted(data['regressors'].keys())
+    loc_state = {
+        location: list(map(int, location[1:-1].split(',')))
+        for location in locations
+    }
+    variables = data['statevars'] + data['pointvars']
+    S = len(data['statevars'])
+
+    action_location_roots = defaultdict(dict)
+    for location, loc_trees in data['regressors'].items():
+        for action, tree in loc_trees['regressor'].items():
+            root = build_tree(tree, action, variables, S)
+            root.set_state(State(variables))
+            action_location_roots[action][location] = root
+
+    actions = sorted(action_location_roots.keys())
+    if S == 0:
+        roots = [ action_location_roots[a]['(1)'] for a in actions ]
+        return roots, variables, actions, get_uppaal_data(data)
+
+    org_root = None
+    for loc in locations:
+        org_root = put_loc(org_root, loc_state[loc], data['statevars'], 0)
+
+    roots = []
+    for action, location_roots in action_location_roots.items():
+        root = deepcopy(org_root)
+        for location, tree in location_roots.items():
+            root = put_tree(root, loc_state[loc], Leaf(0, action=tree))
+
+        root = fix_tree(root, action)
+        root.set_state(State(variables))
+        roots.append(root)
+
+    return roots, variables, actions, get_uppaal_data(data)
+
 
 def fix_tree(node, action):
     if not node.low.is_leaf:
         node.low = fix_tree(node.low, action)
     elif isinstance(node.low.action, Node):
         node.low = node.low.action
+    else:
+        node.low.action = action
 
     if not node.high.is_leaf:
         node.high = fix_tree(node.high, action)
     elif isinstance(node.high.action, Node):
         node.high = node.high.action
+    else:
+        node.high.action = action
 
     if node.low.is_leaf and node.high.is_leaf:
         return Leaf(np.inf, action=action)
     else:
         return node
+
 
 def put_loc(node, loc, names, i):
     if node is None or node.is_leaf:
@@ -447,6 +397,7 @@ def put_loc(node, loc, names, i):
         node.high = put_loc(node.high, loc, names, max(node.var_id, i))
 
     return node
+
 
 def put_tree(node, loc, tree):
     if node.is_leaf:
