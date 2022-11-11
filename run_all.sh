@@ -16,14 +16,14 @@ fi
 
 for MODEL_DIR in $DIRS ; do
     rm -rf $MODEL_DIR/constructed_*
-    rm "$MODEL_DIR"/sample_*.log
 
     model=${MODEL_DIR##*/}
 
     echo "SAMPLING for '$model'"
     $MODEL_DIR/make_samples.sh
-    for SAMPLE_FILE in "$MODEL_DIR"/sample_*.log ; do
-        python log2ctrl.py $SAMPLE_FILE $SAMPLE_FILE
+
+    for SAMPLE_FILE in $MODEL_DIR/samples/* ; do
+        python log2ctrl.py $SAMPLE_FILE $SAMPLE_FILE > /dev/null
     done
 
     echo "BUILDING trees for model '$model'"
@@ -53,5 +53,4 @@ for MODEL_DIR in $DIRS ; do
     done
     echo "COMBINE results for '$model'"
     python combine_results.py $MODEL_DIR
-    exit
 done

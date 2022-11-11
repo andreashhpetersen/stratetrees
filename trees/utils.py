@@ -352,10 +352,10 @@ def import_uppaal_strategy(fp):
     roots = []
     for action, location_roots in action_location_roots.items():
         root = deepcopy(org_root)
-        for location, tree in location_roots.items():
-            root = put_tree(root, loc_state[loc], Leaf(0, action=tree))
+        for loc, tree in location_roots.items():
+            put_tree(root, loc_state[loc], Leaf(0, action=tree))
 
-        root = fix_tree(root, action)
+        fix_tree(root, action)
         root.set_state(State(variables))
         roots.append(root)
 
@@ -367,15 +367,15 @@ def fix_tree(node, action):
         node.low = fix_tree(node.low, action)
     elif isinstance(node.low.action, Node):
         node.low = node.low.action
-    else:
-        node.low.action = action
+    # else:  # node.low is leaf and action is None
+    #     node.low.action = action
 
     if not node.high.is_leaf:
         node.high = fix_tree(node.high, action)
     elif isinstance(node.high.action, Node):
         node.high = node.high.action
-    else:
-        node.high.action = action
+    # else:  # node.high is leaf and action is None
+    #     node.high.action = action
 
     if node.low.is_leaf and node.high.is_leaf:
         return Leaf(np.inf, action=action)

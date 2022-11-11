@@ -86,9 +86,8 @@ def write_results(data, model_names, model_dir):
 
 def run_experiment(model_dir, k=10):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
-    sample_logs = glob(f'{model_dir}/sample_*.log')
+    sample_logs = glob(f'{model_dir}/samples/*')
 
-    # qtrees, variables, actions, meta = load_trees(qt_strat_file, verbosity=1)
     qtrees, variables, actions, meta = import_uppaal_strategy(qt_strat_file)
 
     size = sum([t.size for t in qtrees])
