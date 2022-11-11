@@ -148,12 +148,16 @@ class Tree:
     def update_meta(self, meta, loc='(1)'):
         roots = self.root.to_q_trees(self.actions)
         for action, root in roots:
-            meta['regressors'][loc]['regressor'][action] = root.to_uppaal(
-                self.var2id
-            )
+            try:
+                meta['regressors'][loc]['regressor'][action] = root.to_uppaal(
+                    self.var2id
+                )
+            except:
+                import ipdb; ipdb.set_trace()
+
         return meta
 
-    def export_to_uppaal(self, filepath, meta, loc='(1)'):
+    def export_to_uppaal(self, meta, filepath, loc='(1)'):
         meta = self.update_meta(meta, loc=loc)
         with open(filepath, 'w') as f:
             json.dump(meta, f, indent=4)

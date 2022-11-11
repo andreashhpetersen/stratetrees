@@ -1,14 +1,18 @@
 #! /bin/bash
 
-S='10 100 1000'
-V=~/uppaal-4.1.20-stratego-10-linux64/bin/verifyta
-M=./model.xml
+MODEL_DIR=$(dirname $(realpath $0))
+SAMPLE_DIR=$MODEL_DIR/samples
 
+if [[ -d $SAMPLE_DIR ]] ; then
+    rm -rf $SAMPLE_DIR
+fi
+mkdir $SAMPLE_DIR
+
+S='10 100 1000'
+M=$MODEL_DIR/model.xml
 for s in $S ; do
     Q=$(mktemp)
-    echo "strategy s = loadStrategy {} -> {Ball(0).p, Ball(0).v} (\"qt_strategy.json\")" > $Q
-    echo "simulate [<=300;$s] {Ball(0).p, Ball(0).v}" >> $Q
-    $V $M $Q -sqyW --sampling-time 0.5 > /dev/null
-    size=$(cat ./sampling.log | wc -l)
-    mv ./sampling.log ./sample_$size.log
+    echo "strategy s = loadStrategy {} -> {Ball(0).p, Ball(0).v} (\"$MODEL_DIR/qt_strategy.json\")" > $Q
+    echo "simulate [<=300;$s] {LearnerPlayer.C, Ball(0).p, Ball(0).v}" >> $Q
+    $VERIFYTA_PATH $M $Q -sqyW > $SAMPLE_DIR/sample_${s}.log
 done

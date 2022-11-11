@@ -4,7 +4,9 @@ import pydot
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import smc2py
 
+from copy import deepcopy
 from collections import defaultdict
 from matplotlib.patches import Rectangle
 
@@ -165,13 +167,16 @@ def parse_from_sampling_log(filepath, as_numpy=True):
     Return data as a list (or as a `np.array` if `as_numpy=True`) of floats
     parsed from a log file (of the format [timestep, var1, var2, ...])
     """
+    # import ipdb; ipdb.set_trace()
+    # data = smc2py.parseEngineOuput(filepath)
     with open(filepath, 'r') as f:
         data = f.readlines()
 
-    data = [list(map(float, s.strip().split(' '))) for s in data]
+    data = [list(map(float, s.strip().split(','))) for s in data]
     if as_numpy:
         data = np.array(data)
-
+    # print(data)
+    # exit(0);
     return data
 
 def count_visits(tree, data, step=1):
@@ -203,7 +208,7 @@ def count_visits(tree, data, step=1):
     actions = defaultdict(int)
     last_a = None
     for i in range(0, len(data), step):
-        state = data[i][1:]
+        state = data[i]
         leaf = tree.get(state, leaf=True)
         leaf.visits += 1
         actions[leaf.action] += 1
@@ -218,66 +223,119 @@ def count_visits(tree, data, step=1):
 
 ####### Function to load and build tree #######
 
-def build_tree(tree, a, variables):
+def build_tree(tree, a, variables, S=0):
     if isinstance(tree, float) or isinstance(tree, int):
         return Leaf(float(tree), action=a)
 
     return Node(
-        variables[tree['var']],
-        tree['var'],  # var_id
+        variables[tree['var'] + S],
+        tree['var'] + S,  # var_id
         tree['bound'],
-        low=build_tree(tree['low'], a, variables),
-        high=build_tree(tree['high'], a, variables)
+        low=build_tree(tree['low'], a, variables, S),
+        high=build_tree(tree['high'], a, variables, S)
     )
 
 def get_uppaal_data(data):
     for reg in data['regressors']:
         data['regressors'][reg]['regressor'] = {}
+
+    data['pointvars'] = data['statevars'] + data['pointvars']
+    data['statevars'] = []
+    data['regressors'] = {
+        '(1)': {
+            'type': 'act->point->val',
+            'representation': 'simpletree',
+            'minimize': 1,
+            'regressor': {}
+        }
+    }
     return data
-
-def load_trees(fp, loc='(1)', verbosity=0):
-    """
-    If `verbosity=1`, also return a dict with the UPPAAL specific strategy data
-    (relevant for later exporting back to the UPPAAL forma). Default 0.
-    """
-    with open(fp, 'r') as f:
-        data = json.load(f)
-
-    variables = data['pointvars']
-    roots = []
-    trees = data['regressors'][loc]['regressor']
-    actions = []
-    for action, tree in trees.items():
-        root = build_tree(tree, action, variables)
-        root.set_state(State(variables))
-        roots.append(root)
-        actions.append(action)
-
-    if verbosity > 0:
-        misc = get_uppaal_data(data)
-        return roots, variables, actions, misc
-
-    return roots, variables, actions
 
 def import_uppaal_strategy(fp):
     with open(fp, 'r') as f:
         data = json.load(f)
 
-    variables = data['pointvars']
-    actions = list(data['actions'].keys())
-    regressors = data['regressors']
-    locations = regressors.keys()
+    locations = sorted(data['regressors'].keys())
+    loc_state = {
+        location: list(map(int, location[1:-1].split(',')))
+        for location in locations
+    }
+    variables = data['statevars'] + data['pointvars']
+    S = len(data['statevars'])
 
-    trees_at_location = {}
-    for location in locations:
-        qtrees = regressors[location]['regressor']
-        roots = {}
-        for action, qtree in qtrees.items():
-            root = build_tree(qtree, action, variables)
+    action_location_roots = defaultdict(dict)
+    for location, loc_trees in data['regressors'].items():
+        for action, tree in loc_trees['regressor'].items():
+            root = build_tree(tree, action, variables, S)
             root.set_state(State(variables))
-            roots[action] = root
+            action_location_roots[action][location] = root
 
-        trees_at_location[location] = roots
+    actions = sorted(action_location_roots.keys())
+    if S == 0:
+        roots = [ action_location_roots[a]['(1)'] for a in actions ]
+        return roots, variables, actions, get_uppaal_data(data)
 
-    meta = get_uppaal_data(data)
-    return trees_at_location, variables, actions, meta
+    org_root = None
+    for loc in locations:
+        org_root = put_loc(org_root, loc_state[loc], data['statevars'], 0)
+
+    roots = []
+    for action, location_roots in action_location_roots.items():
+        root = deepcopy(org_root)
+        for loc, tree in location_roots.items():
+            put_tree(root, loc_state[loc], Leaf(0, action=tree))
+
+        fix_tree(root, action)
+        root.set_state(State(variables))
+        roots.append(root)
+
+    return roots, variables, actions, get_uppaal_data(data)
+
+
+def fix_tree(node, action):
+    if not node.low.is_leaf:
+        node.low = fix_tree(node.low, action)
+    elif isinstance(node.low.action, Node):
+        node.low = node.low.action
+    # else:  # node.low is leaf and action is None
+    #     node.low.action = action
+
+    if not node.high.is_leaf:
+        node.high = fix_tree(node.high, action)
+    elif isinstance(node.high.action, Node):
+        node.high = node.high.action
+    # else:  # node.high is leaf and action is None
+    #     node.high.action = action
+
+    if node.low.is_leaf and node.high.is_leaf:
+        return Leaf(np.inf, action=action)
+    else:
+        return node
+
+
+def put_loc(node, loc, names, i):
+    if node is None or node.is_leaf:
+        if i < len(loc):
+            node = Node(names[i], i, loc[i], low=Leaf(np.inf), high=Leaf(np.inf))
+            return put_loc(node, loc, names, i + 1)
+        else:
+            return node
+
+    if loc[node.var_id] <= node.bound:
+        node.low = put_loc(node.low, loc, names, max(node.var_id, i))
+    else:
+        node.high = put_loc(node.high, loc, names, max(node.var_id, i))
+
+    return node
+
+
+def put_tree(node, loc, tree):
+    if node.is_leaf:
+        return tree
+
+    if loc[node.var_id] <= node.bound:
+        node.low = put_tree(node.low, loc, tree)
+    else:
+        node.high = put_tree(node.high, loc, tree)
+
+    return node
