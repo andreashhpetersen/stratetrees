@@ -23,9 +23,15 @@ if __name__ == '__main__':
                 if v > 0:
                     # the controller is in power
                     values = []
+                    old_hints = [h for h in hints]
                     for d in range(1, len(trajectories.fields)):
                         (value, hint) = trajectories.data[d][i].predict(t,hints[d])
                         values.append(str(value))
                         hints[d] = hint
+
+                    # for Peter: this shows the problem
+                    # if float(values[1]) < 2:
+                    #     import ipdb; ipdb.set_trace()
+
                     out.write(",".join(values))
                     out.write("\n")
