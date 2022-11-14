@@ -1,6 +1,6 @@
 {"version":1.0,"type":"state->regressor","representation":"map","actions":{
-		"0":"P.P->P.W { true, tau, d := d + d_delta[0] - d_e + random(d_e * 2.000000), t := t + t_delta[0] - t_e + random(t_e * 2.000000), cost := cost + act_cost[0], pick := 0, ++nsteps, stepsum += 0 }",
-		"1":"P.P->P.W { true, tau, d := d + d_delta[1] - d_e + random(d_e * 2.000000), t := t + t_delta[1] - t_e + random(t_e * 2.000000), cost := cost + act_cost[1], pick := 1, ++nsteps, stepsum += 1 }",
+		"0":"P.P->P.W { true, tau, act := 0 }",
+		"1":"P.P->P.W { true, tau, act := 1 }",
 		"2":"WAIT"
 	},"statevars":[
 	],"pointvars":[
