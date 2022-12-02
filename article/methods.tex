@@ -1,22 +1,27 @@
 \section{MaxPartitions algorithm}%
 \label{sec:maxParts}
 
-The idea of the \texttt{MaxPartitions} algorithm is to maximize the size of the
-state space partitions, so that the overall number of partitions used to
-represent the strategy is minimized. As previously described, the partitioning
-that happens during training in UPPAAL Stratego creates a lot of redundant
-splits in the state space and this is amplified when we convert the Q-trees to a
-unified decision tree.
+Since state space discretization for Reinforcement Learning is usually done
+\textit{before} any learning takes place, the discretization is likely to create
+adjacent discrete states that are mapped to the same optimal action. The
+question we would then like to answer is this: if $\mathcal{T}$ is a decision
+tree representing a trained strategy and $\mathcal{A}_{\mathcal{T}}$ is its
+induced partitioning, can we find another partitioning $\mathcal{B}$ which is
+smaller than $\mathcal{A}_{\mathcal{T}}$ but still respects $\mathcal{T}$?
 
-As an example, take a look at the example strategy in
-Figure~\ref{fig:complexExample}. On the left, is the decision tree
-representation and on the right is a 2D visualization of the partitioning of the
-state space. It is easy to see, that this perfectly valid decision tree entails
-a state space partitioning with several redundant partitions, where areas of the
-same color (meaning they suggests the same optimal action) are split in two.
-Since each confined area, ie.\ partition, is represented in our decision tree as
-a leaf node, the fewer partitions we have the smaller a tree we need to
-represent it.
+As an example, we can consider the toy strategy from
+Example~\ref{ex:runningExample}. In Figure~\ref{fig:complexExample} the strategy
+is represented as a decision tree (\ref{fig:complexExampleTree}) by omitting the
+specification of cost values of each action and only preserving the optimal
+action for each discrete state. On the right (\ref{fig:complexExample2dVisual})
+is a 2D visualization of the induced partitioning of the state space. It can
+easily be assessed, that the partitioning has several redundant splits where
+areas of the same color (meaning they suggests the same optimal action) are
+split in two. For instance, the region $((0,0),(1,1))$ and the region
+$((0,1),(1,2))$ both specify $a$ as the optimal action, and we could replace
+these two regions with a single one given by $((0,0),(1,2))$.  Since each region
+is represented in our decision tree as a leaf node, the fewer regions we have
+the smaller a tree we need to represent it.
 
 \begin{figure}[ht]
     \begin{subfigure}[b]{.5\textwidth}
@@ -38,8 +43,8 @@ represent it.
 
     \caption{%
         Two representations of the toy strategy introduced in
-        Example~\ref{ex:runningExample}.  In~\subref{fig:complexExampleTree} the
-        deterministic version of the Q-table is represented as a decision tree.
+        Example~\ref{ex:runningExample}. In~\subref{fig:complexExampleTree} the
+        Q-table is represented as a decision tree.
         In~\subref{fig:complexExample2dVisual} a 2D visualization of the state
         space partitioning is showed, where the colors indicate what the optimal
         action is in that area of the state space (red for $a$, green for $b$
@@ -48,17 +53,14 @@ represent it.
     \label{fig:complexExample}
 \end{figure}
 
-The \texttt{MaxPartitions} algorithms achieves this by maximizing the size of
-each partition so the strategy can be represented with a minimum number of
-partitions. The basic concept of the algorithm is to try and construct as large
-a partition as possible starting from a given point (typically the point
-representing the minimum of each dimension) while retaining the invariant that
-only one action is considered optimal in this partition. When this invariant is
-violated, the new partition is stored and the operation continues from the
-`corner' points of the new partition.  The pseudocode is given in
-Algorithm~\ref{alg:MaxPartitions}.
+We start by stating the problem of finding maximum sized regions as a problem of
+local optimization: Given a starting point $s^{\min}$, find $s^{\max}$ such that
+$\nu = (s^{\min}, s^{\max})$ has singular mapping in $\mathcal{T}$ while no
+other region $\nu' = (s^{\min}, s')$ where $s'_j = s^{\max}_j$ for $j =
+1,\ldots,i-1,i+1,\ldots,K$ and $s'_i > s^{\max}_i$ has this property.
 
-\subsection{Description of the algorithm}%
+
+\subsection{Details of the algorithm}%
 \label{sub:maxPartsDescription}
 
 We introduce a new notation to refer to individual bounds on the dimensions in
@@ -70,59 +72,118 @@ nodes in $\mathcal{T}$ and allows accessing $\mathcal{T}_{i,j}$ in constant
 time.
 
 Exploiting this notation, if $p$ is a $K$-dimensional vector of index pointers
-to bounds in $\mathcal{T}$, such that $p_i$ is a pointer to
+to bounds in $\mathcal{T}$, such that $p_i \in p$ is a pointer to
 $\mathcal{T}_{i,p_i}$, then we can define a point at an intersection of bounds
 in all $K$ dimensions as $s^{p}_{\mathcal{T}} =
-(\mathcal{T}_{1,p_1},\mathcal{T}_{2,p_2},\ldots,\mathcal{T}_{K,p_K})$.
+(\mathcal{T}_{1,p_1},\mathcal{T}_{2,p_2},\ldots,\mathcal{T}_{K,p_K})$. We will
+omit the subscript $\mathcal{T}$ on $s^{p}_{\mathcal{T}}$ when it is clear from
+the context.
 
 For the algorithm, we require that the domain of $\mathcal{T}$ is bounded in all
 $K$ dimensions. This can be achieved by including a minimum and a maximum bound
 for each dimension $i$, which is not represented by a branch node in
 $\mathcal{T}$. These limit bounds can be negative and positive infinity, in
 which case we say $\mathcal{T}_{i,1} = -\infty$ and
-$\mathcal{T}_{i,|\mathcal{T}_{i}|} = \infty$.
+$\mathcal{T}_{i,|\mathcal{T}_{i}|} = \infty$. Further, in a slight abuse of
+notation, we define $\mathcal{T}_{i,|\mathcal{T}_i| + 1}$ to be some
+\textit{sentinel} value representing that we are outside the boundaries of
+dimension $i$.  Correspondingly, we define a sentinel action $\alpha$, and we
+say that $\mathcal{T}(s^p_{\mathcal{T}}) = \alpha$ if and only if $\exists p_i
+\in p, p_i = |\mathcal{T}_i| + 1$.
 
-Further, in a slight abuse of notation, we define
-$\mathcal{T}_{i,|\mathcal{T}_i| + 1}$ to be some \textit{sentinel} value
-representing that we are outside the boundaries of dimension $i$.
-Correspondingly, we define a sentinel action $\alpha$, and we say that
-$\mathcal{T}(s^p_{\mathcal{T}}) = \alpha$ if and only if $\exists p_i \in p, p_i
-= |\mathcal{T}_i| + 1$.
+The algorithm works by maintaining two vectors of index pointers, $p^{\min}$ and
+$p^{\max}$, and iteratively increasing $p^{\max}$ until a region $\nu =
+(s^{p^{\min}}, s^{p^{\max}})$ cannot be expanded further. The regions are stored
+in a list $\mathcal{R}$ and a list $\mathcal{P}$ is keeping track of the
+$p^{\min}$ vectors to use as starting points for the region search. Initially,
+$\mathcal{R}$ is empty and $\mathcal{P}$ contains just a vector of $K$ ones
+(ie.\ the vector pointing to the lowest bounds of all $K$ dimensions). The
+algorithm is given in pseudo-code in Algorithm~\ref{alg:MaxPartitions} while the
+following describes it in more detail.
 
-Let $\mathbf{\hat{e}}_i$ denote the unit vector parallel to axis $i$, such that
-$p + \mathbf{\hat{e}}_i = (p_1,\ldots,p_i + 1,\ldots,p_K)$. We can then define
-the following recursive function to \textit{grow} a region from a point
-$s^{p^{\min}}_{\mathcal{T}}$ to its maximal size while retaining the invariants
-that the region can only span areas mapping to a single action:
+Let $p^{\min}$ be the result of popping the lexicographically smallest element
+of $\mathcal{P}$. We can then define $s^{\min} = s^{p^{\min}}$ as the `lower
+left' corner in a region $\nu = (s^{\min}, s^{\max})$ where $s^{\max}$ is the
+point we want to determine, so that $\nu$ has singular mapping in $\mathcal{T}$.
+By definition, $s^{\max} = s^{p^{\max}}$ satifies this requirement for $p^{\max}
+= (p^{\min}_{1} + 1, \ldots, p^{\max}_{K} + 1)$, since no branch node in
+$\mathcal{T}$ splits on a predicate $c$ where $\mathcal{T}_{i,p^{\min}_{i}} < c
+< \mathcal{T}_{i,p^{\min} + 1}$ for any $i = 1, \ldots, K$. 
 
-\[
-    grow(p, E \mid \theta) = 
-    \begin{cases}
-        p & \text{if } |E|  =  K \\
-        grow(p, E \cup \{i\}) &
-            \text{if }
-                |\mathcal{T}((s^{p^{\min}}, s^{p + \mathbf{\hat{e}}_i}))| > 1
-                \text{~or $s^{p + \mathbf{\hat{e}}_i}$ is explored} \\
-        grow(p + \mathbf{\hat{e}}_i, E) & \text{otherwise}
-    \end{cases}
-\] 
+We can now increase $p^{\max}$ by 1 in any dimension $i$ and test for singular
+mapping in our new region. Additionally, we require that the point
+$s^{p^{\max}}$ is not already covered by a region in $\mathcal{R}$, as this
+would result in overlapping regions. Let $\mathbf{\hat{e}}_i$ denote the unit
+vector parallel to axis $i$, such that $p + \mathbf{\hat{e}}_i = (p_1,\ldots,p_i
++ 1,\ldots,p_K)$. Then, the updated region is given by $\nu = (s^{\min},
+s^{p^{\max} + \mathbf{\hat{e}}_{i}})$. If $|\mathcal{T}(\nu)| = 1$ and $\forall
+\nu' \in \mathcal{R}, s^{p^{\max} + \mathbf{\hat{e}}_{i}} \notin \nu'$, then the
+update did not violate the singular mapping property and we can set $p^{\max} =
+p^{\max} + \mathbf{\hat{e}}_{i}$. Otherwise, we mark dimension $i$ as
+\textit{exhausted} so we know not to increase in this dimension again. We then
+continue, choosing a new dimension not marked as exhausted.
 
-\noindent where $grow$ is parametized by $\theta = (\mathcal{T}, p^{\min})$ with
-$\mathcal{T}$ being a binary decision tree over the domain $\mathbb{R}^K$
-inducing a partitioning $\mathcal{A}_{\mathcal{T}}$ and $p^{\min}$ is
-a vector of index pointers giving the left lowest point of the region we are
-currently expanding. Further, to avoid cluttering the expression for $grow$,
-we use $i$ defined as
+This process is repeated until all dimensions have been exhausted at which
+point, $p^{\max}$ together with the unchanged $p^{\min}$ defines a region $\nu =
+(s^{p^{\min}}, s^{p^{\max}})$ that has singular mapping in $\mathcal{T}$ and
+cannot be expanded further in any dimension. More generally, we can say that
+given $p^{\min}$ we want to choose $p^{\Delta} \in \mathbb{Z}^{K}$ such that
+$\nu = (s^{p^{\min}}, s^{p^{\min} + p^{\Delta}})$ has singular mapping in
+$\mathcal{T} $and no other $p^{\Delta'} > p^{\Delta}$ has this property.
 
-\begin{align*}
-    i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i \le 
-    |\mathcal{T}_i| \}}
-        \mathcal{T}_{i,p_i+1} - \mathcal{T}_{i,p_i} \\
-\end{align*}
+Having found $\nu$, we add it to $\mathcal{R}$. Further, we add to $\mathcal{P}$
+all the points we can create from taking $p^{\min}$ and setting $p^{\min}_{i} =
+p^{\max}_{i}$ for all $i$ where $p^{\max}_{i} < |\mathcal{T}_{i}|$. These points
+will later be popped and used as a new $p^{\min}$ for a search for a large
+region. If $\mathcal{P}$ is not empty, we repeat the entire process, otherwise
+the algorithm terminates and returns $\mathcal{R}$ which now represents a new
+partitioning that respects $\mathcal{T}$.
 
-\noindent
-The \texttt{MaxPartitions} algorithm is given in
-Algorithm~\ref{alg:MaxPartitions}.
+
+% We can then define
+% the following recursive function \textit{grow}, which, given a vector $p$ of
+% index pointers to bounds in $\mathcal{T}$ and an initially empty set $E$, finds
+% $p^{\max}$ such that the region $\nu = (s^{p^{\min}}, s^{p^{\max}})$ has
+% singular mapping in $\mathcal{T}$ but cannot be expanded in any dimension
+% without loosing this property:
+
+% Let $M = \argmax_{i} |\mathcal{T}_i|$.
+
+% \[
+%     % grow_{\mathcal{T}}(p) = p + \Delta
+%     grow_{\theta}(p, E) =
+%     \begin{cases}
+%         p & \text{if } |E|  =  K \\
+%         grow(p, E \cup \{i\}) &
+%             \text{if }
+%                 |\mathcal{T}((s^{p^{\min}}, s^{p + \mathbf{\hat{e}}_i}))| > 1
+%                 \text{~or $s^{p + \mathbf{\hat{e}}_i}$ is explored} \\
+%         grow(p + \mathbf{\hat{e}}_i, E) & \text{otherwise}
+%     \end{cases}
+% \] 
+
+% \noindent where $\Delta \in \{ 0,\ldots,M \}^K$ such that
+% $|\mathcal{T}((s^{p}_{\mathcal{T}}, s^{p + \Delta}_{\mathcal{T}}))| = 1$ and for
+% all $\nu \in \mathcal{R}, \nu \cap (s^{p}_{\mathcal{T}}, s^{p +
+% \Delta^K}_{\mathcal{T}}) = \emptyset$ and where no other $\Delta'$
+% lexicographically larger than $\Delta$ has this property.
+
+% \noindent
+% where $grow$ is parametized by $\theta = (\mathcal{T}, p^{\min})$ with
+% $\mathcal{T}$ being a binary decision tree over the domain $\mathbb{R}^K$
+% inducing a partitioning $\mathcal{A}_{\mathcal{T}}$ and $p^{\min}$ is
+% a vector of index pointers giving the left lowest point of the region we are
+% currently expanding. Further, to avoid cluttering the expression for $grow$,
+% we use $i$ defined as
+
+% \begin{align*}
+%     i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i \le 
+%     |\mathcal{T}_i| \}}
+%         \mathcal{T}_{i,p_i+1} - \mathcal{T}_{i,p_i} \\
+% \end{align*}
+
+% The \textsc{MaxPartitions} algorithm is given as pseudo-code in
+% Algorithm~\ref{alg:MaxPartitions}.
 
 \begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
@@ -132,70 +193,53 @@ Algorithm~\ref{alg:MaxPartitions}.
             $\mathcal{T}$: A binary decision tree over the domain
             $\mathbb{R}^K$ inducing the partitioning $\mathcal{A}_{\mathcal{T}}$
         }
-        % \Require{%
-        %     $M$: A $K$-dimensional vector, where $M_i$ is the number of
-        %     constraints on dimension $i$ in $\mathcal{A}_{\mathcal{T}}$
-        % }
-        % \Require{%
-        %     $\mathcal{C}$: A $K \times M$ matrix of the constraints on each
-        %     dimension $i$ sorted in ascending order, such that
-        %     $\mathcal{C}_{i,j}$ is the $j$th smallest constraint in dimension
-        %     $i$ for all $j = 1,2,\ldots,M_i$.
-        % }
-
         \State{$\mathcal{R} \gets \{\}$}
-        \State{$\mathcal{P} \gets \{ \mathbf{0}^K \} $}
+        \State{$\mathcal{P} \gets \{ \mathbf{1}^K \} $}\Comment{%
+            $\mathbf{1}^K$ is a $K$-dimensional vector of ones
+        }
 
         \While{$\mathcal{P}$ is not empty}
             \State{$p^{\min} \gets \min \mathcal{P}$}\Comment{Lexicographic min}
-            % \State{%
-            %     $p^{\max} \gets
-            %     (p^{\min}_1 + 1, p^{\min}_2 + 1, \ldots, p^{\min}_K + 1)$
-            % }
-            \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}
-            \item[]
+            \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}%
+            \Comment{Remove $p^{\min}$ from $\mathcal{P}$}
 
-            % \State{%
-            %     $s^{\min} \gets (\mathcal{T}_{1,p^{\min}_1},
-            %     \mathcal{T}_{2,p^{\min}_2},\ldots, \mathcal{T}_{K,p^{\min}_K})$
-            % }
-
-            \If{$s^{p^{\min}}_{\mathcal{T}}$ is explored}
-                \State{continue at line 3}
-            \EndIf%
-            \item[]
-
-            % call grow(p^{\max}, {})
-            \State{%
-                $p^{\max} \gets grow(
-                    p^{\min} + \mathbf{1}^K,
-                    \emptyset \mid (\mathcal{T}, p^{\min})
-                )$
+            \If{$s^{p^{\min}}_{\mathcal{T}} \notin \mathcal{R}$}\Comment{%
+                Check $s^{p^{\min}}_{\mathcal{T}}$ has not been covered yet
             }
-            \item[]
 
-            % \State{%
-            %     $s^{\max} \gets (\mathcal{T}_{1,p^{\max}_1},
-            %     \mathcal{T}_{2,p^{\max}_2},\ldots, \mathcal{T}_{K,p^{\max}_K})$
-            % }
-            % \item
-
-            \State{%
-                $\mathcal{R} \gets \mathcal{R} \cup \{
-                    (s^{p^{\min}}_{\mathcal{T}},s^{p^{\max}}_{\mathcal{T}})
-                \}
-            $}
-            \For{$i = 1, 2, \ldots, K$}
-                \If{%
-                    $p^{\min}_i \neq p^{\max}_i$
-                    \textbf{and} $p^{\max}_i < |\mathcal{T}_i|$
+                \State{%
+                    $p^{\max} \gets p^{\min} + p^{\Delta}$
+                    % $p^{\max} \gets grow(p^{\min})$
+                    % $p^{\max} \gets grow(
+                    %     p^{\min} + \mathbf{1}^K,
+                    %     \emptyset \mid (\mathcal{T}, p^{\min})
+                    % )$
+                }\Comment{%
+                    Select largest $p^{\Delta}$
                 }
-                    \State{$\mathcal{P} \gets \mathcal{P} \cup
-                    \{(p^{\min}_1, \ldots, p^{\max}_i, \ldots,
-                    p^{\min}_k)\}
-                $}
-                \EndIf%
-            \EndFor%
+
+                \State{%
+                    $\mathcal{R} \gets \mathcal{R} \cup \{
+                        (s^{p^{\min}}_{\mathcal{T}},s^{p^{\max}}_{\mathcal{T}})
+                    \}
+                $}\Comment{%
+                    Add new region to $\mathcal{R}$
+                }
+
+                \For{$i = 1, 2, \ldots, K$}\Comment{%
+                    Add points to $\mathcal{P}$
+                }
+                    \If{%
+                        $p^{\min}_i \neq p^{\max}_i$
+                        \textbf{and} $p^{\max}_i < |\mathcal{T}_i|$
+                    }
+                        \State{$\mathcal{P} \gets \mathcal{P} \cup
+                        \{(p^{\min}_1, \ldots, p^{\max}_i, \ldots,
+                        p^{\min}_k)\}
+                    $}
+                    \EndIf%
+                \EndFor%
+            \EndIf%
 
 
         \EndWhile%
@@ -211,57 +255,98 @@ Algorithm~\ref{alg:MaxPartitions}.
 \label{sub:maxPartsAnalysis}
 
 In the following we provide an upper bound of the running time of
-\texttt{MaxPartitions} and a proof of correctness.
+\textsc{MaxPartitions} and a proof of correctness.
 
-For the running time, we first turn our attention to the outer while loop
-iterating through $\mathcal{P}$. Since $\mathcal{P}$ is dynamically grown, we
-must consider what the accumulated size during the entire run of the algorithm
-can amount to. For this, we look at the case where new points are added to
-$\mathcal{P}$, namely in line 27-31 where we have found a new region. We add a
-point for each of the $K$ variables, barring some edge cases. This means, that
-an upper bound to the number of points we must process in total is $K$ times the
-number of regions we find.
+\subsubsection{Running time}%
+\label{sec:runningTime}
 
-The worst case number of regions the algorithm can find is on the other hand
-bounded by the number of partitions (or leaf nodes) in the original tree
-$\mathcal{T}$. This because either the partitioning $\mathcal{A}$ entailed by
-$\mathcal{T}$ is already optimal, in which case, the algorithm will just find
-one region for every leaf node in $\mathcal{T}$, or $\mathcal{A}$ is not
-optimal, meaning the algorithm will find fewer (but larger) regions. Therefore,
-the outer while loop is bounded by $O(KN)$ with $N$ being the number of leaf
-nodes in $\mathcal{T}$.
+The first thing to notice is the outer while loop over $\mathcal{P}$. Points are
+dynamically added to $\mathcal{P}$ every time a new region is constructed, and
+in the worst case, $K$ new points (one for each dimension) are added for each
+region. The number of regions that can be found and constructed is bounded by
+the size of the original parition $\mathcal{A}_{\mathcal{T}}$, as the worst case
+is when $\mathcal{A}_{\mathcal{T}}$ is already a minimal partitioning that
+respects $\mathcal{T}$. In this case, the algorithm will produce $\mathcal{R} =
+\mathcal{A}_{\mathcal{T}}$ and the number of regions will necessarily be the
+same. Let $N = |\mathcal{A}_{\mathcal{T}}|$. Then we can state that the outer
+while loop is bounded by $O(KN)$.
 
-Inside the while loop, we have two sorting operations and a for-loop. In line 6,
-we sort $\mathcal{P}$, but we ignore this in our analysis, as $\mathcal{P}$ is
-expected to at any time only contain a small subset of all the points entering
-and exiting $\mathcal{P}$ during the algorithm. Secondly, a smart data structure
-(eg.\ a heap) could sort the points at insertion and thus remove the need to
-sort every time.
+% Inside the loop, we first have an operation that pops the (lexicographically)
+% smallest item of $\mathcal{P}$. This can be done in logarithmic time using an
+% appropriate data structure (a priority queue) for $\mathcal{P}$. Of greater
+% interest is the check for membership of a point $s$ in $\mathcal{R}$ (which is
+% both checked for $s^{p^{\min}}$ and for each candidate of $p^{\max}$ in
+% $s^{p^{\max}}$ in the search for $p^{\Delta}$). 
 
-In line 11, however, we sort $\mathcal{C}$ according to the current $p^{\min}$.
-As presented here, this sorting is unavoidable as we cannot expect to know the
-correct sorting with respect to $p^{\min}$.\footnote{%
-    One could imagine, that $K$ lists with the bounds in $\mathcal{C}$ sorted
-    according their respective $V_i$ were stored and consulted in the following
-    for-loop, thus alleviating the need to sort $\mathcal{C}$ in every
-    iteration. This approach is not pursued here.
-} If we assume that the sorting operation is $O(C\log C)$ with $C$ being the
-size of $\mathcal{C}$, then question becomes one of estimating $C$. Also here we
-have that $C$ is proportional to $N$ and $K$, as $\mathcal{C}$ is constructed
-from all the predicates of the branch nodes in $\mathcal{T}$. This is at most
-$N$, or rather $N-1$. Something something $\approx O(KN^2\log N)$.
+How about finding $p^{\Delta}$? The procedure is to increment by 1 in any one
+unexhausted dimension and then check for the validity of that increment. This
+check has two components: (a) check if the new region still has singular mapping
+in $\mathcal{T}$ and (b) check if the new region overlaps with any region
+already in $\mathcal{R}$. Let $\nu = (s^{\min}, s^{\max})$ be the candidate
+region for some $p^{\Delta} = \mathbf{1}^{K} + \mathbf{\hat{e}}_{i}$ (ie.\ so
+$s^{\max} = s^{p^{\min} + p^{\Delta}}$).
 
-\begin{theorem}
-    Given a partitioning $\mathcal{A}_{\mathcal{T}}$ induced by the decision
-    tree $\mathcal{T}$, the \texttt{MaxPartitions} algorithm finds the minimal
-    partitioning $\mathcal{B}$ such that for any region $\nu \in \mathcal{B}$,
-    $\mathcal{T}(p)$ assigns the same action $a \in Act$ to each $p \in \nu$.
-\end{theorem}
+For (a), we have to query $\mathcal{T}(\nu)$ which visits all leaves in $l \in
+\mathcal{T}$ for which $\lambda(l) \cap \nu \neq \emptyset$. Let us denote this
+set by $\mathbf{L}_{\nu}$ and say has size $L$. The analysis of this operation
+is complicated. First of all, we have no guarantee that the tree is balanced.
+If we assume that it is, then the path from the root to a leaf is $O(\log T)$
+where $T = (2N) - 1$ is the size of the tree.
+
+Assuming the tree is balanced,
+the length of the path from the root node to a leaf node is logarithmic in the
+number size of the tree. However, to query $\mathcal{T}(\nu)$ we do not need to do a
+$O(L \log N)$ operation. Consider two leaves, $l_{j}, l_{k} \in
+\mathbf{L}_{\nu}$, that share the same path until their common parent node
+splits them. We only need to follow the path to the parent once and then go to
+$l_{j}$ and $l_{k}$ respectively. In general, if we by $\omega(l)$ denote the
+set of nodes on the path from the root node to a leaf $l$, then we need
+$|\bigcup_{l \in \mathbf{L}_{\nu}} \omega(l)|$ operations to retrieve
+$\mathbf{L}_{\nu}$.
+
+
+% For the running time, we first turn our attention to the outer while loop
+% iterating through $\mathcal{P}$. Since $\mathcal{P}$ is dynamically grown, we
+% must consider what the accumulated size during the entire run of the algorithm
+% can amount to. For this, we look at the case where new points are added to
+% $\mathcal{P}$, namely in line 27-31 where we have found a new region. We add a
+% point for each of the $K$ variables, barring some edge cases. This means, that
+% an upper bound to the number of points we must process in total is $K$ times the
+% number of regions we find.
+
+% The worst case number of regions the algorithm can find is on the other hand
+% bounded by the number of partitions (or leaf nodes) in the original tree
+% $\mathcal{T}$. This because either the partitioning $\mathcal{A}$ entailed by
+% $\mathcal{T}$ is already optimal, in which case, the algorithm will just find
+% one region for every leaf node in $\mathcal{T}$, or $\mathcal{A}$ is not
+% optimal, meaning the algorithm will find fewer (but larger) regions. Therefore,
+% the outer while loop is bounded by $O(KN)$ with $N$ being the number of leaf
+% nodes in $\mathcal{T}$.
+
+% Inside the while loop, we have two sorting operations and a for-loop. In line 6,
+% we sort $\mathcal{P}$, but we ignore this in our analysis, as $\mathcal{P}$ is
+% expected to at any time only contain a small subset of all the points entering
+% and exiting $\mathcal{P}$ during the algorithm. Secondly, a smart data structure
+% (eg.\ a heap) could sort the points at insertion and thus remove the need to
+% sort every time.
+
+% In line 11, however, we sort $\mathcal{C}$ according to the current $p^{\min}$.
+% As presented here, this sorting is unavoidable as we cannot expect to know the
+% correct sorting with respect to $p^{\min}$.\footnote{%
+%     One could imagine, that $K$ lists with the bounds in $\mathcal{C}$ sorted
+%     according their respective $V_i$ were stored and consulted in the following
+%     for-loop, thus alleviating the need to sort $\mathcal{C}$ in every
+%     iteration. This approach is not pursued here.
+% } If we assume that the sorting operation is $O(C\log C)$ with $C$ being the
+% size of $\mathcal{C}$, then question becomes one of estimating $C$. Also here we
+% have that $C$ is proportional to $N$ and $K$, as $\mathcal{C}$ is constructed
+% from all the predicates of the branch nodes in $\mathcal{T}$. This is at most
+% $N$, or rather $N-1$. Something something $\approx O(KN^2\log N)$.
 
 \subsection{From regions to decision tree}%
 \label{sub:regionsToDT}
 
-The output of the \texttt{MaxPartitions} algorithm is a list of regions with
+The output of the \textsc{MaxPartitions} algorithm is a list of regions with
 associated actions. For this to be of any use, we need to construct a new
 decision tree to represent these state-action pairs. To this goal, we face the
 issue that it is not given (and in fact, very unlikely) that the suggested
@@ -331,7 +416,7 @@ operation, as it requires a nested loop through all the regions for each
 of the $K $dimensions (the nested loop being the final summation term over $m =
 1, 2, \ldots, n - j$ for all $j = 1, 2, \ldots, n - 1$). In this work, we have
 not attempted to find a faster implementation as we found that the size of
-$\mathbf{R}$ obtained by using our \texttt{MaxPartitions} algorithm did not
+$\mathbf{R}$ obtained by using our \textsc{MaxPartitions} algorithm did not
 cause performance issues.
 
 

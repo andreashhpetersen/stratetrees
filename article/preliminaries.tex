@@ -3,28 +3,28 @@
 
 We start by defining some relevant concepts.
 
-\begin{definition}[Strategy]%
-    A strategy $\sigma : S \to A$ over the state space $\mathcal{S}$ is a
-    mapping from any state $s \in \mathcal{S}$ to an action $a \in Act$ where
-    $Act$ is a finite set of allowed actions. 
-\end{definition}
+% \begin{definition}[Strategy]%
+%     A strategy $\sigma : S \to A$ over the state space $\mathcal{S}$ is a
+%     mapping from any state $s \in \mathcal{S}$ to an action $a \in Act$ where
+%     $Act$ is a finite set of allowed actions. 
+% \end{definition}
 
-A strategy can be represented in several different ways. In
-Q-learning~\cite{Sutton1998}, the approach is to estimate a function $Q : S, A
-\to \mathbb{R}$ that maps a state-action pair $(s,a)$ to a real number, that is
-an estimation of the expected cost of taking action $a$ in state
-$s$.\footnote{The Q-value can also be the expected reward.} Choosing an action
-in state $s$ under the strategy $\sigma$ is then given by $\sigma(s) =
-\argmin_{a \in Act}Q(s,a)$.
+% A strategy can be represented in several different ways. In
+% Q-learning~\cite{Sutton1998}, the approach is to estimate a function $Q : S, A
+% \to \mathbb{R}$ that maps a state-action pair $(s,a)$ to a real number, that is
+% an estimation of the expected cost of taking action $a$ in state
+% $s$.\footnote{The Q-value can also be the expected reward.} Choosing an action
+% in state $s$ under the strategy $\sigma$ is then given by $\sigma(s) =
+% \argmin_{a \in Act}Q(s,a)$.
 
-For a continuous state space, the Q-function can either be estimated using
-function approxmiation techniques or by discretization of the state space. In
-the latter case, the state space is partitioned into a finite set of convex
-regions, each defining a discrete state $S$ as a list of lower and upper bounds,
-$S_i^{\min}, S_i^{\max}$, for each $i = 1,\ldots,K$. The Q-values can then be
-estimated for the entire region $S$, and we say that $Q(s,a) = Q(S,a)$ for all
-$s \in S$. This allows for a tabular representation of the Q-function, as in the
-toy example in Table~\ref{tab:exStrategyQTable}.
+% For a continuous state space, the Q-function can either be estimated using
+% function approxmiation techniques or by discretization of the state space. In
+% the latter case, the state space is partitioned into a finite set of convex
+% regions, each defining a discrete state $S$ as a list of lower and upper bounds,
+% $S_i^{\min}, S_i^{\max}$, for each $i = 1,\ldots,K$. The Q-values can then be
+% estimated for the entire region $S$, and we say that $Q(s,a) = Q(S,a)$ for all
+% $s \in S$. This allows for a tabular representation of the Q-function, as in the
+% toy example in Table~\ref{tab:exStrategyQTable}.
 
 \begin{definition}[Partitions]%
     A partitioning $\mathcal{A}$ of the state space $\mathcal{S} \in
@@ -32,8 +32,8 @@ toy example in Table~\ref{tab:exStrategyQTable}.
     $\bigcup_{\nu \in \mathcal{A}}\nu = \mathcal{S}$ and for any two regions
     $\nu, \nu' \in \mathcal{A}$ where $\nu \neq \nu'$ it holds that $\nu \cap
     \nu' = \emptyset$. Each region $\nu$ can be expressed in terms of two
-    points, $p^{\min}$ and $p^{\max}$, so that for each $p = (p_1, \ldots, p_K)
-    \in \nu$ it holds that $p^{\min}_i < p_i \le  p^{\max}_i$ for $i =
+    points, $s^{\min}$ and $s^{\max}$, so that for each $s = (s_1, \ldots, s_K)
+    \in \nu$ it holds that $s^{\min}_i < s_i \le  s^{\max}_i$ for $i =
     1,\ldots,K$.
 \end{definition}
 
@@ -42,28 +42,36 @@ effectively a partitioning. For example, the Q-table in
 Table~\ref{tab:exStrategyQTable} corresponds to the partitioning $\mathcal{A} =
 \{ ((0,0),(1,1)), ((1,0),(2,1)),\ldots, ((1,2),(2,3)), ((2,2),(3,3)) \}$.
 
-
-
 \begin{definition}[Decision tree]%
 \label{def:decisionTree}
     A binary decision tree over the domain $\mathcal{S} \in \mathbb{R}^K$ is a
-    tuple $\mathcal{T} = (T, \rho, \ell)$ where $T$ is a full binary tree,
-    $\rho$ assigns to each branch node a predicate function of the form $\rho(s)
-    = s_i \le c$ where $s \in \mathcal{S}$ and $c$ is a constant and $\ell$
-    assigns to each leaf node a label (categorical or numerical).
+    tuple $\mathcal{T} = (\eta_{0}, \mathcal{N}, \mathcal{L})$ where $\eta_{0}
+    \in \mathcal{N}$ is the root node of the tree, $\mathcal{N}$ is a set of
+    branching nodes and $\mathcal{L}$ is a set of leaf nodes. Each branch node
+    $\eta \in \mathcal{N}$ consists of two child nodes and a predicate function 
+    of the form $\rho(s) = s_{i} <= c$ with $s \in \mathcal{S}$ and $c$ being a
+    constant. Each leaf node $\ell \in \mathcal{L}$ is assigned a label from a
+    set of labels $\mathcal{U}$.
 \end{definition}
 
 For a decision tree $\mathcal{T}$, we can obtain a decision $\delta =
-\mathcal{T}(s)$ from any state $s \in \mathcal{S}$ by following the
-\textit{path} from the root node to a leaf by evaluating $\rho(s)$ at every
-branch node and following the left path if the predicate is true and the right
-path otherwise. For each node $\eta$ in the tree (branching or leaf) the path to
-this node defines a bounded subspace $S$ of $\mathcal{S}$ and we denote this as
-$S = \lambda(\eta)$.
+\mathcal{T}(s)$, $\delta \in \mathcal{U}$ from any state $s \in \mathcal{S}$ by
+following the \textit{path} from the root node to a leaf by evaluating $\rho(s)$
+at every branch node and continuing the path at the left child if the predicate
+is true and at the right child otherwise. Further, we also allow evaluating a
+region of $\mathcal{S}$.  Given a region $\nu = (s^{\min}, s^{\max})$,
+$[\delta]_{\nu} = \mathcal{T}(\nu)$ is the set of all decisions that can be
+obtained evaluating configurations of $\nu$, ie. $\mathcal{T}(\nu) = \{
+\mathcal{T}(s) \mid s \in \nu \}$.
 
-Further, for a euclidean domain we also allow evaluating a region of
-$\mathcal{S}$. Given a region $\nu = (p^{\min}, p^{\max})$, $[\delta]_{\nu} =
-\mathcal{T}(\nu)$ is the set of all decisions that can be obtained evaluating
-configurations of $\nu$, ie. $\mathcal{T}(\nu) = \{ \mathcal{T}(s) \mid s \in \nu
-\}$.
-
+For any node $\eta$ in the tree (branching or leaf) the predicates along the
+path to this node defines a region $\nu$ and we denote this as $\nu =
+\lambda(\eta)$. In this way, we say that $\mathcal{T}$ induces a partitioning
+$\mathcal{A}_{\mathcal{T}} = \{ \lambda(\ell) \mid \ell \in \mathcal{L} \}$. For
+any region $\nu$ and a decision tree $\mathcal{T}$ we say, that $\nu$ has
+\textit{singular mapping} in $\mathcal{T}$ if for all $p \in \nu$,
+$\mathcal{T}(p) = \delta$ for some $\delta \in \mathcal{U}$. Naturally, all
+regions in $\mathcal{A}_{\mathcal{T}}$ has singular mapping in $\mathcal{T}$.
+For any partitioning $\mathcal{B}$ of the same state space, we say $\mathcal{B}$
+\textit{respects} $\mathcal{T}$ if and only if every region $\nu \in
+\mathcal{B}$ has singular mapping in $\mathcal{T}$.
