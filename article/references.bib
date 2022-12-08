@@ -1,104 +1,99 @@
-@inproceedings{David2015UppaalS,
-  title={Uppaal Stratego},
-  author={Alexandre David and Peter Gj{\o}l Jensen and Kim G. Larsen and Marius Mikucionis and Jakob Haahr Taankvist},
-  booktitle={TACAS},
-  year={2015}
+@inproceedings{Andre2013,
+  title = {Merge and Conquer: {{State}} Merging in Parametric Timed Automata},
+  author = {Andr{\'e}, {\'E}tienne and Fribourg, Laurent and Soulat, Romain},
+  year = {2013},
+  month = oct,
+  volume = {8172},
+  pages = {381--396},
+  doi = {10.1007/978-3-319-02444-8_27},
+  isbn = {978-3-319-02443-1}
 }
 
-@InProceedings{Manfred2019,
-    author="Jaeger, Manfred
-    and Jensen, Peter Gj{\o}l
-    and Guldstrand Larsen, Kim
-    and Legay, Axel
-    and Sedwards, Sean
-    and Taankvist, Jakob Haahr",
-    editor="Chen, Yu-Fang
-    and Cheng, Chih-Hong
-    and Esparza, Javier",
-    title="Teaching Stratego to Play Ball: Optimal Synthesis for Continuous Space MDPs",
-    booktitle="Automated Technology for Verification and Analysis",
-    year="2019",
-    publisher="Springer International Publishing",
-    address="Cham",
-    pages="81--97",
-    abstract="Formal models of cyber-physical systems, such as priced timed Markov decision processes, require a state space with continuous and discrete components. The problem of controller synthesis for such systems then can be cast as finding optimal strategies for Markov decision processes over a Euclidean state space. We develop two different reinforcement learning strategies that tackle the problem of continuous state spaces via online partition refinement techniques. We provide theoretical insights into the convergence of partition refinement schemes. Our techniques are implemented in . Experimental results show the advantages of our new techniques over previous optimization algorithms of .",
-    isbn="978-3-030-31784-3"
+@inproceedings{David2015UppaalS,
+  title = {Uppaal Stratego},
+  booktitle = {{{TACAS}}},
+  author = {David, Alexandre and Jensen, Peter Gj{\o}l and Larsen, Kim G. and Mikucionis, Marius and Taankvist, Jakob Haahr},
+  year = {2015}
 }
 
 @inproceedings{dtControl,
-    author = {Ashok, Pranav and Jackermeier, Mathias and Jagtap, Pushpak and K\v{r}et\'{\i}nsk\'{y}, Jan and Weininger, Maximilian and Zamani, Majid},
-    title = {DtControl: Decision Tree Learning Algorithms for Controller Representation},
-    year = {2020},
-    isbn = {9781450370189},
-    publisher = {Association for Computing Machinery},
-    address = {New York, NY, USA},
-    url = {https://doi.org/10.1145/3365365.3383468},
-    doi = {10.1145/3365365.3383468},
-    abstract = {Decision tree learning is a popular classification technique most commonly used in machine learning applications. Recent work has shown that decision trees can be used to represent provably-correct controllers concisely. Compared to representations using lookup tables or binary decision diagrams, decision tree representations are smaller and more explainable. We present dtControl, an easily extensible tool offering a wide variety of algorithms for representing memoryless controllers as decision trees. We highlight that the trees produced by dtControl are often very concise with a single-digit number of decision nodes. This demo is based on our tool paper [1].},
-    booktitle = {Proceedings of the 23rd International Conference on Hybrid Systems: Computation and Control},
-    articleno = {30},
-    numpages = {2},
-    keywords = {symbolic control, explainability, controller representation, non-uniform quantizer, decision tree, machine learning},
-    location = {Sydney, New South Wales, Australia},
-    series = {HSCC '20}
+  title = {{{DtControl}}: {{Decision}} Tree Learning Algorithms for Controller Representation},
+  booktitle = {Proceedings of the 23rd International Conference on Hybrid Systems: {{Computation}} and Control},
+  author = {Ashok, Pranav and Jackermeier, Mathias and Jagtap, Pushpak and K{\v r}et{\'i}nsk{\'y}, Jan and Weininger, Maximilian and Zamani, Majid},
+  year = {2020},
+  series = {{{HSCC}} '20},
+  publisher = {{Association for Computing Machinery}},
+  address = {{New York, NY, USA}},
+  doi = {10.1145/3365365.3383468},
+  abstract = {Decision tree learning is a popular classification technique most commonly used in machine learning applications. Recent work has shown that decision trees can be used to represent provably-correct controllers concisely. Compared to representations using lookup tables or binary decision diagrams, decision tree representations are smaller and more explainable. We present dtControl, an easily extensible tool offering a wide variety of algorithms for representing memoryless controllers as decision trees. We highlight that the trees produced by dtControl are often very concise with a single-digit number of decision nodes. This demo is based on our tool paper [1].},
+  articleno = {30},
+  isbn = {978-1-4503-7018-9},
+  keywords = {controller representation,decision tree,explainability,machine learning,non-uniform quantizer,symbolic control}
 }
 
-@InProceedings{dtControl2,
-    author="Ashok, Pranav
-    and Jackermeier, Mathias
-    and K{\v{r}}et{\'i}nsk{\'y}, Jan
-    and Weinhuber, Christoph
-    and Weininger, Maximilian
-    and Yadav, Mayank",
-    editor="Groote, Jan Friso
-    and Larsen, Kim Guldstrand",
-    title="dtControl 2.0: Explainable Strategy Representation via Decision Tree Learning Steered by Experts",
-    booktitle="Tools and Algorithms for the Construction and Analysis of Systems",
-    year="2021",
-    publisher="Springer International Publishing",
-    address="Cham",
-    pages="326--345",
-    abstract="Recent advances have shown how decision trees are apt data structures for concisely representing strategies (or controllers) satisfying various objectives. Moreover, they also make the strategy more explainable. The recent tool dtControl had provided pipelines with tools supporting strategy synthesis for hybrid systems, such as SCOTS and Uppaal Stratego. We present dtControl 2.0, a new version with several fundamentally novel features. Most importantly, the user can now provide domain knowledge to be exploited in the decision tree learning process and can also interactively steer the process based on the dynamically provided information. To this end, we also provide a graphical user interface. It allows for inspection and re-computation of parts of the result, suggesting as well as receiving advice on predicates, and visual simulation of the decision-making process. Besides, we interface model checkers of probabilistic systems, namely STORM and PRISM and provide dedicated support for categorical enumeration-type state variables. Consequently, the controllers are more explainable and smaller.",
-    isbn="978-3-030-72013-1"
-}
-
-@book{Sutton1998,
-  added-at = {2019-07-13T10:11:53.000+0200},
-  author = {Sutton, Richard S. and Barto, Andrew G.},
-  biburl = {https://www.bibsonomy.org/bibtex/2f46601cf8b13d39d1378af0d79438b12/lanteunis},
-  edition = {Second},
-  interhash = {ac6b144aaec1819919a2fba9f705c852},
-  intrahash = {f46601cf8b13d39d1378af0d79438b12},
-  keywords = {},
-  publisher = {The MIT Press},
-  timestamp = {2019-07-13T10:11:53.000+0200},
-  title = {Reinforcement Learning: An Introduction},
-  url = {http://incompleteideas.net/book/the-book-2nd.html},
-  year = {2018 }
+@inproceedings{dtControl2,
+  title = {{{dtControl}} 2.0: {{Explainable}} Strategy Representation via Decision Tree Learning Steered by Experts},
+  booktitle = {Tools and Algorithms for the Construction and Analysis of Systems},
+  author = {Ashok, Pranav and Jackermeier, Mathias and K{\v r}et{\'i}nsk{\'y}, Jan and Weinhuber, Christoph and Weininger, Maximilian and Yadav, Mayank},
+  editor = {Groote, Jan Friso and Larsen, Kim Guldstrand},
+  year = {2021},
+  pages = {326--345},
+  publisher = {{Springer International Publishing}},
+  address = {{Cham}},
+  abstract = {Recent advances have shown how decision trees are apt data structures for concisely representing strategies (or controllers) satisfying various objectives. Moreover, they also make the strategy more explainable. The recent tool dtControl had provided pipelines with tools supporting strategy synthesis for hybrid systems, such as SCOTS and Uppaal Stratego. We present dtControl 2.0, a new version with several fundamentally novel features. Most importantly, the user can now provide domain knowledge to be exploited in the decision tree learning process and can also interactively steer the process based on the dynamically provided information. To this end, we also provide a graphical user interface. It allows for inspection and re-computation of parts of the result, suggesting as well as receiving advice on predicates, and visual simulation of the decision-making process. Besides, we interface model checkers of probabilistic systems, namely STORM and PRISM and provide dedicated support for categorical enumeration-type state variables. Consequently, the controllers are more explainable and smaller.},
+  isbn = {978-3-030-72013-1}
 }
 
 @article{HYAFIL197615,
-    title = {Constructing optimal binary decision trees is NP-complete},
-    journal = {Information Processing Letters},
-    volume = {5},
-    number = {1},
-    pages = {15-17},
-    year = {1976},
-    issn = {0020-0190},
-    doi = {https://doi.org/10.1016/0020-0190(76)90095-8},
-    url = {https://www.sciencedirect.com/science/article/pii/0020019076900958},
-    author = {Laurent Hyafil and Ronald L. Rivest},
-    keywords = {Binary decision trees, computational complexity, NP-complete}
+  title = {Constructing Optimal Binary Decision Trees Is {{NP-complete}}},
+  author = {Hyafil, Laurent and Rivest, Ronald L.},
+  year = {1976},
+  journal = {Information Processing Letters},
+  volume = {5},
+  number = {1},
+  pages = {15--17},
+  issn = {0020-0190},
+  doi = {10.1016/0020-0190(76)90095-8},
+  keywords = {Binary decision trees,computational complexity,NP-complete}
 }
 
+@article{m.t.l.b.IntroductionProbabilityTheory1951,
+  title = {An {{Introduction}} to {{Probability Theory}} and Its {{Applications}}, Vol. {{I}}. {{By William Feller}}. [{{Pp}}. Xii + 419. {{New York}}: {{John Wiley}} and {{Sons Inc}}.; {{London}}: {{Chapman}} and {{Hall Ltd}}. 1950. {{Price}} 48s.]},
+  shorttitle = {An {{Introduction}} to {{Probability Theory}} and Its {{Applications}}, Vol. {{I}}. {{By William Feller}}. [{{Pp}}. Xii + 419. {{New York}}},
+  author = {{M.T.L.B.}},
+  year = {1951},
+  month = nov,
+  journal = {Journal of the Staple Inn Actuarial Society},
+  volume = {10},
+  number = {04},
+  pages = {316--318},
+  issn = {0020-269X, 0020-269X},
+  doi = {10.1017/S0020269X00004679},
+  langid = {english}
+}
 
-@inproceedings{Andre2013,
-    author = {André, Étienne and Fribourg, Laurent and Soulat, Romain},
-    year = {2013},
-    month = {10},
-    pages = {381-396},
-    title = {Merge and Conquer: State Merging in Parametric Timed Automata},
-    volume = {8172},
-    isbn = {978-3-319-02443-1},
-    doi = {10.1007/978-3-319-02444-8_27}
+@inproceedings{Manfred2019,
+  title = {Teaching Stratego to Play Ball: {{Optimal}} Synthesis for Continuous Space {{MDPs}}},
+  booktitle = {Automated Technology for Verification and Analysis},
+  author = {Jaeger, Manfred and Jensen, Peter Gj{\o}l and Guldstrand Larsen, Kim and Legay, Axel and Sedwards, Sean and Taankvist, Jakob Haahr},
+  editor = {Chen, Yu-Fang and Cheng, Chih-Hong and Esparza, Javier},
+  year = {2019},
+  pages = {81--97},
+  publisher = {{Springer International Publishing}},
+  address = {{Cham}},
+  abstract = {Formal models of cyber-physical systems, such as priced timed Markov decision processes, require a state space with continuous and discrete components. The problem of controller synthesis for such systems then can be cast as finding optimal strategies for Markov decision processes over a Euclidean state space. We develop two different reinforcement learning strategies that tackle the problem of continuous state spaces via online partition refinement techniques. We provide theoretical insights into the convergence of partition refinement schemes. Our techniques are implemented in . Experimental results show the advantages of our new techniques over previous optimization algorithms of .},
+  isbn = {978-3-030-31784-3}
+}
+
+@book{Sutton1998,
+  title = {Reinforcement Learning: {{An}} Introduction},
+  author = {Sutton, Richard S. and Barto, Andrew G.},
+  year = {2018},
+  edition = {Second},
+  publisher = {{The MIT Press}},
+  added-at = {2019-07-13T10:11:53.000+0200},
+  biburl = {https://www.bibsonomy.org/bibtex/2f46601cf8b13d39d1378af0d79438b12/lanteunis},
+  interhash = {ac6b144aaec1819919a2fba9f705c852},
+  intrahash = {f46601cf8b13d39d1378af0d79438b12},
+  timestamp = {2019-07-13T10:11:53.000+0200}
 }

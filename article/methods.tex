@@ -127,9 +127,10 @@ This process is repeated until all dimensions have been exhausted at which
 point, $p^{\max}$ together with the unchanged $p^{\min}$ defines a region $\nu =
 (s^{p^{\min}}, s^{p^{\max}})$ that has singular mapping in $\mathcal{T}$ and
 cannot be expanded further in any dimension. More generally, we can say that
-given $p^{\min}$ we want to choose $p^{\Delta} \in \mathbb{Z}^{K}$ such that
-$\nu = (s^{p^{\min}}, s^{p^{\min} + p^{\Delta}})$ has singular mapping in
-$\mathcal{T} $and no other $p^{\Delta'} > p^{\Delta}$ has this property.
+given $p^{\min}$ we want to choose $\Delta_{p} \in \mathbb{Z}^{K}$ such that for
+$p^{\max} = p^{\min} + \Delta_{p}$ the region $\nu = (s^{p^{\min}},
+s^{p^{\max}})$ has singular mapping in $\mathcal{T} $and no other $p^{\Delta'} >
+\Delta_{p}$ has this property.
 
 Having found $\nu$, we add it to $\mathcal{R}$. Further, we add to $\mathcal{P}$
 all the points we can create from taking $p^{\min}$ and setting $p^{\min}_{i} =
@@ -208,14 +209,14 @@ partitioning that respects $\mathcal{T}$.
             }
 
                 \State{%
-                    $p^{\max} \gets p^{\min} + p^{\Delta}$
+                    $p^{\max} \gets p^{\min} + \Delta_{p}$
                     % $p^{\max} \gets grow(p^{\min})$
                     % $p^{\max} \gets grow(
                     %     p^{\min} + \mathbf{1}^K,
                     %     \emptyset \mid (\mathcal{T}, p^{\min})
                     % )$
                 }\Comment{%
-                    Select largest $p^{\Delta}$
+                    Select largest $\Delta_{p}$
                 }
 
                 \State{%
@@ -276,33 +277,100 @@ while loop is bounded by $O(KN)$.
 % appropriate data structure (a priority queue) for $\mathcal{P}$. Of greater
 % interest is the check for membership of a point $s$ in $\mathcal{R}$ (which is
 % both checked for $s^{p^{\min}}$ and for each candidate of $p^{\max}$ in
-% $s^{p^{\max}}$ in the search for $p^{\Delta}$). 
+% $s^{p^{\max}}$ in the search for $\Delta_{p}$). 
 
-How about finding $p^{\Delta}$? The procedure is to increment by 1 in any one
+How about finding $\Delta_{p}$? The procedure is to increment by 1 in any one
 unexhausted dimension and then check for the validity of that increment. This
 check has two components: (a) check if the new region still has singular mapping
 in $\mathcal{T}$ and (b) check if the new region overlaps with any region
 already in $\mathcal{R}$. Let $\nu = (s^{\min}, s^{\max})$ be the candidate
-region for some $p^{\Delta} = \mathbf{1}^{K} + \mathbf{\hat{e}}_{i}$ (ie.\ so
-$s^{\max} = s^{p^{\min} + p^{\Delta}}$).
+region for some $\Delta_{p} = \mathbf{1}^{K} + \mathbf{\hat{e}}_{i}$ (ie.\ so
+$s^{\max} = s^{p^{\min} + \Delta_{p}}$).
 
 For (a), we have to query $\mathcal{T}(\nu)$ which visits all leaves in $l \in
-\mathcal{T}$ for which $\lambda(l) \cap \nu \neq \emptyset$. Let us denote this
-set by $\mathbf{L}_{\nu}$ and say has size $L$. The analysis of this operation
-is complicated. First of all, we have no guarantee that the tree is balanced.
-If we assume that it is, then the path from the root to a leaf is $O(\log T)$
-where $T = (2N) - 1$ is the size of the tree.
+\mathcal{T}$ for which $\lambda(l) \cap \nu \neq \emptyset$. Assuming
+$\mathcal{T}$ is balanced, then the path from the root to a leaf is $O(\log
+ T)$ where $T - 1$ is the size of the tree (and $T = 2N -1$). The worst case
+for retrieving a set of size $L$, is that all $L$ leaves share the least amount
+of path. Since all paths share the root node, the worst case for $L=2$ is when
+the root is the \textit{only} shared node, in which case the operation would
+require $(2 * \log T) - 1$ visits (with the last term representing 1 shared
+node on the paths). For $L=3$ and $L=4$, all paths must at least share the root
+node as well as one of its two children. Thus, for $L=3$ we have $(3 * \log T)
+- 3$ and for $L=4$ we have $(4 * \log T) - 5$ (since now, adding the 3rd and
+4th leaf would require $\log T$ operations minus the checks on the nodes on the
+path shared by the 1st and 2nd leaf).
 
-Assuming the tree is balanced,
-the length of the path from the root node to a leaf node is logarithmic in the
-number size of the tree. However, to query $\mathcal{T}(\nu)$ we do not need to do a
-$O(L \log N)$ operation. Consider two leaves, $l_{j}, l_{k} \in
-\mathbf{L}_{\nu}$, that share the same path until their common parent node
-splits them. We only need to follow the path to the parent once and then go to
-$l_{j}$ and $l_{k}$ respectively. In general, if we by $\omega(l)$ denote the
-set of nodes on the path from the root node to a leaf $l$, then we need
-$|\bigcup_{l \in \mathbf{L}_{\nu}} \omega(l)|$ operations to retrieve
-$\mathbf{L}_{\nu}$.
+In general, this becomes 
+
+\begin{equation}\label{eq:runtimeWithCeil}
+    L \log T - \sum^{L}_{i=1} \lceil \log i \rceil 
+\end{equation}
+
+Using Stirlings approximation~\cite{m.t.l.b.IntroductionProbabilityTheory1951}
+we can get rid of the summation further reduce:
+
+\begin{align}
+    L \log T - \sum^{L}_{i=1} \lceil \log i \rceil \notag
+    &\approx L \log T - (L \log L - L + 1) \notag \\
+    &= L \left(
+            \log T - \left( \log L - 1 + \frac{1}{L} \right)
+         \right) \notag \\
+    &= L \left(
+            \log T - \log \left( \frac{L}{2} \right) - \frac{1}{L}
+         \right) \notag \\
+    &= L \log \left( \frac{2T}{L} \right) - 1
+\end{align}
+
+In Big-$O$ notation, this is $O(L\left( \log \frac{T}{L} \right))$, ie.\ the
+complexity of the query $\mathcal{T}(\nu)$ is linear in the size of the output
+set times the logarithm of the ratio between the size of the tree and the size
+of the output set.
+
+By keeping $L$ small, we can therefore obtain a complexity that is close to $O
+\log T$. We can do this by noting, that we do not need to query the entire
+candidate region at each increment. Say we start from some region $\nu_{1} =
+(s^{p^{\min}}, s^{p^{\max}})$ with $p^{\max} = p^{\min} + \mathbf{1}^{K}$. We
+then have $\mathcal{T}(\nu_{1}) = \{ \alpha \}$ with $\alpha \in Act$ (as
+$\nu_{1}$ by design cannot span more than one region in the original
+paritioning). Then, for our next candidate region $\nu_{2} = (s^{p^{\min}},
+s^{p^{\max} + \mathbf{\hat{e}}_{i}})$ we only need to check that the region
+given by $\nu_{2} \setminus \nu_{1} = (s^{p'}, s^{p^{\max} +
+\mathbf{\hat{e}}_{i}})$ with $p' = (p^{\min}_{1}, \ldots, p^{\max}_{i}, \ldots,
+p^{\min}_{K})$ being an intermediate minimum point defining the lower bounds of
+the new part of the candidate region. With this technique, we avoid querying the
+same region again and again until the search terminates and we keep the expected
+complexity of each query operation minimal.
+
+How often is this operation performed? We increase $\Delta_{p}$ (starting from
+$\Delta_{p} = \mathbf{1}^{K}$) by $\mathbf{\hat{e}}_{i}$ until the region $\nu =
+(s^{p^{\min}}, s^{p^{\min} + \Delta_{p}})$ no longer has singular mapping and so
+for each such increment, we have to query $\mathcal{T}(\nu)$. In the worst case,
+a single search for $\Delta_{p}$ thus searches through each bound on each
+dimension. However, this would then result in the outer loop only running once
+since then a region spanning the entire state space would have been found. On
+the other hand, it is very difficult to say excactly how many increments of
+$\Delta_{p}$ can be expected.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{adversarialDeltaPCheck}
+    \caption{%
+        Example of a bad situation in terms of checking for $\Delta_{p}$. The
+        dashed lines extends the bounds of each region to show how the algorithm
+        processes the bounds.
+    }\label{fig:adversarialDeltaPCheck}
+\end{figure}
+
+Figure~\ref{fig:adversarialDeltaPCheck} gives an example of a partioning with a
+structure that requires checking a lot of bounds unrelated to the current region
+under construction. The algorithm would start by considering the region $\nu =
+(s^{\min}, s^{\max})$ with $s^{\min} = (0,0)$ and $s^{\max} = (1,2)$. But then,
+$s^{\max}$ would be increased to $(2,2)$ then to $(3,2)$, then $(4,2)$ and so
+forth. The same would be the case for the region starting in $s^{\min} = (0,2)$.
+In total, this partioning would make the algorithm attempt $11 + 11 + 2*10 = 42$
+increments even thoug, the number of (upper) bounds is only $13$.
+
 
 
 % For the running time, we first turn our attention to the outer while loop
@@ -352,27 +420,32 @@ decision tree to represent these state-action pairs. To this goal, we face the
 issue that it is not given (and in fact, very unlikely) that the suggested
 partitioning can be perfectly represented by a decision tree, as this would
 require the existence of enough `clean splits' (ie.\ predicates on some variable
-that perfectly divides the regions into two sets with an empty disjunction) to
+that perfectly divides the regions into two sets with an empty intersection) to
 arrange the entire set of regions.
 
 Therefore, we suggest a brute-force algorithm that tries to separate the regions
-as cleanly as possible. Let $\mathbf{R}$ be a list of regions $\nu \in
-\mathbf{R}$ with $a_{\nu}$ being the action associated with $\nu$. We
-iteratively create a branch node that splits $\mathbf{R}$ into two,
-$\mathbf{R}_{low}$ and $\mathbf{R}_{high}$, based on a predicate function
-$\rho(x_i,c) = x_i \le c$ with $c \in \mathbb{R}$ so that $\mathbf{R}_{low} = \{
-\nu \in \mathbf{R} \mid \nu_{i,\min} \le c \}$ and $\mathbf{R_{high}} = \{ \nu
-\in \mathbf{R} \mid \nu_{i,\max} > c \}$. When the list only contains a single
-element $\nu$, we create a leaf node with action $a_{\nu}$ and return.
+as cleanly as possible. Let $\mathbf{R}$ be a list of regions and let $a_{\nu}$
+be the action associated with the region $\nu = (s^{\min}, s^{\min})$. In the
+following, we refer to $s^{\min}$ and $s^{\max}$ of a region $\nu$ by
+$\nu_{\min}$ and $\nu_{\max}$ respectively, and to the value of a specific
+dimension $i$ in one such boundary point as $\nu_{\min, i}$ or $\nu_{\max,i}$.
 
-The question is how to determine $\rho(x_i,c)$, more specifically which variable
-$x_i$ to predicate on and at which value $c$. Ideally, we want to split
+We iteratively create a branch node that splits $\mathbf{R}$ into two,
+$\mathbf{R}_{low}$ and $\mathbf{R}_{high}$, based on a predicate function
+$\rho(x) = x_i \le c$ with $c \in \mathbb{R}$ so that $\mathbf{R}_{low} = \{ \nu
+\in \mathbf{R} \mid \rho(\nu_{\min}) \text{~is True} \}$ and $\mathbf{R}_{high}
+= \{ \nu \in \mathbf{R} \mid \rho(\nu_{\max}) \text{~is False} \}$. When the
+list only contains a single element $\nu$, we create a leaf node with action
+$a_{\nu}$ and return.
+
+The question is how to determine $\rho(x)$, more specifically which dimension
+$i$ to predicate on and at which value $c$. Ideally, we want to split
 $\mathbf{R}$ in two equally sized subsets and in a way that no single region
 would have to occur in both, ie.\ we would like $\mathbf{R}_{low} \cap
 \mathbf{R}_{high} = \emptyset$. For this we define an impurity measure
 $I(\mathbf{R}_{low},\mathbf{R}_{high})$ that penalises the difference in size
 between $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ and the size of the
-disjunction between the two. Let $abs(a)$ be the absolute value of $a$ and let
+intersection between the two. Let $abs(a)$ be the absolute value of $a$ and let
 $|b|$ denote the size of a set $b$, then
 
 \[
@@ -385,31 +458,32 @@ Our brute-force way of finding the predicate that minimizes $I$ is to iterate
 over the dimensions in $\mathcal{S}$ and for each dimension $i$ we sort the
 regions according to their upper bound. Let $\mathbf{R}_i = \{ \nu^1, \nu^2,
 \ldots, \nu^n \}$ be the list sorted according to the $i$ th dimension so that
-for all $\nu^j, \nu^{j+1}$ it holds that $\nu^{j}_{i,\max} \le
-\nu^{j+1}_{i,\max}$. If we then let $\rho(x_i,c) = x_i \le c$ with $c =
-\nu^{j}_{i,\max}$ we have $|\mathbf{R}_{low}| = j$ and |$\mathbf{R}_{high}| = n
+for all $\nu^j, \nu^{j+1} \in \mathbf{R}_{i}$ it holds that $\nu^{j}_{\max,i} \le
+\nu^{j+1}_{\max,i}$. If we then let $\rho(x) = x_i \le c$ with $c =
+\nu^{j}_{\max,i}$ we have $|\mathbf{R}_{low}| = j$ and |$\mathbf{R}_{high}| = n
 - j$. For determining the size of $\mathbf{R}_{low} \cap \mathbf{R}_{high}$ we
 simply need to count the number of regions $\nu^{j+m}$ for $m = 1, 2, \ldots,
 n-j$ whose lower bound is less than our predicate bound $c$, since these regions
-will appear both in $\mathbf{R}_{low}$ (because then, by definition, $\rho(x_i,c) = x_i
-\le c$ will be true for $x_i = \nu^{j+m}_{i,\min}$ and $c = \nu^{j}_{i,\max}$)
+will appear both in $\mathbf{R}_{low}$ (because then, by definition, $\rho(x) = x_i
+\le c$ will be true for $x_i = \nu^{j+m}_{\min,i}$ and $c = \nu^{j}_{\max,i}$)
 and in $\mathbf{R}_{high}$ (because our sorting ensures that for all
-$\nu^{j},\nu^{j+m}$ it holds that $\nu^{j}_{i,\max} \le \nu^{j+m}_{i,\max}$).
+$\nu^{j},\nu^{j+m}$ it holds that $\nu^{j}_{\max,i} \le \nu^{j+m}_{\max,i}$).
 
 Now we can write our impurity measure in terms of these quantities:
 
 \[
     I(\mathbf{R}_{low}, \mathbf{R}_{high}) = abs(j - (n - j)) +
-    \sum^{n}_{m=1} \mathbbm{1}(\rho(\nu^{j+m}_{i,\min},\nu^{j}_{i,\max})), \quad
-    \text{for all }\nu^{j} \in \mathbf{R}
+    \sum^{n}_{m=1} \mathbbm{1}(\rho(\nu^{j+m}_{\min})), \quad
+    \text{for all }\nu^{j} \in \mathbf{R}_{i}
 \] 
 
-where $\mathbbm{1}$ is the indicator function, $\mathbf{R}$ is the list of
-regions sorted according to upper bound and $\mathbf{R}_{low}$ and
+\noindent
+where $\mathbbm{1}$ is the indicator function, $\mathbf{R}_{i}$ is the list of
+regions sorted according to upper bounds in dimension $i$ and $\mathbf{R}_{low}$ and
 $\mathbf{R}_{high}$ are the subsets resulting from splitting on the predicate
-function $\rho(x_i,c) = x_i \le c$ with $c = \nu^{j}_{i,\max}$ so that
+function $\rho(x) = x_i \le c$ with $c = \nu^{j}_{\max,i}$ so that
 $\mathbf{R}_{low} \subsetneq \mathbf{R}$, $\mathbf{R}_{high} \subsetneq
-\mathbf{R}$ and $\mathbf{R} \subseteq \mathbf{R}_{low} \cup \mathbf{R}_{high}$.
+\mathbf{R}$ and $\mathbf{R} \supseteq \mathbf{R}_{low} \cup \mathbf{R}_{high}$.
 
 Finding the best split, ie.\ the one that minimizes the impurity, is a $O(Kn^2)$
 operation, as it requires a nested loop through all the regions for each
