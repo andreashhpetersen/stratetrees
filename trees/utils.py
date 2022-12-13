@@ -124,7 +124,7 @@ def draw_graph(
 
 def draw_partitioning(
     leaves, x_var, y_var, xlim, ylim, cmap,
-    dpi=100, lw=0, show=False, out_fp='./tmp.svg'
+    dpi=100, lw=0, bounds=False, show=False, out_fp='./tmp.svg'
 ):
     min_x, max_x = xlim
     min_y, max_y = ylim
@@ -135,6 +135,17 @@ def draw_partitioning(
         s = l.state
         x_start, x_end = s.min_max(x_var, min_limit=min_x, max_limit=max_x)
         y_start, y_end = s.min_max(y_var, min_limit=min_y, max_limit=max_y)
+
+        if bounds:
+            ax.plot(
+                [x_end, x_end], [min_y, max_y],
+                linestyle=(0,(5,20)), c='black', lw=0.2
+            )
+            ax.plot(
+                [y_end, y_end], [min_x, max_x],
+                linestyle=(0,(5,20)), c='black', lw=0.2
+            )
+
         width = x_end - x_start
         height = y_end - y_start
         c = cmap[l.action]
