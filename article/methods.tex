@@ -2,26 +2,26 @@
 \label{sec:maxParts}
 
 Since state space discretization for Reinforcement Learning is usually done
-\textit{before} any learning takes place, the discretization is likely to create
-adjacent discrete states that are mapped to the same optimal action. The
-question we would then like to answer is this: if $\mathcal{T}$ is a decision
-tree representing a trained strategy and $\mathcal{A}_{\mathcal{T}}$ is its
-induced partitioning, can we find another partitioning $\mathcal{B}$ which is
-smaller than $\mathcal{A}_{\mathcal{T}}$ but still respects $\mathcal{T}$?
+\textit{before} any learning takes place, it tends to be conservative. For this
+reason, discretization is likely to create adjacent discrete states that are
+mapped to the same optimal action. The question we would then like to answer is
+this: if $\mathcal{T}$ is a decision tree representing a trained strategy and
+$\mathcal{A}_{\mathcal{T}}$ is its induced partitioning, can we find another
+partitioning $\mathcal{B}$ which is smaller than $\mathcal{A}_{\mathcal{T}}$ but
+still respects $\mathcal{T}$?
 
 As an example, we can consider the toy strategy from
 Example~\ref{ex:runningExample}. In Figure~\ref{fig:complexExample} the strategy
 is represented as a decision tree (\ref{fig:complexExampleTree}) by omitting the
 specification of cost values of each action and only preserving the optimal
 action for each discrete state. On the right (\ref{fig:complexExample2dVisual})
-is a 2D visualization of the induced partitioning of the state space. It can
-easily be assessed, that the partitioning has several redundant splits where
-areas of the same color (meaning they suggests the same optimal action) are
-split in two. For instance, the region $((0,0),(1,1))$ and the region
-$((0,1),(1,2))$ both specify $a$ as the optimal action, and we could replace
-these two regions with a single one given by $((0,0),(1,2))$.  Since each region
-is represented in our decision tree as a leaf node, the fewer regions we have
-the smaller a tree we need to represent it.
+is a 2D visualization of the induced partitioning of the state space. The
+partitioning has several redundant splits where areas of the same color (meaning
+they suggests the same optimal action) are split in two. For instance, the
+region $((0,0),(1,1))$ and the region $((0,1),(1,2))$ both specify $a$ as the
+optimal action, and we could replace these two regions with a single one given
+by $((0,0),(1,2))$.  Since each region is represented in our decision tree as a
+leaf node, the fewer regions we have the smaller a tree we need to represent it.
 
 \begin{figure}[ht]
     \begin{subfigure}[b]{.5\textwidth}
@@ -53,62 +53,53 @@ the smaller a tree we need to represent it.
     \label{fig:complexExample}
 \end{figure}
 
-We start by stating the problem of finding maximum sized regions as a problem of
-local optimization: Given a starting point $s^{\min}$, find $s^{\max}$ such that
-$\nu = (s^{\min}, s^{\max})$ has singular mapping in $\mathcal{T}$ while no
-other region $\nu' = (s^{\min}, s')$ where $s'_j = s^{\max}_j$ for $j =
-1,\ldots,i-1,i+1,\ldots,K$ and $s'_i > s^{\max}_i$ has this property.
+The problem of finding maximum sized regions is a local optimization probem:
+Given a point $s^{\min}$, find $s^{\max}$ such that $\nu = (s^{\min},
+s^{\max})$ has singular mapping in $\mathcal{T}$ while no other region $\nu' =
+(s^{\min}, s')$ where $s'_j = s^{\max}_j$ for $j = 1,\ldots,i-1,i+1,\ldots,K$
+and $s'_i > s^{\max}_i$ has this property.
 
 
 \subsection{Details of the algorithm}%
 \label{sub:maxPartsDescription}
 
-We introduce a new notation to refer to individual bounds on the dimensions in
-$\mathcal{T}$. We denote by $\mathcal{T}_i$ the sorted list of bounds on
-dimension $i$ and by $\mathcal{T}_{i,j}$ the $j$th smallest bound on dimension
-$i$ for each $j = 1,2,\ldots,|\mathcal{T}_i|$. This can be precomputed as a
-matrix in log-linear time by collecting and sorting the bounds on all branch
-nodes in $\mathcal{T}$ and allows accessing $\mathcal{T}_{i,j}$ in constant
-time.
+We write $\mathcal{T}_i$ for the (ascendingly) sorted list of bounds on
+dimension $i$ in the policy given by the tree $\mathcal{T}$. The first bound in
+the list is defined to be negative $\infty$ and the last is positive $\infty$.
+By $\mathcal{T}_{i,j}$ we write the $j$th smallest bound on dimension $i$ for
+each $j = 1, 2, \ldots, |\mathcal{T}_i|$. This can be precomputed as a matrix in
+log-linear time by collecting and sorting the bounds on all branch nodes in
+$\mathcal{T}$ and allows accessing $\mathcal{T}_{i,j}$ in constant time.
 
 Exploiting this notation, if $p$ is a $K$-dimensional vector of index pointers
 to bounds in $\mathcal{T}$, such that $p_i \in p$ is a pointer to
 $\mathcal{T}_{i,p_i}$, then we can define a point at an intersection of bounds
-in all $K$ dimensions as $s^{p}_{\mathcal{T}} =
-(\mathcal{T}_{1,p_1},\mathcal{T}_{2,p_2},\ldots,\mathcal{T}_{K,p_K})$. We will
-omit the subscript $\mathcal{T}$ on $s^{p}_{\mathcal{T}}$ when it is clear from
-the context.
-
-For the algorithm, we require that the domain of $\mathcal{T}$ is bounded in all
-$K$ dimensions. This can be achieved by including a minimum and a maximum bound
-for each dimension $i$, which is not represented by a branch node in
-$\mathcal{T}$. These limit bounds can be negative and positive infinity, in
-which case we say $\mathcal{T}_{i,1} = -\infty$ and
-$\mathcal{T}_{i,|\mathcal{T}_{i}|} = \infty$. Further, in a slight abuse of
-notation, we define $\mathcal{T}_{i,|\mathcal{T}_i| + 1}$ to be some
-\textit{sentinel} value representing that we are outside the boundaries of
-dimension $i$.  Correspondingly, we define a sentinel action $\alpha$, and we
-say that $\mathcal{T}(s^p_{\mathcal{T}}) = \alpha$ if and only if $\exists p_i
-\in p, p_i = |\mathcal{T}_i| + 1$.
+in all $K$ dimensions as $s^{p}_{\mathcal{T}} = (\mathcal{T}_{1,p_1},
+\mathcal{T}_{2,p_2}, \ldots, \mathcal{T}_{K,p_K})$. We will omit the subscript
+$\mathcal{T}$ on $s^{p}_{\mathcal{T}}$ when it is clear from the context.
+Further, in a slight abuse of notation, we define $\mathcal{T}_{i,
+|\mathcal{T}_i| + 1}$ to be some \textit{sentinel} value representing that we
+are outside the boundaries of dimension $i$.  Correspondingly, we define a
+sentinel action $\alpha$, and we say that $\mathcal{T}(s^p_{\mathcal{T}}) =
+\alpha$ if and only if $\exists p_i \in p, p_i = |\mathcal{T}_i| + 1$.
 
 The algorithm works by maintaining two vectors of index pointers, $p^{\min}$ and
 $p^{\max}$, and iteratively increasing $p^{\max}$ until a region $\nu =
 (s^{p^{\min}}, s^{p^{\max}})$ cannot be expanded further. The regions are stored
 in a list $\mathcal{R}$ and a list $\mathcal{P}$ is keeping track of the
 $p^{\min}$ vectors to use as starting points for the region search. Initially,
-$\mathcal{R}$ is empty and $\mathcal{P}$ contains just a vector of $K$ ones
-(ie.\ the vector pointing to the lowest bounds of all $K$ dimensions). The
-algorithm is given in pseudo-code in Algorithm~\ref{alg:MaxPartitions} while the
-following describes it in more detail.
+$\mathcal{R}$ is empty and $\mathcal{P}$ contains the lowest bound for each
+dimension (so it equals the first column of the matrix $\mathcal{T}$). The
+pseudo-code is given in Algorithm~\ref{alg:MaxPartitions}.
 
 Let $p^{\min}$ be the result of popping the lexicographically smallest element
-of $\mathcal{P}$. We can then define $s^{\min} = s^{p^{\min}}$ as the `lower
+of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the `lower
 left' corner in a region $\nu = (s^{\min}, s^{\max})$ where $s^{\max}$ is the
 point we want to determine, so that $\nu$ has singular mapping in $\mathcal{T}$.
 By definition, $s^{\max} = s^{p^{\max}}$ satifies this requirement for $p^{\max}
-= (p^{\min}_{1} + 1, \ldots, p^{\max}_{K} + 1)$, since no branch node in
+= (p^{\min}_{1} + 1, \ldots, p^{\min}_{K} + 1)$, since no branch node in
 $\mathcal{T}$ splits on a predicate $c$ where $\mathcal{T}_{i,p^{\min}_{i}} < c
-< \mathcal{T}_{i,p^{\min} + 1}$ for any $i = 1, \ldots, K$. 
+< \mathcal{T}_{i,p^{\min}_{i} + 1}$ for any $i = 1, \ldots, K$. 
 
 We can now increase $p^{\max}$ by 1 in any dimension $i$ and test for singular
 mapping in our new region. Additionally, we require that the point
@@ -129,7 +120,7 @@ point, $p^{\max}$ together with the unchanged $p^{\min}$ defines a region $\nu =
 cannot be expanded further in any dimension. More generally, we can say that
 given $p^{\min}$ we want to choose $\Delta_{p} \in \mathbb{Z}^{K}$ such that for
 $p^{\max} = p^{\min} + \Delta_{p}$ the region $\nu = (s^{p^{\min}},
-s^{p^{\max}})$ has singular mapping in $\mathcal{T} $and no other $p^{\Delta'} >
+s^{p^{\max}})$ has singular mapping in $\mathcal{T} $and no other $\Delta_{p'} >
 \Delta_{p}$ has this property.
 
 Having found $\nu$, we add it to $\mathcal{R}$. Further, we add to $\mathcal{P}$
