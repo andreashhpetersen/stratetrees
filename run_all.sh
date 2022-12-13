@@ -23,11 +23,11 @@ for MODEL_DIR in $DIRS ; do
     $MODEL_DIR/make_samples.sh
 
     for SAMPLE_FILE in $MODEL_DIR/samples/* ; do
-        python log2ctrl.py $SAMPLE_FILE $SAMPLE_FILE > /dev/null
+        python log2ctrl.py $SAMPLE_FILE $SAMPLE_FILE
     done
 
     echo "BUILDING trees for model '$model'"
-    python run_experiments.py $MODEL_DIR -k 1 -u
+    python run_experiments.py $MODEL_DIR -k 10 -u
 
     echo "EVALUATE '$model' strategies"
     R=$MODEL_DIR/eval_results.txt
