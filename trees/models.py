@@ -99,6 +99,12 @@ class Tree:
         self.act2id = { a: i for i, a in enumerate(actions) }
         self.size = size
 
+    def set_depth(self):
+        self.root.set_depth()
+        leaves = self.get_leaves()
+        self.max_depth = max([l.depth for l in leaves])
+        self.avg_depth = sum([l.depth for l in leaves]) / len(leaves)
+
     def get(self, state, leaf=False):
         """
         Get the action/decision associated with `state'. If `leaf=True', the
@@ -329,6 +335,19 @@ class Node:
 
         self.var_name = variable
         self.var_id = var_id
+
+    def set_depth(self, depth=0):
+        self.depth = depth
+
+        if self.low.is_leaf:
+            self.low.depth = depth + 1
+        else:
+            self.low.set_depth(depth + 1)
+
+        if self.high.is_leaf:
+            self.high.depth = depth + 1
+        else:
+            self.high.set_depth(depth + 1)
 
     @property
     def size(self):
