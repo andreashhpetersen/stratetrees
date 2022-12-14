@@ -72,6 +72,7 @@ S&gt;0</label>
 	</template>
 	<template>
 		<name>Light</name>
+		<declaration>int cl = 2; // used for learning</declaration>
 		<location id="id8" x="-102" y="0">
 			<name x="-85" y="-8">EW</name>
 			<label kind="invariant" x="-85" y="8">y&lt;=1</label>
@@ -92,14 +93,15 @@ S&gt;0</label>
 			<target ref="id8"/>
 			<label kind="guard" x="110" y="-93">x&gt;=4</label>
 			<label kind="assignment" x="-85" y="-68">x=0, y=0,
-EWg=1</label>
+EWg=1, cl=2</label>
 			<nail x="170" y="-68"/>
 			<nail x="-102" y="-68"/>
 		</transition>
 		<transition id="id13">
 			<source ref="id11"/>
 			<target ref="id9"/>
-			<label kind="assignment" x="93" y="51">y=0</label>
+			<label kind="assignment" x="93" y="51">y=0,
+cl=3</label>
 			<nail x="170" y="68"/>
 			<nail x="76" y="68"/>
 		</transition>
@@ -107,15 +109,17 @@ EWg=1</label>
 			<source ref="id10"/>
 			<target ref="id9"/>
 			<label kind="guard" x="-187" y="42">x&gt;=4</label>
-			<label kind="assignment" x="8" y="17">x=0, y=0,
-EWg=0</label>
+			<label kind="assignment" x="-17" y="17">x=0, y=0,
+EWg=0,
+cl=3</label>
 			<nail x="-204" y="68"/>
 			<nail x="68" y="68"/>
 		</transition>
 		<transition id="id15">
 			<source ref="id10"/>
 			<target ref="id8"/>
-			<label kind="assignment" x="-161" y="-68">y=0</label>
+			<label kind="assignment" x="-161" y="-68">y=0,
+cl=2</label>
 			<nail x="-204" y="-68"/>
 			<nail x="-119" y="-68"/>
 		</transition>
@@ -7887,11 +7891,9 @@ Mean estimate of displayed sample: 784.5 ± 40.16 (95% CI)</comment>
 			<comment/>
 		</query>
 		<query>
-			<formula>strategy Opt = minE (Q) [&lt;=100] {Light.location}-&gt;{x, y, E, S} : &lt;&gt; t&gt;=99
+			<formula>strategy Opt = minE (Q) [&lt;=100] {cl}-&gt;{x, y, E, S} : &lt;&gt; t&gt;=99
 </formula>
 			<comment>9000 runs -- some 15 sec.</comment>
-			<result outcome="success" type="quality" timestamp="2022-10-15 16:56:13 +0200">
-			</result>
 		</query>
 		<query>
 			<formula>simulate [&lt;=1000; 1] {E, S, Light.EW} under OptF</formula>

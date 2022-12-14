@@ -1,11 +1,11 @@
 {"version":1.0,"type":"state->regressor","representation":"map","actions":{
-		"0":"Light._id11->Light.EW { x >= 4, tau, x := 0, y := 0, EWg := 1 }",
-		"1":"Light._id11->Light.SN { 1, tau, y := 0 }",
-		"2":"Light._id10->Light.SN { x >= 4, tau, x := 0, y := 0, EWg := 0 }",
-		"3":"Light._id10->Light.EW { 1, tau, y := 0 }",
+		"0":"Light._id11->Light.EW { x >= 4, tau, x := 0, y := 0, EWg := 1, cl := 2 }",
+		"1":"Light._id11->Light.SN { 1, tau, y := 0, cl := 3 }",
+		"2":"Light._id10->Light.SN { x >= 4, tau, x := 0, y := 0, EWg := 0, cl := 3 }",
+		"3":"Light._id10->Light.EW { 1, tau, y := 0, cl := 2 }",
 		"4":"WAIT"
 	},"statevars":[
-		"Light.location"
+		"Light.cl"
 	],"pointvars":[
 		"x",
 		"y",

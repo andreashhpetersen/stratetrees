@@ -25,6 +25,8 @@ if __name__ == '__main__':
                     values = []
                     for d in range(1, len(trajectories.fields)):
                         (value, hint) = trajectories.data[d][i].predict(t,hints[d])
+                        if isinstance(value, list):
+                            value = value[0]
                         values.append(str(value))
                         hints[d] = hint
 

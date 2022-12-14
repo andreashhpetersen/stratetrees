@@ -12,7 +12,7 @@ S='10 100'
 M=$MODEL_DIR/model.xml
 for s in $S ; do
     Q=$(mktemp)
-    echo "strategy s = loadStrategy {Light.location} -> {x, y, E, S} (\"$MODEL_DIR/qt_strategy.json\")" > $Q
-    echo "simulate [<=1000;$s] {Light.location == 2 || Light.location == 3, Light.location, x, y, E, S} under s" >> $Q
+    echo "strategy s = loadStrategy {Light.cl} -> {x, y, E, S} (\"$MODEL_DIR/qt_strategy.json\")" > $Q
+    echo "simulate [<=1000;$s] {Light.location == 2 || Light.location == 3, Light.cl, x, y, E, S} under s" >> $Q
     $VERIFYTA_PATH $M $Q &> $SAMPLE_DIR/sample_${s}.log
 done

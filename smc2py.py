@@ -38,7 +38,12 @@ class SMCSimulation:
                 found = True
                 hint -= 1
                 if lx == time:
-                    value = lval
+                    value = [lval]
+                    while self.points[hint][0] == time:
+                        value.insert(0, self.points[hint][1])
+                        if hint == 0:
+                            break
+                        hint -= 1
                     break
                 else:
                     r = (val - lval) / (x - lx)
