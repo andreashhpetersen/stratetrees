@@ -17,7 +17,7 @@ fi
 for MODEL_DIR in $DIRS ; do
     rm -rf $MODEL_DIR/constructed_*
 
-    model=${MODEL_DIR##*/}
+    model=$(basename "$MODEL_DIR")
 
     echo "SAMPLING for '$model'"
     $MODEL_DIR/make_samples.sh
