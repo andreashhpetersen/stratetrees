@@ -212,6 +212,7 @@ class Tree:
         for i in range(1, len(leaves)):
             root = root.put_leaf(leaves[i], State(variables))
 
+        # import ipdb; ipdb.set_trace()
         tree.root = root.prune()
         tree.size = root.size
         return tree
@@ -439,15 +440,17 @@ class Node:
         self.low.set_state(low_state)
         self.high.set_state(high_state)
 
-    def prune(self):
+    def prune(self, cost_prune=False):
+        # self.low.is_leaf, self.high.is_leaf = self.low.is_leaf, self.high.is_leaf
+
         if not self.low.is_leaf:
-            self.low = self.low.prune()
+            self.low = self.low.prune(cost_prune=cost_prune)
 
         if not self.high.is_leaf:
-            self.high = self.high.prune()
+            self.high = self.high.prune(cost_prune=cost_prune)
 
-        if self.low.is_leaf and self.high.is_leaf:
-            if self.low.action == self.high.action:
+        if self.low.is_leaf and self.high.is_leaf and self.low.action == self.high.action:
+            if not cost_prune or self.low.cost == self.high.cost:
                 return Leaf(
                     max(self.low.cost, self.high.cost),
                     action=self.low.action
@@ -518,11 +521,13 @@ class Node:
 
                 # if another action is here, make it very expensive
                 if leaf.action != action:
+                    leaf.action = action
                     leaf.cost = MAX_COST
 
                 # otherwise, make it cheap
                 else:
                     leaf.cost = MIN_COST
+            root.prune(cost_prune=True)
             out.append((action, root))
         return out
 
