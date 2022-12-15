@@ -15,7 +15,10 @@ else
 fi
 
 for MODEL_DIR in $DIRS ; do
-    rm -rf $MODEL_DIR/constructed_*
+    if [ -d $MODEL_DIR/generated/ ] ; then
+        rm -rf $MODEL_DIR/generated/
+    fi
+    mkdir $MODEL_DIR/generated
 
     model=$(basename "$MODEL_DIR")
 
@@ -26,11 +29,11 @@ for MODEL_DIR in $DIRS ; do
         python log2ctrl.py $SAMPLE_FILE $SAMPLE_FILE
     done
 
-    echo "BUILDING trees for model '$model'"
-    python run_experiments.py $MODEL_DIR -k 10 -u
+    echo "BUILDING trees for '$model'"
+    python run_experiments.py $MODEL_DIR -k 1 -u
 
     echo "EVALUATE '$model' strategies"
-    R=$MODEL_DIR/eval_results.txt
+    R=$MODEL_DIR/generated/eval_results.txt
     M=$MODEL_DIR/model.xml
 
     if [ -f $R ] ; then
@@ -38,7 +41,7 @@ for MODEL_DIR in $DIRS ; do
     fi
     touch $R
 
-    D=$(cat $MODEL_DIR/smallest.txt)
+    D="generated/$(cat $MODEL_DIR/generated/smallest.txt)"
 
     strategies=($MODEL_DIR/qt_strategy.json $MODEL_DIR/$D/*)
     for S in "${strategies[@]}" ; do

@@ -15,7 +15,7 @@ S_ID, T_ID = 0, 1   # size and time
 
 
 def parse_uppaal_results(model_dir):
-    with open(f'{model_dir}/eval_results.txt', 'r') as f:
+    with open(f'{model_dir}/generated/eval_results.txt', 'r') as f:
         plain_data = f.readlines()
 
     results = {}
@@ -47,7 +47,7 @@ def parse_uppaal_results(model_dir):
 if __name__=='__main__':
     model_dir = args.MODEL_DIR
     eval_data = parse_uppaal_results(model_dir)
-    dt_data = pd.read_csv(f'{model_dir}/dt_results.csv', index_col=0)
+    dt_data = pd.read_csv(f'{model_dir}/generated/dt_results.csv', index_col=0)
 
     dt_data['perf (exp)'] = 0
     dt_data['perf (std)'] = 0
@@ -56,4 +56,4 @@ if __name__=='__main__':
         dt_data.at[model_name, 'perf (exp)'] = exp
         dt_data.at[model_name, 'perf (std)'] = std
 
-    dt_data.to_csv(f'{model_dir}/combined_results.csv')
+    dt_data.to_csv(f'{model_dir}/generated/combined_results.csv')

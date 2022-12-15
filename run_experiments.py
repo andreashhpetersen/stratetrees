@@ -59,14 +59,14 @@ def dump_json(tree, meta, fp):
 
 def write_results(data, model_names, model_dir):
     smallest = np.argmin(data[:,1,S_ID])
-    with open(f'{model_dir}/smallest.txt', 'w') as f:
+    with open(f'{model_dir}/generated/smallest.txt', 'w') as f:
         f.write(f'constructed_{smallest}')
 
     headers = [
         'model_name', 'time (best)', 'time (avg)', 'time (std)',
         'size (best)', 'size (avg)', 'size (std)'
     ]
-    with open(f'{model_dir}/dt_results.csv', 'w') as f:
+    with open(f'{model_dir}/generated/dt_results.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
 
@@ -100,7 +100,7 @@ def run_experiment(model_dir, k=10):
 
     data = []
     for i in range(k):
-        store_path = f'{model_dir}/constructed_{i}'
+        store_path = f'{model_dir}/generated/constructed_{i}'
 
         if EXPORT_UPPAAL:
             try:
