@@ -54,7 +54,13 @@ def dump_json(tree, meta, fp):
     if not EXPORT_UPPAAL:
         return
 
-    tree.export_to_uppaal(meta, fp)
+    path = fp.split('/')
+    tree_path = path[:-1] + ['trees'] + path[-1:]
+    uppaal_path = path[:-1] + ['uppaal'] + path[-1:]
+
+    tree.save_as('/'.join(tree_path))
+    # tree.save_as(fp.replace('.json', '_dtv.json'))
+    tree.export_to_uppaal(meta, '/'.join(uppaal_path))
 
 
 def write_results(data, model_names, model_dir):
@@ -105,6 +111,8 @@ def run_experiment(model_dir, k=10):
         if EXPORT_UPPAAL:
             try:
                 os.mkdir(store_path)
+                os.mkdir(store_path + '/trees')
+                os.mkdir(store_path + '/uppaal')
             except FileExistsError:
                 pass
 
