@@ -62,7 +62,6 @@ for MODEL_DIR in $DIRS ; do
     python make_dtcontrol.py $MODEL_DIR/$D/trees/dt_original.json $SAMPLES
     dtcontrol \
         -i $MODEL_DIR/samples/dtcontrol_samples.csv \
-        -c $MODEL_DIR/samples/dtcontrol_meta.json \
         -o $MODEL_DIR/generated/dtcontrol/ \
         -b $MODEL_DIR/generated/dtcontrol/benchmark.json \
         -r
