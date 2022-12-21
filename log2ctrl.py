@@ -30,12 +30,5 @@ if __name__ == '__main__':
                         values.append(str(value))
                         hints[d] = hint
 
-                    # for Peter: this shows the problem
-                    # if float(values[1]) < 2:
-                    #     import ipdb; ipdb.set_trace()
-
-                    # print(t, values)
-                    # print(trajectories.data[1][i].points[hints[1]-3:hints[1]+2])
-
                     out.write(",".join(values))
                     out.write("\n")
