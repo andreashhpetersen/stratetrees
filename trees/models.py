@@ -301,13 +301,14 @@ class Tree:
             except ValueError:
                 continue
 
-            label = node.get_attributes()['label'].strip('"').split(" ")
+            label = node.get_attributes()['label'].strip('"').split("<=")
+            label = list(map(lambda x: x.strip(' '), label))
             if len(label) == 1:
                 nodes.append(Leaf(0, action=int(float(label[0]))))
             else:
                 var = varmap[label[0]]
                 var_id = tree.var2id[var]
-                bound = float(label[2])
+                bound = float(label[1])
                 nodes.append(Node(var, var_id, bound))
 
         for edge in graph.get_edges():
