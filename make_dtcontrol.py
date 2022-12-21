@@ -1,6 +1,7 @@
 import json
 import argparse
 import numpy as np
+from math import inf
 
 from trees.models import Tree
 
@@ -15,21 +16,32 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+HARD_MIN, HARD_MAX = -99999, 99999
+
 def make_data(tree, states, path):
     fn = path + '/dtcontrol_samples.csv'
     with open(fn, 'w') as f:
         f.write('#NON-PERMISSIVE\n')
         f.write('#BEGIN {} 1\n'.format(len(tree.variables)))
-        for state in states:
-            action = tree.get(state)
-            f.write(','.join(map(str, state)) + f',{action}\n')
+        # for state in states:
+        #     action = tree.get(state)
+        #     f.write(','.join(map(str, state)) + f',{float(action)}\n')
+        for leaf in tree.get_leaves():
+            cs = leaf.state.constraints
+            smin, smax = cs[:,0], cs[:,1]
+            smax -= 0.0001
+            smin[smin == -inf] = HARD_MIN
+            smax[smax == inf] = HARD_MAX
+            f.write(','.join(map(str, smin)) + f',{float(leaf.action)}\n')
+            f.write(','.join(map(str, smax)) + f',{float(leaf.action)}\n')
+
 
     meta = {
         'x_column_names': tree.variables,
-        'y_column_names': tree.actions
     }
-    fn = path + '/dtcontrol_meta.json'
-    json.dump(meta, fn)
+    fn = path + '/dtcontrol_samples_config.json'
+    with open(fn, 'w') as f:
+        json.dump(meta, f)
 
 
 if __name__ == '__main__':
