@@ -145,13 +145,13 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
         bounds[:,-1][p_max == max_i] = 1
 
         while np.sum(bounds[:,-1]) < K:
-            # grow in dimension v and update p_max and max_state
-            p_max, v = grow(p_max, bounds, max_i)
-            max_state[v] = bounds[v][p_max[v]]
+            # grow in dimension i and update p_max and max_state
+            p_max, i = grow(p_max, bounds, max_i)
+            max_state[i] = bounds[i][p_max[i]]
 
             # state to express difference between previous max_state and current
             diff_state = min_state.copy()
-            diff_state[v] = bounds[v][p_max[v] - 1]
+            diff_state[i] = bounds[i][p_max[i] - 1]
 
             # check if new region is explored
             explored = is_explored(diff_state, max_state, track)
@@ -159,15 +159,15 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
             # check if our new region returns a more than one action
             actions = tree.get_for_region(diff_state, max_state)
 
-            if (actions != set(action) or explored or p_max[v] == max_i[v]):
+            if (actions != set(action) or explored or p_max[i] == max_i[i]):
 
                 # mark variable as exhausted
-                bounds[v,-1] = 1
+                bounds[i,-1] = 1
 
                 # roll back to last state
                 if actions != set(action) or explored:
-                    p_max[v] -= 1
-                    max_state[v] = diff_state[v]
+                    p_max[i] -= 1
+                    max_state[i] = diff_state[i]
 
         # create the region as a leaf with a state spanned by min_state and
         # max_state
@@ -184,7 +184,7 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
 
         # add new points from which to start later
         for i in range(K):
-            if (p_min[i] != p_max[i] and p_max[i] < max_i[i]):
+            if p_max[i] < max_i[i]:
 
                 new_p = [idx for idx in p_min]
                 new_p[i] = p_max[i]
