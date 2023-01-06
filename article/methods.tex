@@ -93,89 +93,51 @@ dimension (so it equals the first column of the matrix $\mathcal{T}$). The
 pseudo-code is given in Algorithm~\ref{alg:MaxPartitions}.
 
 Let $p^{\min}$ be the result of popping the lexicographically smallest element
-of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the `lower
-left' corner in a region $\nu = (s^{\min}, s^{\max})$ where $s^{\max}$ is the
-point we want to determine, so that $\nu$ has singular mapping in $\mathcal{T}$.
-By definition, $s^{\max} = s^{p^{\max}}$ satifies this requirement for $p^{\max}
-= (p^{\min}_{1} + 1, \ldots, p^{\min}_{K} + 1)$, since no branch node in
+of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the
+`lower left' corner in (or the origin of) a region $\nu = (s^{\min}, s^{\max})$
+where $s^{\max}$ is the point we want to determine, so that $\nu$ is maximized
+and has singular mapping in $\mathcal{T}$. By definition, $s^{\max} =
+s^{p^{\max}}$ satifies the singular mapping requirement for $p^{\max} =
+(p^{\min}_{1} + 1, \ldots, p^{\min}_{K} + 1)$, since no branch node in
 $\mathcal{T}$ splits on a predicate $c$ where $\mathcal{T}_{i,p^{\min}_{i}} < c
 < \mathcal{T}_{i,p^{\min}_{i} + 1}$ for any $i = 1, \ldots, K$. 
 
-We can now increase $p^{\max}$ by 1 in any dimension $i$ and test for singular
-mapping in our new region. Additionally, we require that the point
-$s^{p^{\max}}$ is not already covered by a region in $\mathcal{R}$, as this
-would result in overlapping regions. Let $\mathbf{\hat{e}}_i$ denote the unit
-vector parallel to axis $i$, such that $p + \mathbf{\hat{e}}_i = (p_1,\ldots,p_i
-+ 1,\ldots,p_K)$. Then, the updated region is given by $\nu = (s^{\min},
-s^{p^{\max} + \mathbf{\hat{e}}_{i}})$. If $|\mathcal{T}(\nu)| = 1$ and $\forall
-\nu' \in \mathcal{R}, s^{p^{\max} + \mathbf{\hat{e}}_{i}} \notin \nu'$, then the
-update did not violate the singular mapping property and we can set $p^{\max} =
-p^{\max} + \mathbf{\hat{e}}_{i}$. Otherwise, we mark dimension $i$ as
-\textit{exhausted} so we know not to increase in this dimension again. We then
-continue, choosing a new dimension not marked as exhausted.
+Finding a $p^{\max}$ that maximizes the region comes down to finding a vector
+$\Delta_{p} \in \mathbb{Z}^{K}$ so that $p^{\max} = p^{\min} + \Delta_{p}$. The
+definition of $\Delta_{p}$ is given below.
 
-This process is repeated until all dimensions have been exhausted at which
-point, $p^{\max}$ together with the unchanged $p^{\min}$ defines a region $\nu =
-(s^{p^{\min}}, s^{p^{\max}})$ that has singular mapping in $\mathcal{T}$ and
-cannot be expanded further in any dimension. More generally, we can say that
-given $p^{\min}$ we want to choose $\Delta_{p} \in \mathbb{Z}^{K}$ such that for
-$p^{\max} = p^{\min} + \Delta_{p}$ the region $\nu = (s^{p^{\min}},
-s^{p^{\max}})$ has singular mapping in $\mathcal{T} $and no other $\Delta_{p'} >
-\Delta_{p}$ has this property.
+\begin{definition}
+    Given $p^{\min} \in \mathbb{Z}^{K}$, a decision tree $\mathcal{T}$ over a
+    $K$-dimensional space and a list $\mathcal{R}$ of already found regions,
+    $\Delta_{p} \in \mathbb{Z}^{K}$ is a vector such that for $p^{\max} =
+    p^{\min} + \Delta_{p}$ the region $\nu = (s^{p^{\min}}_{\mathcal{T}},
+    s^{p^{\max}}_{\mathcal{T}})$ has singular mapping in $\mathcal{T}$, does not
+    overlap with any other region in $\mathcal{R}$ and no other $\Delta_{p'} >
+    \Delta_{p}$ has this property.
+\end{definition}\label{def:deltaP}
 
-Having found $\nu$, we add it to $\mathcal{R}$. Further, we add to $\mathcal{P}$
-all the points we can create from taking $p^{\min}$ and setting $p^{\min}_{i} =
-p^{\max}_{i}$ for all $i$ where $p^{\max}_{i} < |\mathcal{T}_{i}|$. These points
-will later be popped and used as a new $p^{\min}$ for a search for a large
-region. If $\mathcal{P}$ is not empty, we repeat the entire process, otherwise
-the algorithm terminates and returns $\mathcal{R}$ which now represents a new
+A greedy approach to finding $\Delta_{p}$ starts with $\Delta_{p} =
+\mathbf{1}^{K}$, where $\mathbf{1}^{K}$ is the $K$-dimensional vector of ones.
+We then iteratively increment a single dimension chosen non-deterministically
+untill the invariants are violated.  Let $\mathbf{\hat{e}}_i$ denote the unit
+vector parallel to axis $i$, such that $\Delta_{p} + \mathbf{\hat{e}}_i =
+(\Delta_{p_1},\ldots,\Delta_{p_i} + 1,\ldots,\Delta_{p_K})$. At each increment,
+we define a candidate region $\nu$ from $p^{\min}$ and $p^{\max} = p^{\min} +
+\Delta_{p}$ and check for singular mapping and no overlap with regions in
+$\mathcal{R}$. If any of these two do not hold, we mark dimension $i$ as
+exhausted, roll back the increment and continue with a new dimension not marked
+as exhausted. When all dimensions have been exhausted, $\Delta_{p}$ adheres to
+Defintion~\ref{def:deltaP}.
+
+Having found a region $\nu = (s^{p^{\min}}, s^{p^{\max}})$, we add it to
+$\mathcal{R}$. Further, we add to $\mathcal{P}$ the points from which the search
+should continue at future iteration. These are the $K$ points that agree with
+$p^{\min}$ in all dimensions except $i$, where they agree with $p^{\max}$, ie.\
+we add to $\mathcal{P}$ points $(p^{\min}_{1}, \ldots, p^{\max}_{i}, \ldots,
+p^{\min}_{K})$ for $i = 1,\ldots,K$ (where $p^{\max}_{i} < |\mathcal{T}_{i}|$).
+Then if $\mathcal{P}$ is not empty, we repeat the entire process. Otherwise the
+algorithm terminates and returns $\mathcal{R}$ which now represents a new
 partitioning that respects $\mathcal{T}$.
-
-
-% We can then define
-% the following recursive function \textit{grow}, which, given a vector $p$ of
-% index pointers to bounds in $\mathcal{T}$ and an initially empty set $E$, finds
-% $p^{\max}$ such that the region $\nu = (s^{p^{\min}}, s^{p^{\max}})$ has
-% singular mapping in $\mathcal{T}$ but cannot be expanded in any dimension
-% without loosing this property:
-
-% Let $M = \argmax_{i} |\mathcal{T}_i|$.
-
-% \[
-%     % grow_{\mathcal{T}}(p) = p + \Delta
-%     grow_{\theta}(p, E) =
-%     \begin{cases}
-%         p & \text{if } |E|  =  K \\
-%         grow(p, E \cup \{i\}) &
-%             \text{if }
-%                 |\mathcal{T}((s^{p^{\min}}, s^{p + \mathbf{\hat{e}}_i}))| > 1
-%                 \text{~or $s^{p + \mathbf{\hat{e}}_i}$ is explored} \\
-%         grow(p + \mathbf{\hat{e}}_i, E) & \text{otherwise}
-%     \end{cases}
-% \] 
-
-% \noindent where $\Delta \in \{ 0,\ldots,M \}^K$ such that
-% $|\mathcal{T}((s^{p}_{\mathcal{T}}, s^{p + \Delta}_{\mathcal{T}}))| = 1$ and for
-% all $\nu \in \mathcal{R}, \nu \cap (s^{p}_{\mathcal{T}}, s^{p +
-% \Delta^K}_{\mathcal{T}}) = \emptyset$ and where no other $\Delta'$
-% lexicographically larger than $\Delta$ has this property.
-
-% \noindent
-% where $grow$ is parametized by $\theta = (\mathcal{T}, p^{\min})$ with
-% $\mathcal{T}$ being a binary decision tree over the domain $\mathbb{R}^K$
-% inducing a partitioning $\mathcal{A}_{\mathcal{T}}$ and $p^{\min}$ is
-% a vector of index pointers giving the left lowest point of the region we are
-% currently expanding. Further, to avoid cluttering the expression for $grow$,
-% we use $i$ defined as
-
-% \begin{align*}
-%     i &= \argmin_{i \in \{ i \mid i = 1,\ldots,K, i \notin E, p_i \le 
-%     |\mathcal{T}_i| \}}
-%         \mathcal{T}_{i,p_i+1} - \mathcal{T}_{i,p_i} \\
-% \end{align*}
-
-% The \textsc{MaxPartitions} algorithm is given as pseudo-code in
-% Algorithm~\ref{alg:MaxPartitions}.
 
 \begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
@@ -191,48 +153,40 @@ partitioning that respects $\mathcal{T}$.
         }
 
         \While{$\mathcal{P}$ is not empty}
-            \State{$p^{\min} \gets \min \mathcal{P}$}\Comment{Lexicographic min}
-            \State{$\mathcal{P} \gets \mathcal{P} \setminus \{p^{\min}$\}}%
-            \Comment{Remove $p^{\min}$ from $\mathcal{P}$}
+            \State{%
+                $p^{\min} \gets $ Remove lexicographically smallest element of
+                $\mathcal{P}$
+            }
 
-            \If{$s^{p^{\min}}_{\mathcal{T}} \notin \mathcal{R}$}\Comment{%
-                Check $s^{p^{\min}}_{\mathcal{T}}$ has not been covered yet
+            \If{%
+                $s^{p^{\min}}_{\mathcal{T}}$ is not covered by
+                any region in $\mathcal{R}$
             }
 
                 \State{%
                     $p^{\max} \gets p^{\min} + \Delta_{p}$
-                    % $p^{\max} \gets grow(p^{\min})$
-                    % $p^{\max} \gets grow(
-                    %     p^{\min} + \mathbf{1}^K,
-                    %     \emptyset \mid (\mathcal{T}, p^{\min})
-                    % )$
                 }\Comment{%
-                    Select largest $\Delta_{p}$
+                    See Definition~\ref{def:deltaP}
                 }
 
                 \State{%
-                    $\mathcal{R} \gets \mathcal{R} \cup \{
+                    $\mathcal{R} \gets \mathcal{R} \cup \{\,
                         (s^{p^{\min}}_{\mathcal{T}},s^{p^{\max}}_{\mathcal{T}})
-                    \}
-                $}\Comment{%
-                    Add new region to $\mathcal{R}$
+                    \,\}
+                $}
+
+                \State{%
+                    $\mathcal{P} \gets \mathcal{P} \cup
+                    \{\, (
+                            p^{\min}_{1}, \ldots, p^{\max}_{i},
+                            \ldots, p^{\min}_{K}
+                         ) \mid
+                         i \in 1, \ldots, K, \quad
+                         p^{\max}_{i} < |\mathcal{T}_{i}|
+                    \,\}$
                 }
 
-                \For{$i = 1, 2, \ldots, K$}\Comment{%
-                    Add points to $\mathcal{P}$
-                }
-                    \If{%
-                        $p^{\min}_i \neq p^{\max}_i$
-                        \textbf{and} $p^{\max}_i < |\mathcal{T}_i|$
-                    }
-                        \State{$\mathcal{P} \gets \mathcal{P} \cup
-                        \{(p^{\min}_1, \ldots, p^{\max}_i, \ldots,
-                        p^{\min}_k)\}
-                    $}
-                    \EndIf%
-                \EndFor%
             \EndIf%
-
 
         \EndWhile%
 
