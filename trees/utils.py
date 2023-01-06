@@ -131,29 +131,35 @@ def draw_partitioning(
 
     fig, ax = plt.subplots()
 
+    bounds_data = []
+
     for l in leaves:
         s = l.state
         x_start, x_end = s.min_max(x_var, min_limit=min_x, max_limit=max_x)
         y_start, y_end = s.min_max(y_var, min_limit=min_y, max_limit=max_y)
 
         if bounds:
-            ax.plot(
-                [x_end, x_end], [min_y, max_y],
-                linestyle=(0,(5,20)), c='black', lw=0.2
-            )
-            ax.plot(
-                [y_end, y_end], [min_x, max_x],
-                linestyle=(0,(5,20)), c='black', lw=0.2
-            )
+            bounds_data.append((
+                ([x_end, x_end], [min_y, max_y]),
+                { 'linestyle': (0,(5,20)), 'c': 'black', 'lw': 0.2 }
+            ))
+            bounds_data.append((
+                ([y_end, y_end], [min_x, max_x]),
+                { 'linestyle': (0,(5,20)), 'c': 'black', 'lw': 0.2 }
+            ))
 
         width = x_end - x_start
         height = y_end - y_start
         c = cmap[l.action]
         ax.add_patch(
             Rectangle(
-                (x_start, y_start), width, height, color=c, ec='black', lw=lw
+                (x_start, y_start), width, height, color=c, ec='black', lw=lw,
+                zorder=0
             )
         )
+
+    for args, kwargs in bounds_data:
+        ax.plot(*args, **kwargs)
 
     plt.xlim(xlim)
     plt.ylim(ylim)

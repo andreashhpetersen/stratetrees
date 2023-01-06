@@ -91,13 +91,14 @@ class State:
 
 
 class Tree:
-    def __init__(self, root, variables, actions, size=None):
+    def __init__(self, root, variables, actions, size=None, meta={}):
         self.root = root
         self.variables = variables
         self.var2id = { v: i for i, v in enumerate(variables) }
         self.actions = actions
         self.act2id = { a: i for i, a in enumerate(actions) }
         self.size = size
+        self.meta = meta
 
     def set_depth(self):
         self.root.set_depth()
@@ -146,13 +147,15 @@ class Tree:
         data = {
             'variables': self.variables,
             'actions': self.actions,
-            'root': self.root.as_dict()
+            'root': self.root.as_dict(),
+            'meta': self.meta
         }
         with open(filepath, 'w') as f:
             json.dump(data, f, indent=4)
 
-    def update_meta(self, meta, loc='(1)'):
+    def get_uppaal_meta(self, loc='(1)'):
         roots = self.root.to_q_trees(self.actions)
+        meta = self.meta.copy()
         for action, root in roots:
             try:
                 meta['regressors'][loc]['regressor'][action] = root.to_uppaal(
@@ -163,17 +166,16 @@ class Tree:
 
         return meta
 
-    def export_to_uppaal(self, meta, filepath, loc='(1)'):
-        meta = self.update_meta(meta, loc=loc)
+    def export_to_uppaal(self, filepath, loc='(1)'):
         with open(filepath, 'w') as f:
-            json.dump(meta, f, indent=4)
+            json.dump(self.get_uppaal_meta(loc=loc), f, indent=4)
 
     def copy(self):
         return deepcopy(self)
 
     def __copy__(self):
         return type(self)(
-            self.root, self.variables, self.actions, self.size
+            self.root, self.variables, self.actions, self.size, self.meta
         )
 
     def __deepcopy__(self, memo):
@@ -185,6 +187,7 @@ class Tree:
                 deepcopy(self.variables, memo),
                 deepcopy(self.actions, memo),
                 deepcopy(self.size, memo),
+                deepcopy(self.meta, memo),
             )
             memo[id_self] = _copy
         return _copy
@@ -286,7 +289,7 @@ class Tree:
 
         root = Node.build_from_dict(data['root'], var2id, act2id)
         root.set_state(State(variables))
-        return Tree(root, variables, actions, size=root.size)
+        return Tree(root, variables, actions, size=root.size, meta=data['meta'])
 
     @classmethod
     def parse_from_dot(cls, filepath, varmap):

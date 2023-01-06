@@ -18,6 +18,7 @@ def build_state(intervals):
         state.less_than(var, max_v)
     return state
 
+
 def grow(p, bs, max_i):
     """
     Finds the next dimension `i' from point `p' that minimizes the difference

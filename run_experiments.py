@@ -60,7 +60,7 @@ def dump_json(tree, meta, fp):
 
     tree.save_as('/'.join(tree_path))
     # tree.save_as(fp.replace('.json', '_dtv.json'))
-    tree.export_to_uppaal(meta, '/'.join(uppaal_path))
+    tree.export_to_uppaal('/'.join(uppaal_path))
 
 
 def write_results(data, model_names, model_dir):
@@ -130,11 +130,11 @@ def run_single_experiment(
         qtrees, variables, actions, meta, sample_logs, store_path
 ):
     results = []
-    org_meta = meta
 
     with performance() as p:
         tree = Tree.merge_qtrees(qtrees, variables, actions)
 
+    tree.meta = meta
     results.append([tree.size, p.time])
 
     dump_json(tree, meta, f'{store_path}/dt_original.json')
@@ -147,6 +147,7 @@ def run_single_experiment(
     with performance() as p:
         mp_tree = boxes_to_tree(leaves, variables, actions)
 
+    mp_tree.meta = meta
     results.append([ mp_tree.size, p.time + results[-1][1] ])
 
     dump_json(mp_tree, meta, f'{store_path}/dt_max_parts.json')
@@ -162,6 +163,7 @@ def run_single_experiment(
             leaves = max_parts(prune_tree)
             prune_tree = boxes_to_tree(leaves, variables, actions)
 
+        prune_tree.meta = meta
         results.append([prune_tree.size, p.time])
         dump_json(prune_tree, meta, f'{store_path}/dt_prune_{sample_size}.json')
 
