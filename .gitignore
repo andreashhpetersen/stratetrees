@@ -7,6 +7,8 @@ dtcontrol/*
 papers/*
 random/*
 .idea
+automated/*/samples/*
+automated/*/generated/*
 
 # ignore experiment results
 constructed_*
