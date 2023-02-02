@@ -13,7 +13,7 @@ parser.add_argument(
 )
 parser.add_argument(
     'SAMPLES',
-    action='store_const', const=None,
+    nargs='?', default=None,
     help='Use sample file to generate controller'
 )
 args = parser.parse_args()
@@ -52,14 +52,6 @@ def make_from_controller(tree, path):
             f.write(','.join(map(str, smax)) + f',{float(leaf.action)}\n')
 
 
-    meta = {
-        'x_column_names': tree.variables,
-    }
-    fn = '/'.join(path.split('/')[:-1]) + '/dtcontrol_samples_config.json'
-    with open(fn, 'w') as f:
-        json.dump(meta, f)
-
-
 if __name__ == '__main__':
     fp = args.STRATEGY
 
@@ -78,6 +70,13 @@ if __name__ == '__main__':
             make_from_samples(tree, samples, path)
         else:
             make_from_controller(tree, path)
+
+        meta = {
+            'x_column_names': tree.variables,
+        }
+        fn = '/'.join(path.split('/')[:-1]) + '/dtcontrol_samples_config.json'
+        with open(fn, 'w') as f:
+            json.dump(meta, f)
 
     elif fp.endswith('.dot'):
         with open(model_dir + '/generated/smallest.txt', 'r') as f:
