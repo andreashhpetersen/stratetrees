@@ -4,7 +4,6 @@ import pydot
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import smc2py
 
 from copy import deepcopy
 from collections import defaultdict
