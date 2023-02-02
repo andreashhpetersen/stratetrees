@@ -136,8 +136,8 @@ class Tree:
     def put_leaf(self, leaf):
         self.root.put_leaf(leaf, State(self.variables))
 
-    def emp_prune(self):
-        self.root = Node.emp_prune(self.root)
+    def emp_prune(self, sub_action=None):
+        self.root = Node.emp_prune(self.root, sub_action=sub_action)
         self.size = self.root.size
 
     def save_as(self, filepath):
@@ -289,7 +289,13 @@ class Tree:
 
         root = Node.build_from_dict(data['root'], var2id, act2id)
         root.set_state(State(variables))
-        return Tree(root, variables, actions, size=root.size, meta=data['meta'])
+        return Tree(
+            root,
+            variables,
+            actions,
+            size=root.size,
+            meta=data.get('meta', '')
+        )
 
     @classmethod
     def parse_from_dot(cls, filepath, varmap):
@@ -672,12 +678,17 @@ class Node:
         return isinstance(tree, Leaf)
 
     @classmethod
-    def emp_prune(cls, node, thresh=0.0):
+    def emp_prune(cls, node, sub_action=None, thresh=0.0):
         if node.is_leaf:
-            return None if node.ratio <= thresh else node
+            if node.ratio <= thresh:
+                if sub_action is None:
+                    return None
+                else:
+                    node.action = sub_action
+            return node
 
-        low = cls.emp_prune(node.low, thresh)
-        high = cls.emp_prune(node.high, thresh)
+        low = cls.emp_prune(node.low, sub_action=sub_action, thresh=thresh)
+        high = cls.emp_prune(node.high, sub_action=sub_action, thresh=thresh)
 
         if low is None and high is None:
             return None
@@ -804,3 +815,17 @@ class Leaf:
 
     def __repr__(self):
         return self.__str__()
+
+
+class QTree:
+    def __init__(self, roots: list[Node], actions: list, variables: list):
+        self.act2id = { a: i for i, a in enumerate(actions) }
+        self.actions = actions
+        self.roots = roots
+        self.variables = variables
+
+    def predict(self, state: np.ndarray):
+        return self.actions[np.argmin(r.get(state).cost for r in self.roots)]
+
+    def predict_qs(self, state: np.ndarray) -> np.ndarray:
+        return np.array([r.get(state).cost for r in self.roots])
