@@ -160,13 +160,13 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
             # check if our new region returns a more than one action
             actions = tree.get_for_region(diff_state, max_state)
 
-            if (actions != set(action) or explored or p_max[i] == max_i[i]):
+            if (actions != set([action]) or explored or p_max[i] == max_i[i]):
 
                 # mark variable as exhausted
                 bounds[i,-1] = 1
 
                 # roll back to last state
-                if actions != set(action) or explored:
+                if actions != set([action]) or explored:
                     p_max[i] -= 1
                     max_state[i] = diff_state[i]
 
