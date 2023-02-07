@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.5//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_5.dtd'>
+<nta>
+	<declaration>// Implementation of the classical CartPole environment.
+// Author: Andreas Holck Høeg-Petersen
+
+// Based on the Gymnasium env (https://github.com/Farama-Foundation/Gymnasium/blob/main/gymnasium/envs/classic_control/cartpole.py)
+// which uses the equations from Florian, R. 2007 (https://coneural.org/florian/papers/05_cart_pole.pdf)
+
+broadcast chan left, right;
+clock time;</declaration>
+	<template>
+		<name>Agent</name>
+		<declaration>clock t;</declaration>
+		<location id="id0" x="-76" y="-68">
+			<name x="-86" y="-102">Move</name>
+			<committed/>
+		</location>
+		<location id="id1" x="-76" y="33">
+			<name x="-86" y="-1">W</name>
+			<label kind="invariant" x="-59" y="42">t&lt;=0.02</label>
+			<label kind="exponentialrate" x="-93" y="51">1</label>
+		</location>
+		<init ref="id1"/>
+		<transition id="id2">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-229" y="-26">left!</label>
+			<nail x="-187" y="-68"/>
+			<nail x="-187" y="33"/>
+		</transition>
+		<transition id="id3">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="43" y="-26">right!</label>
+			<nail x="43" y="-68"/>
+			<nail x="43" y="33"/>
+		</transition>
+		<transition id="id4" controllable="false">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-68" y="-9">t==0.02</label>
+			<label kind="assignment" x="-68" y="-26">t=0.0</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">CartPole</name>
+		<declaration>
+// count the number of times the pole falls (minimization objective)
+int num_deaths = 0;
+
+// force applied to cart (control variable)
+double force = 0;
+
+// position and angle of the cart, angle and velocity of the pole (state variables)
+clock cart_pos, cart_vel, pole_ang, pole_vel;
+
+// thresholds (+/-) for when the game is considered lost
+const double cart_thresh = 2.4;
+const double pole_thresh = (12 * 2 * M_PI) / 360;
+
+// constants for physics
+const double G = 9.8;           // gravity
+const double mc = 1.0;          // mass cart
+const double mp = 0.1;          // mass pole
+const double l = 0.5;           // pole length (half)
+const double mass = mp + mc;    // total mass
+const double mp_l = mp * l;     // pole mass times its length
+const double force_mag = 10.0;  // magnitude of force applied
+
+// value to be used in both acceleration equations
+double temp() {
+    return (force + mp_l * pow(pole_vel, 2) * sin(pole_ang)) / mass;
+}
+
+// pole acceleration
+double poleAcc() {
+    return (G * sin(pole_ang) - cos(pole_ang) * temp()) / (
+        l * (4.0 / 3.0 - (mp * pow(cos(pole_ang), 2) / mass))
+    );
+}
+
+// cart acceleration
+double cartAcc() {
+    return temp() - mp_l * poleAcc() * cos(pole_ang) / mass;
+}</declaration>
+		<location id="id5" x="-229" y="-357">
+			<name x="-280" y="-400">Terminated</name>
+			<label kind="invariant" x="-340" y="-442">cart_pos' == 0 &amp;&amp; cart_vel'==0 &amp;&amp;
+pole_ang'==0 &amp;&amp; pole_vel'==0</label>
+			<committed/>
+		</location>
+		<location id="id6" x="-229" y="-17">
+			<name x="-280" y="-42">Alive</name>
+			<label kind="invariant" x="-212" y="-8">cart_pos' == cart_vel &amp;&amp; cart_vel' == cartAcc() &amp;&amp;
+pole_ang' == pole_vel &amp;&amp; pole_vel' == poleAcc()</label>
+		</location>
+		<location id="id7" x="-229" y="102">
+			<name x="-239" y="68">Initial</name>
+			<urgent/>
+		</location>
+		<location id="id8" x="-229" y="-161">
+			<name x="-221" y="-153">is_dead</name>
+			<committed/>
+		</location>
+		<location id="id9" x="-603" y="-289">
+			<name x="-637" y="-323">cart_low</name>
+			<committed/>
+		</location>
+		<location id="id10" x="-408" y="-289">
+			<name x="-442" y="-323">cart_high</name>
+			<committed/>
+		</location>
+		<location id="id11" x="-34" y="-289">
+			<name x="-76" y="-323">pole_low</name>
+			<committed/>
+		</location>
+		<location id="id12" x="136" y="-289">
+			<name x="102" y="-323">pole_high</name>
+			<committed/>
+		</location>
+		<init ref="id7"/>
+		<transition id="id13" controllable="false">
+			<source ref="id8"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-25" y="-229">pole_ang &gt; pole_thresh</label>
+		</transition>
+		<transition id="id14" controllable="false">
+			<source ref="id8"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-221" y="-272">pole_ang &lt; -pole_thresh</label>
+		</transition>
+		<transition id="id15" controllable="false">
+			<source ref="id8"/>
+			<target ref="id10"/>
+			<label kind="guard" x="-459" y="-272">cart_pos &gt; cart_thresh</label>
+		</transition>
+		<transition id="id16" controllable="false">
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-612" y="-229">cart_pos &lt; -cart_thresh</label>
+		</transition>
+		<transition id="id17" controllable="false">
+			<source ref="id12"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id18" controllable="false">
+			<source ref="id11"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id19" controllable="false">
+			<source ref="id10"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id20" controllable="false">
+			<source ref="id9"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id21" controllable="false">
+			<source ref="id8"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-221" y="-127">cart_pos &gt;= -cart_thresh &amp;&amp;
+cart_pos &lt;= cart_thresh &amp;&amp;
+pole_ang &gt;= -1 * pole_thresh &amp;&amp; 
+pole_ang &lt;= pole_thresh</label>
+		</transition>
+		<transition id="id22" controllable="false">
+			<source ref="id5"/>
+			<target ref="id7"/>
+			<label kind="assignment" x="-773" y="-127">num_deaths++</label>
+			<nail x="-671" y="-357"/>
+			<nail x="-671" y="102"/>
+		</transition>
+		<transition id="id23" controllable="false">
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="assignment" x="-204" y="93">cart_pos = -0.05 + random(0.1), cart_vel = -0.05 + random(0.1),
+pole_ang = -0.05 + random(0.1), pole_vel = -0.05 + random(0.1)</label>
+		</transition>
+		<transition id="id24">
+			<source ref="id6"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="59" y="-110">left?</label>
+			<label kind="assignment" x="59" y="-85">force = -1 * force_mag</label>
+			<nail x="42" y="-17"/>
+			<nail x="42" y="-161"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id6"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-510" y="-76">right?</label>
+			<label kind="assignment" x="-510" y="-59">force = force_mag</label>
+			<nail x="-357" y="-17"/>
+			<nail x="-357" y="-161"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+// Process = CartPole();
+// List one or more processes to be composed into a system.
+system Agent, CartPole;
+</system>
+	<queries>
+		<query>
+			<formula>// How often do we die with random control?</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=10;100] (max: CartPole.num_deaths)</formula>
+			<comment/>
+			<result outcome="success" type="quantity" value="23.45 ± 0.52488 (95% CI)" timestamp="2023-01-30 11:18:01 +0100">
+				<details>23.45 ± 0.52488 (95% CI)</details>
+				<plot title="Probability Density Distribution" xaxis="max: CartPole.num_deaths" yaxis="probability density">
+					<series title="density" type="b(1.000000)" color="0x0000ff" encoding="csv">16.0,0.01
+17.0,0.02
+18.0,0.02
+19.0,0.01
+20.0,0.08
+21.0,0.07
+22.0,0.1
+23.0,0.17
+24.0,0.18
+25.0,0.13
+26.0,0.1
+27.0,0.06
+28.0,0.03
+29.0,0.01
+30.0,0.01
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">23.45,0.0
+23.45,0.18
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=1, bucket count=15
+Runs: 100 in total, 100 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [16, 30]
+Mean estimate of displayed sample: 23.45 ± 0.52488 (95% CI)</comment>
+				</plot>
+				<plot title="Probability Distribution" xaxis="max: CartPole.num_deaths" yaxis="probability">
+					<series title="probability" type="b(1.000000)" color="0x0000ff" encoding="csv">16.0,0.01
+17.0,0.02
+18.0,0.02
+19.0,0.01
+20.0,0.08
+21.0,0.07
+22.0,0.1
+23.0,0.17
+24.0,0.18
+25.0,0.13
+26.0,0.1
+27.0,0.06
+28.0,0.03
+29.0,0.01
+30.0,0.01
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">23.45,0.0
+23.45,0.18
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=1, bucket count=15
+Runs: 100 in total, 100 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [16, 30]
+Mean estimate of displayed sample: 23.45 ± 0.52488 (95% CI)</comment>
+				</plot>
+				<plot title="Cumulative Probability Distribution" xaxis="max: CartPole.num_deaths" yaxis="probability">
+					<series title="cumulative" type="l" color="0x000000" encoding="csv">16.0,0.0
+17.0,0.01
+18.0,0.03
+19.0,0.05
+20.0,0.06
+21.0,0.14
+22.0,0.21
+23.0,0.31
+24.0,0.48
+25.0,0.66
+26.0,0.79
+27.0,0.89
+28.0,0.95
+29.0,0.98
+30.0,0.99
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">23.45,0.0
+23.45,1.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=1, bucket count=15
+Runs: 100 in total, 100 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [16, 30]
+Mean estimate of displayed sample: 23.45 ± 0.52488 (95% CI)</comment>
+				</plot>
+				<plot title="Cumulative Probability Confidence Intervals" xaxis="max: CartPole.num_deaths" yaxis="probability">
+					<series title="upper limit" type="k" color="0x0000dd" encoding="csv">16.0,0.03621669264517642
+17.0,0.05445938539208066
+18.0,0.08517605297428003
+19.0,0.11283491110546276
+20.0,0.12602993458082296
+21.0,0.22372798137056776
+22.0,0.3029153793505407
+23.0,0.4103145541601993
+24.0,0.5822102345936934
+25.0,0.7517764984551558
+26.0,0.8650563042946708
+27.0,0.9437929797145126
+28.0,0.9835681208179479
+29.0,0.9975686631760574
+30.0,0.9997468539670226
+					</series>
+					<series title="lower limit" type="k" color="0xdd0000" encoding="csv">16.0,0.0
+17.0,2.5314603297742064E-4
+18.0,0.006229971538306394
+19.0,0.016431879182052158
+20.0,0.022334886071316375
+21.0,0.07870540492696577
+22.0,0.13494369570532913
+23.0,0.22128879213067107
+24.0,0.3790054801779586
+25.0,0.5584667322490411
+26.0,0.6970846206494593
+27.0,0.8116988678035574
+28.0,0.8871650888945373
+29.0,0.9296160675289299
+30.0,0.9455406146079194
+					</series>
+					<series title="cumulative" type="l" color="0x000000" encoding="csv">16.0,0.0
+17.0,0.01
+18.0,0.03
+19.0,0.05
+20.0,0.06
+21.0,0.14
+22.0,0.21
+23.0,0.31
+24.0,0.48
+25.0,0.66
+26.0,0.79
+27.0,0.89
+28.0,0.95
+29.0,0.98
+30.0,0.99
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">23.45,0.0
+23.45,1.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=1, bucket count=15
+Runs: 100 in total, 100 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [16, 30]
+Mean estimate of displayed sample: 23.45 ± 0.52488 (95% CI)</comment>
+				</plot>
+				<plot title="Frequency Histogram" xaxis="max: CartPole.num_deaths" yaxis="count">
+					<series title="count" type="b(1.000000)" color="0x0000ff" encoding="csv">16.0,1.0
+17.0,2.0
+18.0,2.0
+19.0,1.0
+20.0,8.0
+21.0,7.0
+22.0,10.0
+23.0,17.0
+24.0,18.0
+25.0,13.0
+26.0,10.0
+27.0,6.0
+28.0,3.0
+29.0,1.0
+30.0,1.0
+					</series>
+					<series title="average" type="pl" color="0x00dd00" encoding="csv">23.45,0.0
+23.45,18.0
+					</series>
+					<comment>Parameters: α=0.05, ε=0.05, bucket width=1, bucket count=15
+Runs: 100 in total, 100 (100%) displayed, 0 (0%) remaining
+Span of displayed sample: [16, 30]
+Mean estimate of displayed sample: 23.45 ± 0.52488 (95% CI)</comment>
+				</plot>
+			</result>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>// Train and save strategy</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy StayAlive = minE (CartPole.num_deaths) [&lt;=10] {} -&gt; {CartPole.cart_pos, CartPole.cart_vel, CartPole.pole_ang, CartPole.pole_vel}: &lt;&gt; time &gt;= 10</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>saveStrategy("/path/to/strategy.json", StayAlive)</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>// ...or load strategy</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>strategy StayAlive = loadStrategy {} -&gt; {CartPole.cart_pos, CartPole.cart_vel, CartPole.pole_ang, CartPole.pole_vel} ("/path/to/strategy.json")</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>// How often do we die with trained controller?</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E[&lt;=10;100] (max: CartPole.num_deaths) under StayAlive</formula>
+			<comment/>
+		</query>
+	</queries>
+</nta>
