@@ -7,7 +7,7 @@ import numpy as np
 from decimal import *
 from time import perf_counter
 from collections import defaultdict
-from trees.models import Node, Leaf, State, Tree
+from trees.models import Node, Leaf, State, DecisionTree
 
 
 def build_state(intervals):
@@ -118,7 +118,7 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
     heapq.heapify(points)
 
     # define a tree to keep track of what has been covered
-    track = Tree.empty_tree(tree.variables, [])  # actions arg doesn't matter
+    track = DecisionTree.empty_tree(tree.variables, [])  # actions arg doesn't matter
 
     # this is what we return in the end - lets start!
     regions = []
@@ -178,7 +178,7 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
 
         # create the root of the tracking tree if we haven't done so yet
         if track.root is None:
-            track.root = Tree.make_root_from_leaf(track, leaf)
+            track.root = DecisionTree.make_root_from_leaf(track, leaf)
         # or add to the tree, so we know not to explore this part again
         else:
             track.put_leaf(leaf)
@@ -318,7 +318,7 @@ def cut_to_node(boxes, variables, vmap):
 
 
 def boxes_to_tree(boxes, variables, actions=[]):
-    tree = Tree.empty_tree(variables, actions)
+    tree = DecisionTree.empty_tree(variables, actions)
     root = cut_to_node(boxes, variables, tree.var2id).prune()
     root.set_state(State(variables))
     tree.root = root

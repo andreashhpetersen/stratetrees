@@ -9,7 +9,7 @@ from trees.loaders import UppaalLoader
 from trees.nodes import Node, Leaf, State
 
 
-class Tree:
+class DecisionTree:
     def __init__(self, root, variables, actions, size=None, meta={}):
         self.root = root
         self.variables = variables
@@ -117,13 +117,13 @@ class Tree:
         Initialize and return an empty tree with given `variables' and
         `actions'
         """
-        return Tree(None, variables, actions)
+        return DecisionTree(None, variables, actions)
 
     @classmethod
     def build_from_leaves(cls, leaves, actions, variables, meta=None):
-        tree = Tree.empty_tree(variables, actions)
+        tree = DecisionTree.empty_tree(variables, actions)
         leaves.sort(key=lambda x: x.cost)
-        root = Tree.make_root_from_leaf(tree, leaves[0])
+        root = DecisionTree.make_root_from_leaf(tree, leaves[0])
         for i in range(1, len(leaves)):
             root = root.put_leaf(leaves[i], State(variables))
 
@@ -195,7 +195,7 @@ class Tree:
 
         root = Node.build_from_dict(data['root'], var2id, act2id)
         root.set_state(State(variables))
-        return Tree(
+        return DecisionTree(
             root,
             variables,
             actions,
@@ -205,7 +205,7 @@ class Tree:
 
     @classmethod
     def parse_from_dot(cls, filepath, varmap):
-        tree = Tree.empty_tree(list(varmap.values()), [])
+        tree = DecisionTree.empty_tree(list(varmap.values()), [])
 
         graph = pydot.graph_from_dot_file(filepath)[0]
 
@@ -294,17 +294,17 @@ class QTree:
         """
         return np.array([r.get(state).cost for r in self.roots])
 
-    def to_decision_tree(self) -> Tree:
+    def to_decision_tree(self) -> DecisionTree:
         """
         Create a decision tree representing a strategy equivalent to greedily
         selecting the smallest Q value for any state on this Q tree.
 
         Returns
         -------
-        dt : Tree
+        dt : DecisionTree
             A decision tree instance.
         """
-        return Tree.build_from_leaves(
+        return DecisionTree.build_from_leaves(
             self.leaves(), self.actions, self.variables, meta=self.meta
         )
 
