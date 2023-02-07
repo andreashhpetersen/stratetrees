@@ -20,7 +20,7 @@ class DecisionTree:
         self.size = size
         self.meta = meta
 
-    def predict(self, state: ArrayLike, maximize=False) -> int:
+    def predict(self, state: ArrayLike) -> int:
         """
         Predict the best action based on a `state`.
 
@@ -28,8 +28,6 @@ class DecisionTree:
         ----------
         state : array_like
             Input state
-        maximize : bool, optional
-            If set to True, return the action with the largest Q value
 
         Returns
         ------
