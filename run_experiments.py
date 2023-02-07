@@ -10,9 +10,8 @@ from copy import deepcopy
 from time import perf_counter
 
 from trees.advanced import max_parts, boxes_to_tree
-from trees.models import Tree
-from trees.utils import parse_from_sampling_log, count_visits, \
-    import_uppaal_strategy
+from trees.models import QTree, Tree
+from trees.utils import parse_from_sampling_log, count_visits
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -50,7 +49,7 @@ class performance:
         self.time = self.stop - self.start
 
 
-def dump_json(tree, meta, fp):
+def dump_json(tree, fp):
     if not EXPORT_UPPAAL:
         return
 
@@ -94,11 +93,12 @@ def run_experiment(model_dir, k=10):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
     sample_logs = glob(f'{model_dir}/samples/*')
 
-    qtrees, variables, actions, meta = import_uppaal_strategy(qt_strat_file)
+    # qtrees, variables, actions, meta = import_uppaal_strategy(qt_strat_file)
+    qtree = QTree(qt_strat_file)
 
-    size = sum([t.size for t in qtrees])
+    # size = sum([t.size for t in qtrees])
 
-    q_tree_data = np.array([size, 0])
+    q_tree_data = np.array([qtree.size, 0])
 
     model_names = [
         'qt_strategy', 'dt_original', 'max_parts', 'dt_max_parts'
@@ -116,9 +116,7 @@ def run_experiment(model_dir, k=10):
             except FileExistsError:
                 pass
 
-        res = run_single_experiment(
-            qtrees, variables, actions, meta, sample_logs, store_path
-        )
+        res = run_single_experiment(qtree, sample_logs, store_path)
         data.append(np.vstack((q_tree_data, res)))
 
     data = np.array(data)
@@ -127,17 +125,17 @@ def run_experiment(model_dir, k=10):
 
 
 def run_single_experiment(
-        qtrees, variables, actions, meta, sample_logs, store_path
-):
+        qtree: QTree, sample_logs: list[str], store_path: str
+    ) -> np.ndarray:
     results = []
 
     with performance() as p:
-        tree = Tree.merge_qtrees(qtrees, variables, actions)
+        # tree = Tree.merge_qtrees(qtrees, variables, actions)
+        tree = qtree.to_decision_tree()
 
-    tree.meta = meta
     results.append([tree.size, p.time])
 
-    dump_json(tree, meta, f'{store_path}/dt_original.json')
+    dump_json(tree, f'{store_path}/dt_original.json')
 
     with performance() as p:
         leaves = max_parts(tree)
@@ -145,12 +143,12 @@ def run_single_experiment(
     results.append([len(leaves), p.time])
 
     with performance() as p:
-        mp_tree = boxes_to_tree(leaves, variables, actions)
+        mp_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
+        mp_tree.meta = qtree.meta
 
-    mp_tree.meta = meta
     results.append([ mp_tree.size, p.time + results[-1][1] ])
 
-    dump_json(mp_tree, meta, f'{store_path}/dt_max_parts.json')
+    dump_json(mp_tree, f'{store_path}/dt_max_parts.json')
 
     for sample_log in sample_logs:
         prune_tree = mp_tree.copy()
@@ -161,11 +159,11 @@ def run_single_experiment(
             count_visits(prune_tree, samples)
             prune_tree.emp_prune()
             leaves = max_parts(prune_tree)
-            prune_tree = boxes_to_tree(leaves, variables, actions)
+            prune_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
+            prune_tree.meta = qtree.meta
 
-        prune_tree.meta = meta
         results.append([prune_tree.size, p.time])
-        dump_json(prune_tree, meta, f'{store_path}/dt_prune_{sample_size}.json')
+        dump_json(prune_tree, f'{store_path}/dt_prune_{sample_size}.json')
 
     return np.array(results)
 
