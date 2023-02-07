@@ -120,30 +120,17 @@ class Tree:
         return Tree(None, variables, actions)
 
     @classmethod
-    def get_all_leaves(cls, roots, sort=True):
-        leaves = [l for ls in [root.get_leaves() for root in roots] for l in ls]
-        if sort:
-            leaves.sort(key=lambda x: x.cost)
-        return leaves
-
-    @classmethod
-    def build_from_leaves(cls, leaves, variables, actions):
+    def build_from_leaves(cls, leaves, actions, variables, meta=None):
         tree = Tree.empty_tree(variables, actions)
         leaves.sort(key=lambda x: x.cost)
         root = Tree.make_root_from_leaf(tree, leaves[0])
         for i in range(1, len(leaves)):
             root = root.put_leaf(leaves[i], State(variables))
 
-        # import ipdb; ipdb.set_trace()
         tree.root = root.prune()
         tree.size = root.size
+        tree.meta = meta
         return tree
-
-    @classmethod
-    def merge_qtrees(cls, qtrees, variables, actions):
-        return cls.build_from_leaves(
-            cls.get_all_leaves(qtrees), variables, actions
-        )
 
     @classmethod
     def make_root_from_leaf(cls, tree, leaf):
@@ -261,9 +248,85 @@ class QTree:
         self.actions = actions
         self.roots = roots
         self.variables = variables
+        self.meta = meta
 
-    def predict(self, state: np.ndarray):
-        return self.actions[np.argmin(self.predict_qs(state))]
+        self._size = sum([r.size for r in self.roots])
+
+    @property
+    def size(self):
+        """Get size of the tree in the number of leaves"""
+        if not hasattr(self, 'size') or self._size is None:
+            self._size = sum([r.size for r in self.roots])
+        return self._size
+
+    def predict(self, state: np.ndarray, maximize=False) -> int:
+        """
+        Predict the best action based on a `state`.
+
+        Parameters
+        ----------
+        state : array_like
+            Input state
+        maximize : bool, optional
+            If set to True, return the action with the largest Q value
+
+        Returns
+        ------
+        action_id : int
+            The index of the preferred action
+        """
+        qs = self.predict_qs(state)
+        return np.argmax(qs) if maximize else np.argmin
 
     def predict_qs(self, state: np.ndarray) -> np.ndarray:
+        """
+        Predict the Q values for each action given `state`.
+
+        Parameters
+        ----------
+        state : array_like
+            Input state
+
+        Returns
+        -------
+        q_values : numpy.ndarry
+            An array of Q values for each action
+        """
         return np.array([r.get(state).cost for r in self.roots])
+
+    def to_decision_tree(self) -> Tree:
+        """
+        Create a decision tree representing a strategy equivalent to greedily
+        selecting the smallest Q value for any state on this Q tree.
+
+        Returns
+        -------
+        dt : Tree
+            A decision tree instance.
+        """
+        return Tree.build_from_leaves(
+            self.leaves(), self.actions, self.variables, meta=self.meta
+        )
+
+    def leaves(self, sort='min') -> list[Leaf]:
+        """
+        Get all the leaves of the roots of this Q tree.
+
+        Parameters
+        ----------
+        sort : str
+            If set to `'min'` (default), sort the leaves ascendingly according
+            to cost. If set to `'max'` sort descendingly. Otherwise, no sorting
+            is applied.
+
+        Returns
+        -------
+        leaves : list
+            The list of all leaves in the Q tree.
+        """
+        leaves = [l for ls in [r.get_leaves() for r in self.roots] for l in ls]
+        if sort == 'min':
+            leaves.sort(key=lambda x: x.cost)
+        elif sort == 'max':
+            leaves.sort(key=lambda x: -x.cost)
+        return leaves
