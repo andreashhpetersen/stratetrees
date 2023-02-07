@@ -118,7 +118,7 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
     heapq.heapify(points)
 
     # define a tree to keep track of what has been covered
-    track = DecisionTree.empty_tree(tree.variables, [])  # actions arg doesn't matter
+    track = DecisionTree.empty_tree(tree.variables, tree.actions)
 
     # this is what we return in the end - lets start!
     regions = []
@@ -139,7 +139,7 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
             continue
 
         # get the action that the entire region must agree on
-        action = tree.get(max_state)
+        action = tree.predict(max_state)
 
         # reset exhausted variables
         bounds[:,-1] = 0
@@ -173,7 +173,7 @@ def max_parts(tree, min_vals=None, max_vals=None, padding=1):
         # create the region as a leaf with a state spanned by min_state and
         # max_state
         state = State(tree.variables, np.vstack((min_state, max_state)).T)
-        leaf = Leaf(cost=0, action=action, state=state)
+        leaf = Leaf(cost=0, action=tree.actions[action], state=state)
         regions.append(leaf)
 
         # create the root of the tracking tree if we haven't done so yet

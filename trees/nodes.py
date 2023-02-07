@@ -144,13 +144,6 @@ class Node:
         else:
             return self.high.get(state)
 
-    def get_branches(self, nodes=[]):
-        nodes.append(self)
-        if not self.low.is_leaf:
-            self.low.get_branches(nodes)
-        if not self.high.is_leaf:
-            self.high.get_branches(nodes)
-
     def get_leaves(self):
         """
         return a list of all leaves of this tree
@@ -225,15 +218,6 @@ class Node:
                 return self.low
 
         return self
-
-    def save_as(self, filepath, filetype='json'):
-        """
-        Save tree as json to a file at `filepath`.
-
-        TODO: support multiple filetypes
-        """
-        with open(filepath, 'w') as f:
-            json.dump(self.as_dict(), f, indent=4)
 
     def as_dict(self, var_func=lambda x: x):
         """

@@ -9,7 +9,7 @@ from copy import deepcopy
 from collections import defaultdict
 from matplotlib.patches import Rectangle
 
-from trees.models import Node, Leaf, State
+from trees.models import Node, Leaf
 
 ####### Functions to add color gradients #######
 
@@ -175,7 +175,6 @@ def draw_partitioning(
     plt.close()
 
 
-
 ####### Functions to load and add statistics to a tree #######
 
 def parse_from_sampling_log(filepath, as_numpy=True):
@@ -194,44 +193,3 @@ def parse_from_sampling_log(filepath, as_numpy=True):
     # print(data)
     # exit(0);
     return data
-
-def count_visits(tree, data, step=1):
-    """
-    Evaluate every state given by `data`, and mark the resulting leaf in `root`
-    as visited. Counts the total number of visits and the frequency each leaf
-    was visited with. Note that the variables in every entry in `data` must
-    occur in the same order as the do in `variables`.
-
-    - params:
-        - `root`, the root `Node` of the strategy
-        - `data`, a list of lists, where each entry is of the form
-            `[t, var1_t, ..., varN_t]` for a setting with N variables in
-            the state at each time `t`
-        - `variables`, a list of the variable names in the order they occur in
-            each of `data[t]`
-        - `step` (default 1), the stepsize when iterating `data`
-
-    - returns:
-        a dictionary counting the times each action was chosen
-    """
-
-    leaves = tree.get_leaves()
-    for l in leaves:
-        l.visits = 0
-        l.ratio = 0
-
-    total = 0
-    actions = defaultdict(int)
-    last_a = None
-    for i in range(0, len(data), step):
-        state = data[i]
-        leaf = tree.get(state, leaf=True)
-        leaf.visits += 1
-        actions[leaf.action] += 1
-        total += 1
-        last_a = leaf.action
-
-    for l in leaves:
-        l.ratio = l.visits / total
-
-    return actions

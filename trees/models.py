@@ -4,6 +4,7 @@ import numpy as np
 
 from copy import deepcopy
 from random import shuffle
+from numpy.typing import ArrayLike
 
 from trees.loaders import UppaalLoader
 from trees.nodes import Node, Leaf, State
@@ -19,37 +20,65 @@ class DecisionTree:
         self.size = size
         self.meta = meta
 
-    def set_depth(self):
-        self.root.set_depth()
-        leaves = self.get_leaves()
-        self.max_depth = max([l.depth for l in leaves])
-        self.avg_depth = sum([l.depth for l in leaves]) / len(leaves)
-
-    def get(self, state, leaf=False):
+    def predict(self, state: ArrayLike, maximize=False) -> int:
         """
-        Get the action/decision associated with `state'. If `leaf=True', the
-        entire `Leaf' is returned.
+        Predict the best action based on a `state`.
+
+        Parameters
+        ----------
+        state : array_like
+            Input state
+        maximize : bool, optional
+            If set to True, return the action with the largest Q value
+
+        Returns
+        ------
+        action_id : int
+            The index of the preferred action
         """
         l = self.root.get(state)
-        if leaf:
-            return l
-        return l.action
+        return self.act2id[l.action]
+
+    def count_visits(self, data: list[ArrayLike]) -> None:
+        """
+        Count the number of visits to each leaf node when evaluating the states
+        in `data` on the tree. Typically used as a preprocessing step before
+        calling `Tree.emp_prune()`.
+
+        Parameters
+        ----------
+        data : list of lists
+            The sample states to evaluate.
+        """
+        leaves = self.leaves()
+        for l in leaves:
+            l.visits = 0
+
+        for state in data:
+            leaf = self.root.get(state)
+            leaf.visits += 1
+
+        for l in leaves:
+            l.ratio = l.visits / len(data)
 
     def get_for_region(self, min_state, max_state, actions=True):
-        return self.root.get_for_region(
+        return set(self.act2id[a] for a in self.root.get_for_region(
             min_state, max_state, actions=actions, collect=set()
-        )
+        ))
 
     def get_bounds(self):
         bounds = self.root.get_bounds([set() for _ in self.variables])
         return [sorted(list(vbounds)) for vbounds in bounds]
 
-    def get_branches(self):
-        nodes = []
-        self.root.get_branches(nodes)
-        return nodes
+    def leaves(self) -> list[Leaf]:
+        """
+        Get the list of all leaves in the tree.
 
-    def get_leaves(self):
+        Returns
+        -------
+        leaves : list
+            The list of leaves in the tree
+        """
         return self.root.get_leaves()
 
     def put_leaf(self, leaf):
@@ -58,6 +87,12 @@ class DecisionTree:
     def emp_prune(self, sub_action=None):
         self.root = Node.emp_prune(self.root, sub_action=sub_action)
         self.size = self.root.size
+
+    def set_depth(self):
+        self.root.set_depth()
+        depths = np.array([l.depth for l in self.leaves()])
+        self.max_depth = depths.max()
+        self.avg_depth = depths.mean()
 
     def save_as(self, filepath):
         """
@@ -259,7 +294,7 @@ class QTree:
             self._size = sum([r.size for r in self.roots])
         return self._size
 
-    def predict(self, state: np.ndarray, maximize=False) -> int:
+    def predict(self, state: ArrayLike, maximize=False) -> int:
         """
         Predict the best action based on a `state`.
 
@@ -278,7 +313,7 @@ class QTree:
         qs = self.predict_qs(state)
         return np.argmax(qs) if maximize else np.argmin
 
-    def predict_qs(self, state: np.ndarray) -> np.ndarray:
+    def predict_qs(self, state: ArrayLike) -> np.ndarray:
         """
         Predict the Q values for each action given `state`.
 

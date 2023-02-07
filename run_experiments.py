@@ -10,7 +10,7 @@ from copy import deepcopy
 from time import perf_counter
 
 from trees.advanced import max_parts, boxes_to_tree
-from trees.models import QTree, Tree
+from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, count_visits
 
 parser = argparse.ArgumentParser()
@@ -130,11 +130,9 @@ def run_single_experiment(
     results = []
 
     with performance() as p:
-        # tree = Tree.merge_qtrees(qtrees, variables, actions)
         tree = qtree.to_decision_tree()
 
     results.append([tree.size, p.time])
-
     dump_json(tree, f'{store_path}/dt_original.json')
 
     with performance() as p:
@@ -147,7 +145,6 @@ def run_single_experiment(
         mp_tree.meta = qtree.meta
 
     results.append([ mp_tree.size, p.time + results[-1][1] ])
-
     dump_json(mp_tree, f'{store_path}/dt_max_parts.json')
 
     for sample_log in sample_logs:
@@ -156,7 +153,7 @@ def run_single_experiment(
         sample_size = int(re.findall(r'\d+', sample_log)[0])
 
         with performance() as p:
-            count_visits(prune_tree, samples)
+            prune_tree.count_visits(samples)
             prune_tree.emp_prune()
             leaves = max_parts(prune_tree)
             prune_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
