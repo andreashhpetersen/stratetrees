@@ -11,6 +11,8 @@ automated/*/samples/*
 automated/*/generated/*
 build/*
 *.egg-info/*
+examples/*
+old_texts/*
 
 # ignore experiment results
 constructed_*
