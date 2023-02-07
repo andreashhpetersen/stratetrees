@@ -9,6 +9,8 @@ random/*
 .idea
 automated/*/samples/*
 automated/*/generated/*
+build/*
+*.egg-info/*
 
 # ignore experiment results
 constructed_*
