@@ -311,7 +311,7 @@ class QTree:
             The index of the preferred action
         """
         qs = self.predict_qs(state)
-        return np.argmax(qs) if maximize else np.argmin
+        return np.argmax(qs) if maximize else np.argmin(qs)
 
     def predict_qs(self, state: ArrayLike) -> np.ndarray:
         """
