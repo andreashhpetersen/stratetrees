@@ -11,7 +11,7 @@ from time import perf_counter
 
 from trees.advanced import max_parts, boxes_to_tree
 from trees.models import QTree, DecisionTree
-from trees.utils import parse_from_sampling_log, count_visits
+from trees.utils import parse_from_sampling_log
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
