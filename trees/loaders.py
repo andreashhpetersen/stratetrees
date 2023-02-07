@@ -1,12 +1,14 @@
 import json
 import numpy as np
 
+from copy import deepcopy
 from collections import defaultdict
 
 from trees.nodes import Node, Leaf, State
 
 
 class UppaalLoader:
+
     @classmethod
     def load(cls, path: str) -> (list[Node], list[str], list[str], str):
         with open(path, 'r') as f:
@@ -30,7 +32,7 @@ class UppaalLoader:
         actions = sorted(action_location_roots.keys())
         if S == 0:
             roots = [ action_location_roots[a]['(1)'] for a in actions ]
-            return roots, variables, actions, cls._get_uppaal_data(data)
+            return roots, actions, variables, cls._get_uppaal_data(data)
 
         org_root = None
         for loc in locations:
@@ -46,7 +48,7 @@ class UppaalLoader:
             root.set_state(State(variables))
             roots.append(root)
 
-        return roots, variables, actions, cls._get_uppaal_data(data)
+        return roots, actions, variables, cls._get_uppaal_data(data)
 
     @classmethod
     def _fix_tree(cls, node, action):
@@ -64,6 +66,7 @@ class UppaalLoader:
             return Leaf(np.inf, action=action)
         else:
             return node
+
 
     @classmethod
     def _put_loc(cls, node, loc, names, i):
@@ -91,7 +94,7 @@ class UppaalLoader:
         else:
             node.high = cls._put_tree(node.high, loc, tree)
 
-            return node
+        return node
 
     @classmethod
     def _get_uppaal_data(cls, data):

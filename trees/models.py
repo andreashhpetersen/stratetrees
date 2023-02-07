@@ -255,7 +255,7 @@ class QTree:
     @property
     def size(self):
         """Get size of the tree in the number of leaves"""
-        if not hasattr(self, 'size') or self._size is None:
+        if not hasattr(self, '_size') or self._size is None:
             self._size = sum([r.size for r in self.roots])
         return self._size
 
