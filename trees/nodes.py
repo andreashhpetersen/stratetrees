@@ -4,6 +4,7 @@ import numpy as np
 from copy import deepcopy
 from random import shuffle
 
+
 class State:
     def __init__(self, variables, constraints=None):
         self.variables = variables

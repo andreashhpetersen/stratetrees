@@ -6,7 +6,7 @@ from copy import deepcopy
 from random import shuffle
 from numpy.typing import ArrayLike
 
-from trees.loaders import UppaalLoader
+from trees.loaders import UppaalLoader, SklearnLoader
 from trees.nodes import Node, Leaf, State
 
 
