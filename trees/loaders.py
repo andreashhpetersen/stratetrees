@@ -1,6 +1,7 @@
 import json
 import numpy as np
 
+from joblib import load
 from copy import deepcopy
 from collections import defaultdict
 
@@ -125,3 +126,42 @@ class UppaalLoader:
             low=cls._build_tree(tree['low'], a, variables, S),
             high=cls._build_tree(tree['high'], a, variables, S)
         )
+
+
+class SklearnLoader:
+
+    def __init__(self, path: str, actions, variables):
+        self.variables = variables
+        self.actions = actions
+
+        clf = self.load_classifier(path)
+        self.children_left = clf.tree_.children_left
+        self.children_right = clf.tree_.children_right
+        self.features = clf.tree_.feature
+        self.bounds = clf.tree_.threshold
+        self.values = clf.tree_.value
+
+        self.root = self.build_root(0)
+        self.root.set_state(State(variables))
+
+    def build_root(self, node_id: int):
+        is_branch = self.children_left[node_id] != self.children_right[node_id]
+        if is_branch:
+            return Node(
+                self.variables[self.features[node_id]],
+                self.features[node_id],
+                self.bounds[node_id],
+                low=self.build_root(self.children_left[node_id]),
+                high=self.build_root(self.children_right[node_id]),
+            )
+        else:
+            act_id = np.argmax(self.values[node_id])
+            return Leaf(0, action=self.actions[act_id], act_id=act_id)
+
+    def load_classifier(self, path):
+        return load(path)
+
+    @classmethod
+    def load(cls, path, actions, variables):
+        loader = SklearnLoader(path, actions, variables)
+        return loader.root
