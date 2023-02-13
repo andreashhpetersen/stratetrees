@@ -5,9 +5,168 @@ import numpy as np
 from copy import deepcopy
 from random import shuffle
 from numpy.typing import ArrayLike
+from collections import defaultdict
 
 from trees.loaders import UppaalLoader, SklearnLoader
 from trees.nodes import Node, Leaf, State
+
+
+class MpTree:
+    def __init__(self, tree, FMIN=None, FMAX=None):
+        self.children_low = []
+        self.children_high = []
+        self.features = []
+        self.values = []
+        self.thresholds = []
+
+        self.n_leaves = 0
+        self.n_features = len(tree.variables)
+
+        ones = np.ones((self.n_features,))
+        if FMIN is not None:
+            try:
+                self.FMIN = ones * np.array(FMIN)
+            except ValueError:
+                raise ValueError(
+                    f'FMIN must either be scalar or list of size `n_features`'
+                )
+        else:
+            self.FMIN = -ones * np.inf
+
+        if FMAX is not None:
+            try:
+                self.FMAX = ones * np.array(FMAX)
+            except ValueError:
+                raise ValueError(
+                    f'FMAX must either be scalar or list of size `n_features`'
+                )
+        else:
+            self.FMAX = ones * np.inf
+
+        self._build_tree(tree.root, 0)
+
+    @property
+    def size(self):
+        return (self.n_leaves * 2) - 1
+
+    def is_leaf(self, node_id):
+        return self.children_low[node_id] == self.children_high[node_id]
+
+    def leaves(self):
+        return np.argwhere(np.array(self.children_low) < 0).flatten()
+
+    def partitions(self):
+        state = np.vstack((
+            np.ones((self.n_features,)) * self.FMIN,
+            np.ones((self.n_features,)) * self.FMAX
+        )).T
+        collect = []
+        self._get_partitions(0, state, collect)
+        return collect
+
+    def _get_partitions(self, node_id, state, collect):
+        if self.is_leaf(node_id):
+            collect.append((node_id, state))
+            return
+
+        f = self.features[node_id]
+        t = self.thresholds[node_id]
+
+        lstate = state.copy()
+        hstate = state.copy()
+
+        lstate[f,1] = t
+        hstate[f,0] = t
+
+        self._get_partitions(self.children_low[node_id], lstate, collect)
+        self._get_partitions(self.children_high[node_id], hstate, collect)
+
+    def predict(self, state):
+        return self.values[self._predict(state, 0)]
+
+    def predict_node_id(self, state):
+        return self._predict(state, 0)
+
+    def _predict(self, state, node_id):
+        if self.is_leaf(node_id):
+            return node_id
+
+        if state[self.features[node_id]] <= self.thresholds[node_id]:
+            return self._predict(state, self.children_low[node_id])
+        else:
+            return self._predict(state, self.children_high[node_id])
+
+    def predict_for_region(self, min_state, max_state, node_ids=False):
+        """
+        Predict actions in the area defined by `]min_state, max_state]`. If
+        `node_ids` is True, return the node ids in the region instead.
+
+        Parameters
+        ----------
+        min_state : array_like
+            The k-dimensional minimum state
+        max_state : array_like
+            The k-dimensional maximum state
+        node_ids : bool
+            Flag to determine wether to return actions or node ids
+
+        Returns
+        -------
+        predictions : set
+            Either a set of actions in the given region or a list of node ids
+        """
+        res = self._predict_for_region(min_state, max_state, 0, [])
+        if node_ids:
+            return res
+        else:
+            return set(self.values[node_id] for node_id in res)
+
+    def _predict_for_region(self, min_state, max_state, node_id, collect):
+        if self.is_leaf(node_id):
+            collect.append(node_id)
+            return collect
+
+        if min_state[self.features[node_id]] < self.thresholds[node_id]:
+            collect = self._predict_for_region(
+                min_state,
+                max_state,
+                self.children_low[node_id],
+                collect
+            )
+
+        if max_state[self.features[node_id]] > self.thresholds[node_id]:
+            collect = self._predict_for_region(
+                min_state,
+                max_state,
+                self.children_high[node_id],
+                collect
+            )
+
+        return collect
+
+
+    def _build_tree(self, node, node_id):
+        self.children_low.append(-1)
+        self.children_high.append(-1)
+        self.features.append(-1)
+        self.values.append(-1)
+        self.thresholds.append(-1)
+
+        if node.is_leaf:
+            self.values[node_id] = int(node.action)
+            self.n_leaves += 1
+            return node_id, node_id
+        else:
+            self.features[node_id] = node.var_id
+            self.thresholds[node_id] = node.bound
+
+            low_id, max_id = self._build_tree(node.low, node_id + 1)
+            self.children_low[node_id] = low_id
+
+            high_id, max_id = self._build_tree(node.high, max_id + 1)
+            self.children_high[node_id] = high_id
+
+            return node_id, max_id
 
 
 class DecisionTree:
