@@ -1,5 +1,6 @@
 import json
 import pydot
+import operator
 import numpy as np
 
 from copy import deepcopy
@@ -84,17 +85,18 @@ class MpTree:
     def predict(self, state):
         return self.values[self._predict(state, 0)]
 
-    def predict_node_id(self, state):
-        return self._predict(state, 0)
+    def predict_node_id(self, state, cheat=False):
+        return self._predict(state, 0, cheat)
 
-    def _predict(self, state, node_id):
+    def _predict(self, state, node_id, cheat=False):
         if self.is_leaf(node_id):
             return node_id
 
-        if state[self.features[node_id]] <= self.thresholds[node_id]:
-            return self._predict(state, self.children_low[node_id])
+        op = operator.lt if cheat else operator.le
+        if op(state[self.features[node_id]], self.thresholds[node_id]):
+            return self._predict(state, self.children_low[node_id], cheat)
         else:
-            return self._predict(state, self.children_high[node_id])
+            return self._predict(state, self.children_high[node_id], cheat)
 
     def predict_for_region(self, min_state, max_state, node_ids=False):
         """
@@ -143,7 +145,6 @@ class MpTree:
             )
 
         return collect
-
 
     def _build_tree(self, node, node_id):
         self.children_low.append(-1)
@@ -194,7 +195,7 @@ class DecisionTree:
             The index of the preferred action
         """
         l = self.root.get(state)
-        return self.act2id[l.action]
+        return l.action
 
     def count_visits(self, data: list[ArrayLike]) -> None:
         """
@@ -219,7 +220,7 @@ class DecisionTree:
             l.ratio = l.visits / len(data)
 
     def get_for_region(self, min_state, max_state, actions=True):
-        return set(self.act2id[a] for a in self.root.get_for_region(
+        return set(self.root.get_for_region(
             min_state, max_state, actions=actions, collect=set()
         ))
 
@@ -265,7 +266,7 @@ class DecisionTree:
             json.dump(data, f, indent=4)
 
     def get_uppaal_meta(self, loc='(1)'):
-        roots = self.root.to_q_trees(self.actions)
+        roots = self.root.to_q_trees([self.act2id[a] for a in self.actions])
         meta = self.meta.copy()
         for action, root in roots:
             try:
@@ -315,7 +316,7 @@ class DecisionTree:
     def build_from_leaves(cls, leaves, actions, variables, meta=None):
         tree = DecisionTree.empty_tree(variables, actions)
         leaves.sort(key=lambda x: x.cost)
-        root = DecisionTree.make_root_from_leaf(tree, leaves[0])
+        root = tree.make_root_from_leaf(leaves[0])
         for i in range(1, len(leaves)):
             root = root.put_leaf(leaves[i], State(variables))
 
@@ -324,16 +325,15 @@ class DecisionTree:
         tree.meta = meta
         return tree
 
-    @classmethod
-    def make_root_from_leaf(cls, tree, leaf):
+    def make_root_from_leaf(self, leaf):
         root = None
         last = None
-        for var in tree.variables:
+        for var in self.variables:
             var_min, var_max = leaf.state.min_max(
                 var, min_limit=None, max_limit=None
             )
             if var_min is not None:
-                new_node = Node(var, tree.var2id[var], var_min)
+                new_node = Node(var, self.var2id[var], var_min)
                 new_node.low = Leaf(np.inf, action=None)
 
                 if last is None:
@@ -350,7 +350,7 @@ class DecisionTree:
                     root = last
 
             if var_max is not None:
-                new_node = Node(var, tree.var2id[var], var_max)
+                new_node = Node(var, self.var2id[var], var_max)
                 new_node.high = Leaf(np.inf, action=None)
 
                 if last is None:
@@ -371,7 +371,7 @@ class DecisionTree:
         else:
             last.high = leaf
 
-        root.set_state(State(tree.variables))
+        root.set_state(State(self.variables))
         return root
 
     @classmethod
@@ -383,9 +383,8 @@ class DecisionTree:
         actions = data['actions']
 
         var2id = { v: i for i, v in enumerate(variables) }
-        act2id = { a: i for i, a in enumerate(actions) }
 
-        root = Node.build_from_dict(data['root'], var2id, act2id)
+        root = Node.build_from_dict(data['root'], var2id)
         root.set_state(State(variables))
         return DecisionTree(
             root,
@@ -436,11 +435,16 @@ class DecisionTree:
 class QTree:
     def __init__(self, path: str):
         roots, actions, variables, meta = UppaalLoader.load(path)
+        self.variables = variables
+        self.meta = meta
+
         self.act2id = { a: i for i, a in enumerate(actions) }
         self.actions = actions
         self.roots = roots
-        self.variables = variables
-        self.meta = meta
+
+        for r, a in zip(roots, actions):
+            for leaf in r.get_leaves():
+                leaf.action = self.act2id[a]
 
         self._size = sum([r.size for r in self.roots])
 
@@ -522,3 +526,57 @@ class QTree:
         elif sort == 'max':
             leaves.sort(key=lambda x: -x.cost)
         return leaves
+
+
+class Graph:
+    def __init__(self):
+        self.nodes = []
+        self.edges = []
+
+        self.edges_in = []
+        self.edges_out = []
+
+        self.source = 0
+
+    def max_parts(self):
+        visited = [0 for _ in self.nodes]
+        queue = [self.source]
+        while len(queue) > 0:
+            node_id = queue.pop(0)
+            if visited[node]:
+                continue
+
+            neighbours = node.get_neighbours()
+            for neigh in neighbours:
+                merge = True
+                common_neighbours = set(neighbours + neigh.get_neighbours())
+                for c in common_neighbours:
+                    e1, e2 = node.edge_to(c), neigh.edge_to(c)
+                    if not e1.feature == e2.feature and e1.thresh == e2.thresh:
+                        merge = False
+                        break
+
+                if merge:
+                    node = self.merge(node, neigh)
+
+    def merge(self, n1, n2):
+        for e in n2.edges_in():
+            e.to_node = n1
+            n1.edges_in.append(e)
+
+        for e in n2.edges_out():
+            e.from_node = n1
+            n1.edges_out.append(e)
+
+
+class Edge:
+    def __init__(self, from_node, to_node, feature, thresh):
+        self.from_node = from_node
+        self.to_node = to_node
+        self.feature = feature
+        self.thresh = thresh
+
+
+class Vertex:
+    def __init__(self, action):
+        self.action = action

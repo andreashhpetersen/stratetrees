@@ -226,7 +226,7 @@ class Node:
         """
         return {
             'var': var_func(self.variable),
-            'bound': self.bound,
+            'bound': float(self.bound),
             'low': self.low.as_dict(var_func=var_func),
             'high': self.high.as_dict(var_func=var_func)
         }
@@ -365,7 +365,7 @@ class Node:
         return nodes[0]
 
     @classmethod
-    def build_from_dict(cls, node_dict, var2id, act2id):
+    def build_from_dict(cls, node_dict, var2id):
         """
         Recursively build a tree using the top level in `node_dict` as root and
         keep track of variables and actions
@@ -374,15 +374,15 @@ class Node:
         # is this a leaf?
         if not 'low' in node_dict:
             action = node_dict['action']
-            return Leaf(node_dict['cost'], action=action, act_id=act2id[action])
+            return Leaf(cost=node_dict.get('cost', -1), action=action)
 
         var = node_dict['var']
         return Node(
             var,
             var2id[var],
             node_dict['bound'],
-            low=cls.build_from_dict(node_dict['low'], var2id, act2id),
-            high=cls.build_from_dict(node_dict['high'], var2id, act2id)
+            low=cls.build_from_dict(node_dict['low'], var2id),
+            high=cls.build_from_dict(node_dict['high'], var2id)
         )
 
     @classmethod

@@ -26,7 +26,7 @@ class UppaalLoader:
         action_location_roots = defaultdict(dict)
         for location, loc_trees in data['regressors'].items():
             for action, tree in loc_trees['regressor'].items():
-                root = cls._build_tree(tree, action, variables, S)
+                root = cls._build_tree(tree, variables, S)
                 root.set_state(State(variables))
                 action_location_roots[action][location] = root
 
@@ -67,7 +67,6 @@ class UppaalLoader:
             return Leaf(np.inf, action=action)
         else:
             return node
-
 
     @classmethod
     def _put_loc(cls, node, loc, names, i):
@@ -115,16 +114,16 @@ class UppaalLoader:
         return data
 
     @classmethod
-    def _build_tree(cls, tree, a, variables, S=0):
+    def _build_tree(cls, tree, variables, S=0):
         if isinstance(tree, float) or isinstance(tree, int):
-            return Leaf(float(tree), action=a)
+            return Leaf(cost=float(tree))
 
         return Node(
             variables[tree['var'] + S],
             tree['var'] + S,  # var_id
             tree['bound'],
-            low=cls._build_tree(tree['low'], a, variables, S),
-            high=cls._build_tree(tree['high'], a, variables, S)
+            low=cls._build_tree(tree['low'], variables, S),
+            high=cls._build_tree(tree['high'], variables, S)
         )
 
 
