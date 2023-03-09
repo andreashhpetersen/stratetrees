@@ -44,3 +44,4 @@ article/build/*
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+article/main.pdf
