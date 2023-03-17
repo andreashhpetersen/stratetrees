@@ -1,6 +1,7 @@
 import json
 import math
 import time
+import tqdm
 import heapq
 import random
 import numpy as np
@@ -63,287 +64,205 @@ def init_bounds(partitions, K):
     sorted_bounds = [sorted(list(bound_to_nodes[i].keys())) for i in range(K)]
 
     # make lmap map from a node_id to an index pointer representation of the
-    # state of the node
+    # state of the node. Also get number of bounds in each dimension.
     # K x M x 2 operation
+    n_bounds = np.zeros((K,))
     for i in range(K):
+        n_bounds[i] = len(sorted_bounds[i]) - 1
         for idx, bound in enumerate(sorted_bounds[i]):
             for node_id in bound_to_nodes[i][bound]:
                 node_bounds = lmap[node_id]
 
                 # check wether to set min or max bound
-                m = 0 if node_bounds[0][i] is None else 1
-                node_bounds[m][i] = idx
+                m = 0 if node_bounds[i][0] is None else 1
+                node_bounds[i][m] = idx
 
-    return lmap, sorted_bounds
+    for k, v in lmap.items():
+        lmap[k] = np.array(v).T
+
+    M = n_bounds.max()
+    for i in range(K):
+        sorted_bounds[i] = np.pad(
+            sorted_bounds[i],
+            (0, int(M - n_bounds[i])),
+            mode='empty'
+        )
+
+    return lmap, np.array(sorted_bounds), n_bounds
 
 
-def max_parts3(tree):
-    np.random.seed(42)
+def check_state(state, p_state, tree, lmap, track):
+    min_state, max_state = state
+    p_min, p_max = p_state
 
-    mptree = MpTree(tree)
-    K = mptree.n_features
-    partitions = mptree.partitions()
+    explored = is_explored(min_state, max_state, track)
 
-    lmap, bounds = init_bounds(partitions, K)
+    parts = tree.predict_for_region(min_state, max_state, node_ids=True)
+    actions = set([tree.values[nid] for nid in parts])
+
+    broken = []
+    for nid in parts:
+        n_pmin, n_pmax = lmap[nid]
+        remainder = 0
+        for i in range(len(p_max)):
+            if n_pmin[i] < p_max[i] and p_max[i] < n_pmax[i]:
+                remainder += 1
+
+            if n_pmin[i] < p_min[i] and p_min[i] < n_pmax[i]:
+                remainder += 1
+
+            if remainder > 1:
+                broken.append(nid)
+                break
+
+    return explored, actions, broken
+
+
+def get_unexhausted_dim(exhausted):
+    return np.random.choice(np.arange(exhausted.shape[0])[exhausted == 0])
+
+
+def make_state(p_state, bounds):
+    return bounds[np.arange(len(bounds)), p_state].T
+
+
+def make_leaf(action, variables, state, cost=0):
+    return Leaf(cost, action=action, state=State(variables, constraints=state))
+
+
+def update_track_tree(track, state):
+    leaf = make_leaf(1, track.variables, state)
+    if track.root is None:
+        track.root = track.make_root_from_leaf(leaf)
+    else:
+        track.put_leaf(leaf)
+
+
+def update_region_bounds(p_state, state, tree, lmap):
+    """
+    Parameters
+    ----------
+    lmap : dictionary
+        The region bounds to be updated
+    """
+    p_min, p_max = p_state
+    K = len(p_min)
+    parts = tree.predict_for_region(state[:,0], state[:,1], node_ids=True)
+    for nid in parts:
+        n_pmin, n_pmax = lmap[nid]
+        for i in range(K):
+            if p_max[i] > n_pmin[i] >= p_min[i] and n_pmax[i] > p_max[i]:
+                lmap[nid][0][i] = p_max[i]
+            if p_min[i] < n_pmax[i] <= p_max[i] and n_pmin[i] < p_min[i]:
+                lmap[nid][1][i] = p_min[i]
+
+
+def add_points(p_state, points, n_bounds):
+    p_min, p_max = p_state
+    K = len(p_min)
+    for i in range(K):
+        if p_max[i] == n_bounds[i]:
+            continue
+
+        new_point = p_min.copy()
+        new_point[i] = p_max[i]
+        heapq.heappush(points, tuple(new_point))
+
+
+def max_parts3(tree, partitions=None, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
+    tree = MpTree(tree)
+    K = tree.n_features
+
+    if partitions is None:
+        partitions = tree.partitions()
+
+    lmap, bounds, n_bounds = init_bounds(partitions, K)
 
     regions = []
     points = [tuple([0 for _ in range(K)])]
     track = DecisionTree.empty_tree(tree.variables, tree.actions)
 
     while len(points) > 0:
+        max_iter = 0
 
         p_min = heapq.heappop(points)
-        # node_id = mptree.predict_node_id(
-        #     [bounds[i][p] for i,p in enumerate(p_min)], cheat=True
-        # )
-        # p_min, p_max = lmap[node_id]
-        p_max = [p + 1 for p in p_min]
+        node_id = tree.predict_node_id(make_state(p_min, bounds), cheat=True)
 
-        try:
-            state = np.array([
-                [bounds[i][p_min[i]], bounds[i][p_max[i]]]
-                for i in range(K)
-            ])
-        except IndexError:
-            continue
+        p_min, p_max = lmap[node_id]
+        state = make_state((p_min, p_max), bounds)
 
-
-        min_state = state[:,0]
-        max_state = state[:,1]
-
-        # if min_state[0] > -np.inf:
-        #     import ipdb; ipdb.set_trace()
-
+        min_state, max_state = state[:,0], state[:,1]
         if is_explored(min_state, max_state, track):
-            # import ipdb; ipdb.set_trace()
             continue
 
-        action = mptree.predict(max_state)
+        action = tree.predict(max_state)
 
         exhausted = np.zeros((K,))
+        exhausted[np.array(p_max) == n_bounds] = 1
+
+        cand_pmax = p_max.copy()
+        healing = False
+
+        # main loop
         while exhausted.sum() < K:
-            # find candidate update and dimension
-            dim = np.random.choice(np.arange(K)[exhausted == 0])
+            max_iter += 1
+            if max_iter > len(partitions):
+                import ipdb; ipdb.set_trace()
 
-            if p_max[dim] == len(bounds[dim]) - 1:
-                exhausted[dim] = 1
-                # import ipdb; ipdb.set_trace()
-                continue
+            # if we aren't healing, do an incremental expansion
+            if not healing:
+                dim = get_unexhausted_dim(exhausted)
+                prev_pmax_in_dim = cand_pmax[dim]
+                cand_pmax[dim] += 1
 
-            # make new candidate state (pmax and actual state)
-            cand_pmax = [i for i in p_max]
-            cand_pmax[dim] += 1
-            cand_state = [bounds[i][v] for i,v in enumerate(cand_pmax)]
+                diff_state = min_state.copy()
+                diff_state[dim] = bounds[dim][prev_pmax_in_dim]
 
-            if is_explored(min_state, cand_state, track):
-                exhausted[dim] = 1
-                # import ipdb; ipdb.set_trace()
-                continue
+            # make candidate state
+            cand_state = make_state(cand_pmax, bounds)
 
-            # get regions in state
-            parts = mptree.predict_for_region(
-                min_state,
-                cand_state,
-                node_ids=True
+            # check the legitimacy of our expansion
+            explored, actions, broken = check_state(
+                (diff_state, cand_state), (p_min, cand_pmax), tree, lmap, track
             )
 
-            # check if more than one action is returned
-            if len(set([mptree.values[nid] for nid in parts])) > 1:
+            # we either encountered explored territory or different actions
+            if explored or set([action]) != actions:
+                healing = False
                 exhausted[dim] = 1
-                # import ipdb; ipdb.set_trace()
-                continue
+                cand_pmax[dim] = prev_pmax_in_dim
 
-            # check if region is split in more than 2
-            stop = False
-            for nid in parts:
-                n_pmin, n_pmax = lmap[nid]
-                for i in range(K):
-                    if n_pmin[i] < p_min[i] and n_pmax[i] > cand_pmax[i]:
-                    # if n_pmin[i] > p_min[i] and n_pmax[i] < cand_pmax[i]:
-                        exhausted[dim] = 1
-                        stop = True
-                        break
-                if stop:
-                    break
-            if stop:
-                # import ipdb; ipdb.set_trace()
-                continue
+            # we broke one or more regions in more than 2 pieces
+            elif len(broken) > 0:
+                healing = True
+                prev_pmax_in_dim = cand_pmax[dim]
+                cand_pmax[dim] = max([lmap[nid][1][dim] for nid in broken])
 
-            p_max = cand_pmax
+                # terminal case, where no expansion in dim can heal the broken
+                if cand_pmax[dim] <= prev_pmax_in_dim:
+                    healing = False
+                    cand_pmax = p_max.copy()
+                    exhausted[dim] = 1
 
-        regions.append(
-            np.array(
-                [[bounds[i][low], bounds[i][high]]
-                  for i, (low, high) in enumerate(zip(p_min, p_max))
-                 ]
-            )
-        )
-        # import ipdb; ipdb.set_trace()
-
-        leaf = Leaf(0, action=1, state=State(track.variables, constraints=regions[-1]))
-        if track.root is None:
-            track.root = track.make_root_from_leaf(leaf)
-        else:
-            track.put_leaf(leaf)
-
-        for i in range(K):
-            new_point = [
-                p_min[j] if j != i else p_max[j] for j in range(K)
-            ]
-            state = [bounds[i][p] for i, p in enumerate(new_point)]
-            new_node_id = mptree.predict_node_id(state, cheat=True)
-            lmap[new_node_id][0] = new_point
-            heapq.heappush(points, tuple(new_point))
-        # import ipdb; ipdb.set_trace()
-
-    out = []
-    for reg in regions:
-        action = tree.predict(reg[:,1])
-        out.append(
-            Leaf(0, action=action, act_id=action, state=State(
-                tree.variables, constraints=reg
-            ))
-        )
-    return out
-
-
-def max_parts2(tree, min_vals=None, max_vals=None, padding=1):
-
-    mptree = MpTree(tree)
-    K = mptree.n_features
-    partitions = mptree.partitions()
-
-    if min_vals is None:
-        min_vals = [None for _ in range(K)]
-
-    if max_vals is None:
-        max_vals = [None for _ in range(K)]
-
-    # each element in vbounds is a list of constraints for a specific dimension
-    vbounds = tree.get_bounds()  # assumed to be sorted in ascending order
-
-    # store the number of constraints for any dimension i (for indexing)
-    max_i = np.zeros((K,), dtype=int)
-
-    # build list of constraints
-    bounds = []
-    for i in range(K):
-        bs = np.array(vbounds[i])
-
-        # add min and max values if there are none
-        if min_vals[i] is None:
-            if bs.shape[0] == 0:
-                min_vals[i] = -math.inf
+            # we made a completely legit expansion in dim
             else:
-                min_vals[i] = np.amin(bs) - padding
+                healing = False
+                p_max = cand_pmax.copy()
 
-        if max_vals[i] is None:
-            if bs.shape[0] == 0:
-                max_vals[i] = math.inf
-            else:
-                max_vals[i] = np.amax(bs) + padding
+                # we have reached the edge of dim
+                if cand_pmax[dim] == n_bounds[dim]:
+                    exhausted[dim] = 1
 
-        # make list of constraints in range [min_val, max_val] (inclusive)
-        bs = np.hstack((
-            min_vals[i],
-            bs[np.logical_and(bs > min_vals[i], bs < max_vals[i])],
-            max_vals[i]
-        ))
+        # make new region and update the track tree
+        reg = make_state((p_min, p_max), bounds)
+        regions.append(make_leaf(action, tree.variables, reg))
 
-        # register number of constraints minus 1 (ie. the index of the last
-        # constraint)
-        max_i[i] = bs.shape[0] - 1
-
-        # add the array to the list of bounds
-        bounds.append(bs)
-
-    # arrange the constraints in a (K,M) matrix, where M is the length of the
-    # largest list of constraints + 1. The + 1 is for marking the dimension as
-    # exhausted
-    max_len = np.amax(max_i) + 2
-    for i in range(K):
-        bounds[i] = np.pad(bounds[i], (0, max_len - bounds[i].shape[0]))
-    bounds = np.vstack(bounds)
-
-    # start the list of points from the minimum values
-    points = [[0 for _ in range(K)]]
-
-    # we use a heap to process the points in a lexical order
-    heapq.heapify(points)
-
-    # define a tree to keep track of what has been covered
-    track = DecisionTree.empty_tree(tree.variables, tree.actions)
-
-    # this is what we return in the end - lets start!
-    regions = []
-
-    # we keep going for as long as there are points
-    while len(points) > 0:
-
-        # p_min and p_max contains indicies of the current constraints
-        p_min = np.array(heapq.heappop(points), dtype=int)
-        p_max = p_min.copy() + 1
-
-        # define the region spanned by min_state and max_state
-        min_state = bounds[np.arange(K), p_min]
-        max_state = bounds[np.arange(K), p_max]
-
-        # check if we have already explored this state
-        if is_explored(min_state, max_state, track):
-            continue
-
-        # get the action that the entire region must agree on
-        action = mptree.predict(max_state)
-
-        # reset exhausted variables
-        bounds[:,-1] = 0
-        bounds[:,-1][p_max == max_i] = 1
-
-        while np.sum(bounds[:,-1]) < K:
-            # grow in dimension i and update p_max and max_state
-            p_max, i = grow(p_max, bounds, max_i)
-            max_state[i] = bounds[i][p_max[i]]
-
-            # state to express difference between previous max_state and current
-            diff_state = min_state.copy()
-            diff_state[i] = bounds[i][p_max[i] - 1]
-
-            # check if new region is explored
-            explored = is_explored(diff_state, max_state, track)
-
-            # check if our new region returns a more than one action
-            actions = mptree.predict_for_region(diff_state, max_state)
-
-            if (actions != set([action]) or explored or p_max[i] == max_i[i]):
-
-                # mark variable as exhausted
-                bounds[i,-1] = 1
-
-                # roll back to last state
-                if actions != set([action]) or explored:
-                    p_max[i] -= 1
-                    max_state[i] = diff_state[i]
-
-        # create the region as a leaf with a state spanned by min_state and
-        # max_state
-        state = State(tree.variables, np.vstack((min_state, max_state)).T)
-        leaf = Leaf(cost=0, action=action, state=state)
-        regions.append(leaf)
-
-        # create the root of the tracking tree if we haven't done so yet
-        if track.root is None:
-            track.root = track.make_root_from_leaf(leaf)
-        # or add to the tree, so we know not to explore this part again
-        else:
-            track.put_leaf(leaf)
-
-        # add new points from which to start later
-        for i in range(K):
-            if p_max[i] < max_i[i]:
-
-                new_p = [idx for idx in p_min]
-                new_p[i] = p_max[i]
-                heapq.heappush(points, new_p)
+        update_track_tree(track, reg)
+        update_region_bounds((p_min, p_max), reg, tree, lmap)
+        add_points((p_min, p_max), points, n_bounds)
 
     return regions
 

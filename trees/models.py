@@ -14,6 +14,9 @@ from trees.nodes import Node, Leaf, State
 
 class MpTree:
     def __init__(self, tree, FMIN=None, FMAX=None):
+        self.variables = tree.variables
+        self.actions = tree.actions
+
         self.children_low = []
         self.children_high = []
         self.features = []
