@@ -12,15 +12,6 @@ from collections import defaultdict
 from trees.models import Node, Leaf, State, DecisionTree, MpTree
 
 
-def build_state(intervals):
-    variables = list(intervals.keys())
-    state = State(variables)
-    for var, (min_v, max_v) in intervals.items():
-        state.greater_than(var, min_v)
-        state.less_than(var, max_v)
-    return state
-
-
 def grow(p, bs, max_i):
     """
     Finds the next dimension `i' from point `p' that minimizes the difference
@@ -186,8 +177,6 @@ def max_parts3(tree, partitions=None, seed=None):
     track = DecisionTree.empty_tree(tree.variables, tree.actions)
 
     while len(points) > 0:
-        max_iter = 0
-
         p_min = heapq.heappop(points)
         node_id = tree.predict_node_id(make_state(p_min, bounds), cheat=True)
 
@@ -208,10 +197,6 @@ def max_parts3(tree, partitions=None, seed=None):
 
         # main loop
         while exhausted.sum() < K:
-            max_iter += 1
-            if max_iter > len(partitions):
-                import ipdb; ipdb.set_trace()
-
             # if we aren't healing, do an incremental expansion
             if not healing:
                 dim = get_unexhausted_dim(exhausted)
@@ -547,113 +532,3 @@ def boxes_to_tree(boxes, variables, actions=[]):
     tree.root = root
     tree.size = root.size
     return tree
-
-
-def prune_subtree(root, action):
-    """
-    Attempts to find redundant nodes that imposes conditions that are satisfied
-    further `down' the tree. For example:
-
-       x<4
-      /   \
-     /     \
-    a1    x<5
-         /   \
-        /     \
-       a1     a2
-
-    can be reduced to:
-
-       x<5
-      /   \
-     /     \
-    a1     a2
-    """
-
-    # both children are leaves
-    #
-    #     x<b
-    #    /   \
-    #   /     \
-    # a1       a2
-    if root.low.is_leaf and root.high.is_leaf:
-        if root.low.action == action:
-            return root, root.high
-        else:
-            return root, root.low
-
-    # left child is leaf, right is new subtree
-    #
-    #     x<b
-    #    /   \
-    #   /     \
-    # a1      y<c
-    if root.low.is_leaf and not root.high.is_leaf:
-        if root.low.action == action:
-            subtree, leaf = prune_subtree(root.high, action)
-
-        else:
-            subtree, leaf = prune_subtree(root.high, root.low.action)
-
-        if leaf is None or leaf.action == root.low.action:
-            root.high = subtree
-            return root, None
-
-        try:
-            if leaf.state.min[root.variable] > root.bound:
-                return subtree, leaf
-            else:
-                root.high = subtree
-                return root, leaf
-        except:
-            import ipdb; ipdb.set_trace()
-
-    # right child is leaf, lef is new subtree
-    #
-    #     x<b
-    #    /   \
-    #   /     \
-    # y<c     a1
-    if root.high.is_leaf and not root.low.is_leaf:
-        if root.high.action == action:
-            subtree, leaf = prune_subtree(root.low, action)
-
-        else:
-            subtree, leaf = prune_subtree(root.low, root.high.action)
-
-        if leaf is None or leaf.action == root.high.action:
-            root.low = subtree
-            return root, None
-
-        if leaf.state.max[root.variable] < root.bound:
-            return subtree, leaf
-        else:
-            root.low = subtree
-            return root, leaf
-
-    # both children are new subtrees
-    #
-    #     x<b
-    #    /   \
-    #   /     \
-    # y<c     y<d
-    new_low, leaf1 = prune_subtree(root.low, None)
-    new_high, leaf2 = prune_subtree(root.high, None)
-
-    root.low = new_low
-    root.high = new_high
-
-    new_leaf = None
-    if not (leaf1 is None or leaf2 is None) and leaf1.action == leaf2.action:
-        state1, state2 = leaf1.state, leaf2.state
-        state = State(state1.variables)
-        for v in state.variables:
-            state.greater_than(v, min(state1.min[v], state2.min[v]))
-            state.less_than(v, max(state1.max[v], state2.max[v]))
-        new_leaf = Leaf(0, action=leaf1.action, state=state)
-
-    # here we have potential for further optimization
-    # if root.variable == 'Ball[0].v' and round(root.bound, 2) == -11.74:
-    #     import ipdb; ipdb.set_trace()
-
-    return root, new_leaf
