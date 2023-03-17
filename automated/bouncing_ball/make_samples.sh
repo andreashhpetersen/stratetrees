@@ -8,7 +8,7 @@ if [[ -d $SAMPLE_DIR ]] ; then
 fi
 mkdir $SAMPLE_DIR
 
-S='1 2 5 10 100 1000'
+S='5 10 100 1000'
 M=$MODEL_DIR/model.xml
 for s in $S ; do
     Q=$(mktemp)

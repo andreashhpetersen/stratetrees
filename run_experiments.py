@@ -5,11 +5,12 @@ import json
 import argparse
 import numpy as np
 
+from tqdm import tqdm
 from glob import glob
 from copy import deepcopy
 from time import perf_counter
 
-from trees.advanced import max_parts, boxes_to_tree
+from trees.advanced import max_parts, max_parts3, boxes_to_tree
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log
 
@@ -101,11 +102,13 @@ def run_experiment(model_dir, k=10):
     q_tree_data = np.array([qtree.size, 0])
 
     model_names = [
-        'qt_strategy', 'dt_original', 'max_parts', 'dt_max_parts'
+        'qt_strategy', 'dt_original',
+        'old_max_parts', 'dt_old_max_parts',
+        'new_max_parts', 'dt_new_max_parts',
     ] + [ 'dt_prune_{}'.format(re.findall(r"\d+", s)[0]) for s in sample_logs ]
 
     data = []
-    for i in range(k):
+    for i in tqdm(range(k)):
         store_path = f'{model_dir}/generated/constructed_{i}'
 
         if EXPORT_UPPAAL:
@@ -135,6 +138,7 @@ def run_single_experiment(
     results.append([tree.size, p.time])
     dump_json(tree, f'{store_path}/dt_original.json')
 
+    # do old max_parts
     with performance() as p:
         leaves = max_parts(tree)
 
@@ -145,7 +149,20 @@ def run_single_experiment(
         mp_tree.meta = qtree.meta
 
     results.append([ mp_tree.size, p.time + results[-1][1] ])
-    dump_json(mp_tree, f'{store_path}/dt_max_parts.json')
+    dump_json(mp_tree, f'{store_path}/dt_old_max_parts.json')
+
+    # do new max_parts
+    with performance() as p:
+        leaves = max_parts3(tree)
+
+    results.append([len(leaves), p.time])
+
+    with performance() as p:
+        mp_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
+        mp_tree.meta = qtree.meta
+
+    results.append([ mp_tree.size, p.time + results[-1][1] ])
+    dump_json(mp_tree, f'{store_path}/dt_new_max_parts.json')
 
     for sample_log in sample_logs:
         prune_tree = mp_tree.copy()
