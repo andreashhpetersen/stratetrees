@@ -1,0 +1,49 @@
+{
+    "variables": ["x","y"],
+    "actions": ["A","B","C"],
+    "root": {
+        "var": "y",
+        "bound": 3,
+        "low": {
+            "var": "x",
+            "bound": 3,
+            "low": {
+                "action": 0
+            },
+            "high": {
+                "var": "y",
+                "bound": 2,
+                "low": {
+                    "var": "y",
+                    "bound": 1,
+                    "low": {
+                        "action": 2
+                    },
+                    "high": {
+                        "action": 1
+                    }
+                },
+                "high": {
+                    "action": 2
+                }
+            }
+        },
+        "high": {
+            "var": "x",
+            "bound": 2,
+            "low": {
+                "var": "x",
+                "bound": 1,
+                "low": {
+                    "action": 1
+                },
+                "high": {
+                    "action": 2
+                }
+            },
+            "high": {
+                "action": 1
+            }
+        }
+    }
+}
