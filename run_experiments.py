@@ -90,21 +90,65 @@ def write_results(data, model_names, model_dir):
             writer.writerow(row)
 
 
+def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
+    variables, actions = tree.variables, tree.actions
+
+    with performance() as p:
+        boxes = max_parts3(tree)
+
+    time1 = p.time
+
+    with performance() as p:
+        ntree = boxes_to_tree(boxes, variables, actions)
+
+    time2 = p.time
+
+    i = 0
+    best_n_boxes = len(boxes)
+    best_n_tree = ntree.size
+    best_tree = ntree
+    data = [[i, len(boxes), ntree.size, time1, time2]]
+
+    while i < max_iter and \
+            (len(boxes) < best_n_boxes + 1 or ntree.size < best_n_tree + 1):
+
+        i += 1
+
+        with performance() as p:
+            boxes = alg(ntree)
+
+        time1 = p.time
+
+        with performance() as p:
+            ntree = boxes_to_tree(boxes, variables, actions)
+
+        time2 = p.time
+
+        res = [i, len(boxes), ntree.size, time1, time2]
+        data.append(res)
+
+        if len(boxes) < best_n_boxes:
+            best_n_boxes = len(boxes)
+
+        if ntree.size < best_n_tree:
+            best_n_tree = ntree.size
+            best_tree = ntree
+            best_tree_i = i
+
+    return best_tree, (np.array(data), best_tree_i)
+
 def run_experiment(model_dir, k=10):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
     sample_logs = glob(f'{model_dir}/samples/*')
 
-    # qtrees, variables, actions, meta = import_uppaal_strategy(qt_strat_file)
     qtree = QTree(qt_strat_file)
-
-    # size = sum([t.size for t in qtrees])
-
     q_tree_data = np.array([qtree.size, 0])
 
     model_names = [
         'qt_strategy', 'dt_original',
         'old_max_parts', 'dt_old_max_parts',
         'new_max_parts', 'dt_new_max_parts',
+        'new_max_parts_trans', 'dt_new_max_parts_trans',
     ] + [ 'dt_prune_{}'.format(re.findall(r"\d+", s)[0]) for s in sample_logs ]
 
     data = []
@@ -114,7 +158,15 @@ def run_experiment(model_dir, k=10):
         if EXPORT_UPPAAL:
             try:
                 os.mkdir(store_path)
+            except FileExistsError:
+                pass
+
+            try:
                 os.mkdir(store_path + '/trees')
+            except FileExistsError:
+                pass
+
+            try:
                 os.mkdir(store_path + '/uppaal')
             except FileExistsError:
                 pass
@@ -152,17 +204,15 @@ def run_single_experiment(
     dump_json(mp_tree, f'{store_path}/dt_old_max_parts.json')
 
     # do new max_parts
-    with performance() as p:
-        leaves = max_parts3(tree)
+    mp_tree, (data, best) = transitive_max_parts(tree, max_iter=20)
+    results.append([data[0,1], data[0,3]])
+    results.append([data[0,2], data[0,3] + data[0,4]])
 
-    results.append([len(leaves), p.time])
+    results.append([data[best,1], data[:best,3:].sum() + data[best,3]])
+    results.append([data[best,2], data[:best + 1,3:].sum()])
 
-    with performance() as p:
-        mp_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
-        mp_tree.meta = qtree.meta
-
-    results.append([ mp_tree.size, p.time + results[-1][1] ])
-    dump_json(mp_tree, f'{store_path}/dt_new_max_parts.json')
+    mp_tree.meta = qtree.meta
+    dump_json(mp_tree, f'{store_path}/dt_new_max_parts_trans.json')
 
     for sample_log in sample_logs:
         prune_tree = mp_tree.copy()
