@@ -78,15 +78,18 @@ class State:
         state = State(self.variables, constraints=self.constraints.copy())
         return state
 
+    def __eq__(self, other):
+        return self.variables == other.variables and \
+            (self.constraints == other.constraints).all()
+
+    def __getitem__(self, indicies):
+        return self.constraints[indicies]
+
     def __str__(self):
-        ranges = [
-            '{}: [{},{}]'.format(var, self.min(var), self.max(var))
-            for var in self.variables
-        ]
-        return f"State({', '.join(ranges)})"
+        return f'Variables: {self.variables},\n{self.constraints}'
 
     def __repr__(self):
-        return self.__str__()
+        return str(self.constraints)
 
 
 class Node:
@@ -295,6 +298,9 @@ class Node:
 
         with open(path, 'w') as f:
             json.dump(meta, f, indent=4)
+
+    def copy(self):
+        return self.__deepcopy__()
 
     def __str__(self):
         return f'Node(var: {self.var_name}, bound: {self.bound})'

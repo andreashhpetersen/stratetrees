@@ -90,6 +90,13 @@ def write_results(data, model_names, model_dir):
             writer.writerow(row)
 
 
+def write_trans_results(data, path):
+    with open(path, 'w') as f:
+        writer = csv.writer(f)
+        for d in data:
+            writer.writerow(d)
+
+
 def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
     variables, actions = tree.variables, tree.actions
 
@@ -108,6 +115,7 @@ def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
     best_n_tree = ntree.size
     best_tree = ntree
     data = [[i, len(boxes), ntree.size, time1, time2]]
+    print(data[0])
 
     while i < max_iter and \
             (len(boxes) < best_n_boxes + 1 or ntree.size < best_n_tree + 1):
@@ -125,6 +133,7 @@ def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
         time2 = p.time
 
         res = [i, len(boxes), ntree.size, time1, time2]
+        print(res)
         data.append(res)
 
         if len(boxes) < best_n_boxes:
@@ -135,6 +144,7 @@ def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
             best_tree = ntree
             best_tree_i = i
 
+    write_trans_results(data, './trans_results.csv')
     return best_tree, (np.array(data), best_tree_i)
 
 def run_experiment(model_dir, k=10):
@@ -190,18 +200,28 @@ def run_single_experiment(
     results.append([tree.size, p.time])
     dump_json(tree, f'{store_path}/dt_original.json')
 
+
     # do old max_parts
-    with performance() as p:
-        leaves = max_parts(tree)
+    mp_tree, (data, best) = transitive_max_parts(tree, alg=max_parts, max_iter=20)
+    results.append([data[0,1], data[0,3]])
+    results.append([data[0,2], data[0,3] + data[0,4]])
 
-    results.append([len(leaves), p.time])
+    results.append([data[best,1], data[:best,3:].sum() + data[best,3]])
+    results.append([data[best,2], data[:best + 1,3:].sum()])
 
-    with performance() as p:
-        mp_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
-        mp_tree.meta = qtree.meta
+    # with performance() as p:
+    #     leaves = max_parts(tree)
 
-    results.append([ mp_tree.size, p.time + results[-1][1] ])
+    # results.append([len(leaves), p.time])
+
+    # with performance() as p:
+    #     mp_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
+    #     mp_tree.meta = qtree.meta
+
+    # results.append([ mp_tree.size, p.time + results[-1][1] ])
+    mp_tree.meta = qtree.meta
     dump_json(mp_tree, f'{store_path}/dt_old_max_parts.json')
+
 
     # do new max_parts
     mp_tree, (data, best) = transitive_max_parts(tree, max_iter=20)

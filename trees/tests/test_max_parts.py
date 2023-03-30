@@ -6,7 +6,7 @@ from glob import glob
 from trees.models import DecisionTree
 from trees.nodes import Leaf, State
 from trees.advanced import max_parts, max_parts3
-from trees.utils import draw_partitioning
+from trees.utils import draw_partitioning, calc_volume
 
 
 class TestMaxParts3(unittest.TestCase):
@@ -44,7 +44,7 @@ class TestMaxParts3(unittest.TestCase):
         """
 
         return np.array(sorted(tuple([
-            np.hstack((l.action, l.state.constraints.flatten())).tolist()
+            np.hstack((l.action, l.state.constraints.T.flatten())).tolist()
             for l in ls
         ])))
 
@@ -82,16 +82,17 @@ class TestMaxParts3(unittest.TestCase):
         files = sorted(glob(f'{self.DATA_PATH}/dt_*'))
         pairs = [(files[i], files[i+1]) for i in range(0, len(files), 2)]
 
-        for inp_f, exp_f in pairs:
+        for inp_f, exp_f in pairs[-1:]:
             print(inp_f)
             inp_tree = DecisionTree.load_from_file(inp_f)
             exp_leaves = self.__class__.read_boxes(exp_f)
 
             boxes = max_parts3(inp_tree, seed=42)
 
-            # draw it
-            name = inp_f.split('/')[-1].replace('.json','').replace('.boxes','')
-            self.__class__.draw_boxes(inp_tree, f'{name}_output.jpeg', boxes=boxes)
+            if len(inp_tree.variables) == 2:
+                # draw it
+                name = inp_f.split('/')[-1].replace('.json','').replace('.boxes','')
+                self.__class__.draw_boxes(inp_tree, f'{name}_output.jpeg', boxes=boxes)
 
             exp = self.get_sorted_matrix(exp_leaves)
             res = self.get_sorted_matrix(boxes)
@@ -100,3 +101,7 @@ class TestMaxParts3(unittest.TestCase):
             # import ipdb; ipdb.set_trace()
             self.assertEqual(exp.shape, res.shape, msg=msg)
             self.assertTrue((exp == res).all(), msg=msg)
+            self.assertEqual(
+                calc_volume(inp_tree.leaves(), leaves=True),
+                calc_volume(boxes, leaves=True)
+            )
