@@ -374,13 +374,19 @@ def get_edge_vals(bs, pad=1, broadcast=True):
     return edges
 
 
-def set_edges(bs, pad=1, inline=False):
+def set_edges(bs, pad=1, edges=None, inline=False):
     """
     Replace infinite limits in `bs` with finite edge values.
     """
     if not inline:
         bs = bs.copy()
-    edges = get_edge_vals(bs, pad=pad)
+
+    if edges is None:
+        edges = get_edge_vals(bs, pad=pad)
+
+    if not bs.shape == edges.shape:
+        edges = np.repeat(np.expand_dims(edges, axis=0), bs.shape[0], axis=0)
+
     infs = np.isinf(bs)
     bs[infs] = edges[infs]
     return bs

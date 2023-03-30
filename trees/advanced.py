@@ -15,16 +15,6 @@ from trees.utils import has_overlap, cut_overlaps, in_box, in_list, make_state,\
     make_leaf, breaks_box
 
 
-def validate_state(boxes, state):
-    """
-    work in progress
-    """
-    bs = np.array([b.state.constraints.copy() for b in boxes])
-    bbox = get_bbox(bs, len(state.variables))
-    state_fair = (bbox == state.constraints).all()
-    import ipdb; ipdb.set_trace()
-
-
 def is_explored(min_state, max_state, tree):
     """
     Returns True, if any part of the region given by `min_state` and `max_state`
@@ -103,37 +93,31 @@ def update_region_bounds(p_state, state, tree, lmap):
     lmap : dictionary
         The region bounds to be updated
     """
-    p_min, p_max = p_state
     parts = tree.predict_for_region(state[:,0], state[:,1], node_ids=True)
     for nid in parts:
-        try:
-            lmap[nid] = cut_overlaps(p_state, lmap[nid])
-        except AssertionError:
-            import ipdb; ipdb.set_trace()
+        lmap[nid] = cut_overlaps(p_state, lmap[nid])
 
 
 def add_points(p_state, points, n_bounds):
-    p_min, p_max = p_state
-    K = len(p_min)
+    pmin, pmax = p_state
+    K = len(pmin)
     for i in range(K):
-        if p_max[i] == n_bounds[i]:
+        if pmax[i] == n_bounds[i]:
             continue
 
-        new_point = p_min.copy()
-        new_point[i] = p_max[i]
+        new_point = pmin.copy()
+        new_point[i] = pmax[i]
         heapq.heappush(points, tuple(new_point))
 
 
-def max_parts3(tree, partitions=None, seed=None, ms=None):
+def max_parts3(tree, seed=None, return_track_tree=False):
     if seed is not None:
         np.random.seed(seed)
 
     tree = MpTree(tree)
     K = tree.n_features
 
-    if partitions is None:
-        partitions = tree.partitions()
-
+    partitions = tree.partitions()
     lmap, bounds, n_bounds = init_bounds(partitions, K)
 
     regions = []
@@ -141,34 +125,40 @@ def max_parts3(tree, partitions=None, seed=None, ms=None):
     track = DecisionTree.empty_tree(tree.variables, tree.actions)
 
     while len(points) > 0:
-        op_min = heapq.heappop(points)
-        node_id = tree.predict_node_id(make_state(op_min, bounds), cheat=True)
 
-        p_min, p_max = lmap[node_id]
+        # pop lexicographically smallest point and predict node
+        opmin = heapq.heappop(points)
+        node_id = tree.predict_node_id(make_state(opmin, bounds), cheat=True)
 
-        state = make_state((p_min, p_max), bounds)
+        # get updated pmin and pmax
+        pmin, pmax = lmap[node_id]
+
+        # make state and check if it is explored
+        state = make_state((pmin, pmax), bounds)
         min_state, max_state = state[:,0], state[:,1]
-
         if is_explored(min_state, max_state, track):
             continue
 
+        # predict action
         action = tree.predict(max_state)
 
+        # init array to keep track of exhausted dimensions and exhaust where
+        # we are already on the edge of the state space
         exhausted = np.zeros((K,))
-        exhausted[np.array(p_max) == n_bounds] = 1
-
-        cand_pmax = p_max.copy()
-        healing = False
+        exhausted[np.array(pmax) == n_bounds] = 1
 
         # main loop
+        healing = False
+        cand_pmax = pmax.copy()
         while exhausted.sum() < K:
+
             # if we aren't healing, do an incremental expansion
             if not healing:
                 dim = get_unexhausted_dim(exhausted)
                 cand_pmax[dim] += 1
 
                 diff_state = min_state.copy()
-                diff_state[dim] = bounds[dim][p_max[dim]]
+                diff_state[dim] = bounds[dim][pmax[dim]]
 
             # make candidate state
             cand_state = make_state(cand_pmax, bounds)
@@ -179,13 +169,13 @@ def max_parts3(tree, partitions=None, seed=None, ms=None):
             # invariants to be checked
             explored = is_explored(diff_state, cand_state, track)
             actions = set([tree.values[nid] for nid in parts])
-            broken = [nid for nid in parts if breaks_box(lmap[nid], (p_min, cand_pmax))]
+            broken = [nid for nid in parts if breaks_box(lmap[nid], (pmin, cand_pmax))]
 
             # we either encountered explored territory or different actions
             if explored or set([action]) != actions:
                 healing = False
                 exhausted[dim] = 1
-                cand_pmax[dim] = p_max[dim]
+                cand_pmax[dim] = pmax[dim]
 
             # we broke one or more regions in more than 2 pieces
             elif len(broken) > 0:
@@ -195,7 +185,7 @@ def max_parts3(tree, partitions=None, seed=None, ms=None):
                 # terminal case, where no expansion in dim can heal the broken
                 if cand_update <= cand_pmax[dim]:
                     healing = False
-                    cand_pmax[dim] = p_max[dim]
+                    cand_pmax[dim] = pmax[dim]
                     exhausted[dim] = 1
                 else:
                     cand_pmax[dim] = cand_update
@@ -203,22 +193,23 @@ def max_parts3(tree, partitions=None, seed=None, ms=None):
             # we made a completely legit expansion in dim
             else:
                 healing = False
-                p_max = cand_pmax.copy()
+                pmax = cand_pmax.copy()
 
                 # we have reached the edge of dim
                 if cand_pmax[dim] == n_bounds[dim]:
                     exhausted[dim] = 1
 
         # make new region and update the track tree
-        reg = make_state((p_min, p_max), bounds)
+        reg = make_state((pmin, pmax), bounds)
         regions.append(make_leaf(action, tree.variables, reg))
 
         update_track_tree(track, reg, action)
-        update_region_bounds((p_min, p_max), reg, tree, lmap)
-        add_points((p_min, p_max), points, n_bounds)
+        update_region_bounds((pmin, pmax), reg, tree, lmap)
+        add_points((pmin, pmax), points, n_bounds)
 
-    if len([l for l in track.leaves() if l.action is None]) == 0:
-        print('everything is explored!')
+    # used in testing to assert everything is explored
+    if return_track_tree:
+        return regions, track
 
     return regions
 
@@ -507,7 +498,7 @@ def find_best_cut(boxes, variables, vmap):
     return node, low, high
 
 
-def cut_to_node(boxes, variables, vmap, state, tree):
+def cut_to_node(boxes, variables, vmap):
     if len(boxes) == 1:
         leaf = Leaf(0.0, action=boxes[0].action)
         return leaf
@@ -519,18 +510,14 @@ def cut_to_node(boxes, variables, vmap, state, tree):
     # else
     node, low, high = res
 
-    low_state, high_state = state.copy(), state.copy()
-    low_state.less_than(node.variable, node.bound)
-    high_state.greater_than(node.variable, node.bound)
-
-    node.low = cut_to_node(low, variables, vmap, low_state, tree)
-    node.high = cut_to_node(high, variables, vmap, high_state, tree)
+    node.low = cut_to_node(low, variables, vmap)
+    node.high = cut_to_node(high, variables, vmap)
     return node
 
 
-def boxes_to_tree(boxes, variables, org_tree, actions=[]):
+def boxes_to_tree(boxes, variables, actions=[]):
     tree = DecisionTree.empty_tree(variables, actions)
-    root = cut_to_node(boxes, variables, tree.var2id, State(variables), org_tree).prune()
+    root = cut_to_node(boxes, variables, tree.var2id).prune()
     root.set_state(State(variables))
     tree.root = root
     tree.size = root.size

@@ -1,4 +1,5 @@
 {
+    "commment": "this is not an optimal partitioning, but it is a correct one (it is what comes when numpy is seeded with 42)",
     "variables": ["x","y"],
     "actions": ["A","B","C"],
     "root": {
@@ -32,18 +33,25 @@
                 "bound": 5,
                 "low": {
                     "var": "x",
-                    "bound": 7,
+                    "bound": 6,
                     "low": {
                         "action": 0
                     },
                     "high": {
-                        "var": "y",
-                        "bound": 3,
+                        "var": "x",
+                        "bound": 7,
                         "low": {
-                            "action": 1
+                            "action": 0
                         },
                         "high": {
-                            "action": 0
+                            "var": "y",
+                            "bound": 3,
+                            "low": {
+                                "action": 1
+                            },
+                            "high": {
+                                "action": 0
+                            }
                         }
                     }
                 },

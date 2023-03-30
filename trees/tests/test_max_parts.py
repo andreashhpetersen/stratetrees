@@ -6,7 +6,7 @@ from glob import glob
 from trees.models import DecisionTree
 from trees.nodes import Leaf, State
 from trees.advanced import max_parts, max_parts3
-from trees.utils import draw_partitioning, calc_volume
+from trees.utils import draw_partitioning, calc_volume, set_edges, get_edge_vals
 
 
 class TestMaxParts3(unittest.TestCase):
@@ -78,16 +78,15 @@ class TestMaxParts3(unittest.TestCase):
             out_fp=f'{cls.RENDER_PATH}/{fname}'
         )
 
-    def test_all(self):
+    def test_examples(self):
         files = sorted(glob(f'{self.DATA_PATH}/dt_*'))
         pairs = [(files[i], files[i+1]) for i in range(0, len(files), 2)]
 
-        for inp_f, exp_f in pairs[-1:]:
-            print(inp_f)
+        for inp_f, exp_f in pairs:
             inp_tree = DecisionTree.load_from_file(inp_f)
             exp_leaves = self.__class__.read_boxes(exp_f)
 
-            boxes = max_parts3(inp_tree, seed=42)
+            boxes, track = max_parts3(inp_tree, seed=42, return_track_tree=True)
 
             if len(inp_tree.variables) == 2:
                 # draw it
@@ -98,10 +97,21 @@ class TestMaxParts3(unittest.TestCase):
             res = self.get_sorted_matrix(boxes)
 
             msg = f'{inp_f} did not match its expected partition'
-            # import ipdb; ipdb.set_trace()
             self.assertEqual(exp.shape, res.shape, msg=msg)
             self.assertTrue((exp == res).all(), msg=msg)
-            self.assertEqual(
-                calc_volume(inp_tree.leaves(), leaves=True),
-                calc_volume(boxes, leaves=True)
-            )
+
+            # compare volumes, but use the same edge values for both
+            bs_inp = np.array([b.state.constraints.copy() for b in inp_tree.leaves()])
+            bs_res = np.array([b.state.constraints.copy() for b in boxes])
+
+            edges = get_edge_vals(bs_inp, broadcast=False)
+            set_edges(bs_inp, edges=edges, inline=True)
+            set_edges(bs_res, edges=edges, inline=True)
+
+            msg = f'{inp_f} did not match its expected volume'
+            self.assertEqual(calc_volume(bs_inp), calc_volume(bs_res), msg=msg)
+
+            # assert everything is explored
+            msg = f'{inp_f} did not explore all parts of the state space'
+            unexplored = [l for l in track.leaves() if l.action is None]
+            self.assertEqual(len(unexplored), 0, msg=msg)
