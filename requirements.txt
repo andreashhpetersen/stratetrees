@@ -3,3 +3,5 @@ numpy
 pydot==1.4.2
 sklearn
 pandas==1.4.1
+tqdm
+joblib
