@@ -1,0 +1,26 @@
+[build-system]
+requires = ['hatchling']
+build-backend = 'hatchling.build'
+
+[project]
+name = "stratetrees"
+version = "0.0.1"
+authors = [
+  { name="Andreas Holck Høeg-Petersen", email="ahhp@cs.aau.dk" },
+]
+description = "A package for importing UPPAAL Stratego strategies as Python objects"
+readme = "README_package.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'numpy',
+    'pydot'
+]
+
+[project.urls]
+"Homepage" = "https://github.com/andreashhpetersen/stratetrees"
+"Bug Tracker" = "https://github.com/andreashhpetersen/stratetrees/issues"
