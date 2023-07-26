@@ -5,6 +5,7 @@ import operator
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import  matplotlib.animation as animation
 
 from copy import deepcopy
 from itertools import product
@@ -185,6 +186,49 @@ def draw_partitioning(
     plt.close()
 
 
+def plot_voxels(bs, actions, points=[], max_v=10, animate=False):
+    plt.style.use('_mpl-gallery')
+
+    colormap = ['#B8000050',  '#26DC2650', '#4A90E260']
+
+    # Prepare the coordinates
+    shape = (max_v, max_v, max_v)
+    x, y, z = np.indices(shape)
+
+    cubes = []
+    colors = np.empty(shape, dtype=object)
+    for i in range(bs.shape[0]):
+        cube = (bs[i,0,0] <= x) & (x < bs[i,0,1]) & \
+            (bs[i,1,0] <= y) & (y < bs[i,1,1]) & \
+            (bs[i,2,0] <= z) & (z < bs[i,2,1])
+        cubes.append(cube)
+        colors[cube] = colormap[actions[i]]
+        # colors[cube] = '#B8000050' if actions[i] == 0 else '#26DC2650'
+
+    # Plot
+    fig = plt.figure(figsize=(8,6))
+    ax = fig.add_subplot(projection='3d')
+    ax.set(xlabel='cart_pos', ylabel='pole_ang', zlabel='pole_vel')
+
+    def update_vox(num):
+        voxels = np.full(shape, False, dtype=bool)
+        for cube in cubes[:num+1]:
+            voxels = voxels | cube
+        ax.voxels(voxels, facecolors=colors)
+
+    if len(points) > 0:
+        for (point, c) in points:
+            x,y,z = point
+            ax.scatter(x,y,z, marker='o', s=120, c=c)
+
+    if animate:
+        ani = animation.FuncAnimation(fig, update_vox, len(cubes), interval=1000)
+        ani.save('animation.gif', dpi=500, writer='pillow')
+    else:
+        update_vox(len(cubes) + 1)
+        plt.show()
+
+
 ####### Functions to load and add statistics to a tree #######
 
 
@@ -336,7 +380,7 @@ def get_bbox(bs, K):
     Get bounding box of `bs`
     """
     bbox = np.ones((K,2)) * [np.inf, -np.inf]
-    for b in boxes:
+    for b in bs:
         for i in range(K):
             bbox[i,0] = min(bbox[i,0], b[i,0])
             bbox[i,1] = max(bbox[i,1], b[i,1])
@@ -344,7 +388,11 @@ def get_bbox(bs, K):
     return bbox
 
 
-def get_edge_vals(bs, pad=1, broadcast=True):
+def leaves_to_state_constraints(leaves):
+    return np.array([l.state.constraints.copy() for l in leaves])
+
+
+def get_edge_vals(bs, pad=1, broadcast=True, leaves=False):
     """
     Calculate the edge values of the in each dimension from the boxes in `bs`.
     The edges are the lowest/highest finite value of any box in `bs`, possibly
@@ -353,6 +401,9 @@ def get_edge_vals(bs, pad=1, broadcast=True):
     If `broadcast=True`, the returned np.ndarray will have the same shape as
     `bs`, otherwise it will have the shape of a single box in `bs`.
     """
+    if leaves:
+        bs = leaves_to_state_constraints(bs)
+
     K = bs.shape[1]
     edges = np.zeros((K,2))
 
@@ -374,11 +425,14 @@ def get_edge_vals(bs, pad=1, broadcast=True):
     return edges
 
 
-def set_edges(bs, pad=1, edges=None, inline=False):
+def set_edges(bs, pad=1, edges=None, inline=False, leaves=False):
     """
     Replace infinite limits in `bs` with finite edge values.
     """
-    if not inline:
+    if leaves:
+        bs = leaves_to_state_constraints(bs)
+
+    if not inline and not leaves:
         bs = bs.copy()
 
     if edges is None:
@@ -398,7 +452,7 @@ def calc_volume(bs, leaves=False):
     expected to be a list of `trees.nodes.Leaf` objects.
     """
     if leaves:
-        bs = np.array([b.state.constraints.copy() for b in bs])
+        bs = leaves_to_state_constraints(bs)
         bs = set_edges(bs)
 
     if len(bs.shape) == 2:
