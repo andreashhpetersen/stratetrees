@@ -48,6 +48,13 @@ class State:
 
         return center if point else vcenters
 
+    def split(self, var, bound):
+        if isinstance(var, str):
+            var = self.var2id[var]
+
+        return (self.less_than(var, bound, inline=False), \
+            self.greater_than(var, bound, inline=False))
+
     def greater_than(self, var, bound, inline=True):
         if isinstance(var, str):
             var = self.var2id[var]
