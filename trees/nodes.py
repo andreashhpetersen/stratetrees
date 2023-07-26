@@ -48,15 +48,27 @@ class State:
 
         return center if point else vcenters
 
-    def greater_than(self, var, bound):
+    def greater_than(self, var, bound, inline=True):
         if isinstance(var, str):
             var = self.var2id[var]
-        self.constraints[var,0] = bound
 
-    def less_than(self, var, bound):
+        if not inline:
+            state = self.copy()
+            state.constraints[var, 0] = bound
+            return state
+        else:
+            self.constraints[var,0] = bound
+
+    def less_than(self, var, bound, inline=True):
         if isinstance(var, str):
             var = self.var2id[var]
-        self.constraints[var,1] = bound
+
+        if not inline:
+            state = self.copy()
+            state.constraints[var, 1] = bound
+            return state
+        else:
+            self.constraints[var,1] = bound
 
     def min_max(self, var, min_limit=-np.inf, max_limit=np.inf):
         """
@@ -126,19 +138,28 @@ class Node:
         high_count = 1 if self.high.is_leaf else self.high.count_leaves()
         return low_count + high_count
 
-    def put_leaf(self, leaf, state):
+    def put_leaf(self, leaf, state, prune=False):
         var_min, var_max = leaf.state.min_max(self.variable)
         if var_min < self.bound:
             low_state = state.copy()
             low_state.less_than(self.variable, self.bound)
 
-            self.low = self.low.put_leaf(leaf, low_state)
+            self.low = self.low.put_leaf(leaf, low_state, prune=prune)
 
         if var_max > self.bound:
             high_state = state.copy()
             high_state.greater_than(self.variable, self.bound)
 
-            self.high = self.high.put_leaf(leaf, high_state)
+            self.high = self.high.put_leaf(leaf, high_state, prune=prune)
+
+        if prune:
+            if self.low.is_leaf and self.high.is_leaf and \
+                    self.low.action == self.high.action:
+
+                return Leaf(
+                    max(self.low.cost, self.high.cost),
+                    action=self.low.action
+                )
 
         return self
 
@@ -201,8 +222,6 @@ class Node:
         self.high.set_state(high_state)
 
     def prune(self, cost_prune=False):
-        # self.low.is_leaf, self.high.is_leaf = self.low.is_leaf, self.high.is_leaf
-
         if not self.low.is_leaf:
             self.low = self.low.prune(cost_prune=cost_prune)
 
@@ -470,7 +489,7 @@ class Leaf:
 
         return new_node
 
-    def put_leaf(self, leaf, state):
+    def put_leaf(self, leaf, state, prune=False):
         """
         If all variables in `leaf` has been checked, compare cost value to
         determine action. Otherwise, insert Node checking for unchecked
@@ -487,11 +506,11 @@ class Leaf:
 
             if self_var_min < leaf_var_min:
                 new_node = self.split(var, leaf_var_min, state)
-                return new_node.put_leaf(leaf, state)
+                return new_node.put_leaf(leaf, state, prune=prune)
 
             if self_var_max > leaf_var_max:
                 new_node = self.split(var, leaf_var_max, state)
-                return new_node.put_leaf(leaf, state)
+                return new_node.put_leaf(leaf, state, prune=prune)
 
         # all variables are checked
         return Leaf.copy(leaf)

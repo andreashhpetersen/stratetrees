@@ -180,8 +180,20 @@ class DecisionTree:
         self.var2id = { v: i for i, v in enumerate(variables) }
         self.actions = actions
         self.act2id = { a: i for i, a in enumerate(actions) }
-        self.size = size
         self.meta = meta
+
+        if not self.root is None:
+            self.set_state()
+
+    @property
+    def size(self):
+        if self.root is None:
+            return 0
+
+        if self.root.is_leaf:
+            return 1
+
+        return self.root.size
 
     def predict(self, state: ArrayLike) -> int:
         """
@@ -242,12 +254,14 @@ class DecisionTree:
         """
         return self.root.get_leaves()
 
-    def put_leaf(self, leaf):
-        self.root.put_leaf(leaf, State(self.variables))
+    def put_leaf(self, leaf, prune=False):
+        self.root.put_leaf(leaf, State(self.variables), prune=prune)
 
     def emp_prune(self, sub_action=None):
         self.root = Node.emp_prune(self.root, sub_action=sub_action)
-        self.size = self.root.size
+
+    def set_state(self):
+        self.root.set_state(State(self.variables))
 
     def set_depth(self):
         self.root.set_depth()
@@ -324,7 +338,6 @@ class DecisionTree:
             root = root.put_leaf(leaves[i], State(variables))
 
         tree.root = root.prune()
-        tree.size = root.size
         tree.meta = meta
         return tree
 
