@@ -123,6 +123,11 @@ class Node:
         self.var_name = variable
         self.var_id = var_id
 
+        if low is not None and high is not None:
+            self._size = 1 + low._size + high._size
+            self._max_depth = 1 + max(self.low._max_depth, self.high._max_depth)
+            self._min_depth = 1 + min(self.low._min_depth, self.high._min_depth)
+
     def set_depth(self, depth=0):
         self.depth = depth
 
@@ -138,7 +143,11 @@ class Node:
 
     @property
     def size(self):
-        return self.count_leaves()
+        return self._size
+
+    @property
+    def n_leaves(self):
+        return (self.size + 1) // 2
 
     def count_leaves(self):
         low_count = 1 if self.low.is_leaf else self.low.count_leaves()
@@ -168,6 +177,9 @@ class Node:
                     action=self.low.action
                 )
 
+        self._size = 1 + self.low._size + self.high._size
+        self._max_depth = 1 + max(self.low._max_depth, self.high._max_depth)
+        self._min_depth = 1 + min(self.low._min_depth, self.high._min_depth)
         return self
 
     def get(self, state):
@@ -483,17 +495,23 @@ class Leaf:
         self.visits = 0
         self.is_leaf = True
 
+        self._size = 1
+        self._max_depth = 0
+        self._min_depth = 0
+
     def split(self, variable, bound, state):
-        new_node = Node(variable, state.var2id[variable], bound)
 
-        low_state = state.copy()
-        low_state.less_than(variable, bound)
-        new_node.low = Leaf(self.cost, action=self.action, state=low_state)
+        low_state, high_state = state.split(variable, bound)
 
-        high_state = state.copy()
-        high_state.greater_than(variable, bound)
-        new_node.high = Leaf(self.cost, action=self.action, state=high_state)
+        # low_state = state.copy()
+        # low_state.less_than(variable, bound)
+        low = Leaf(self.cost, action=self.action, state=low_state)
 
+        # high_state = state.copy()
+        # high_state.greater_than(variable, bound)
+        high = Leaf(self.cost, action=self.action, state=high_state)
+
+        new_node = Node(variable, state.var2id[variable], bound, low=low, high=high, state=state)
         return new_node
 
     def put_leaf(self, leaf, state, prune=False):

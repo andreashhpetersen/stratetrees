@@ -190,10 +190,14 @@ class DecisionTree:
         if self.root is None:
             return 0
 
-        if self.root.is_leaf:
-            return 1
-
         return self.root.size
+
+    @property
+    def n_leaves(self):
+        if self.root is None:
+            return 0
+
+        return self.root.n_leaves
 
     def predict(self, state: ArrayLike) -> int:
         """
@@ -342,6 +346,34 @@ class DecisionTree:
         return tree
 
     def make_root_from_leaf(self, leaf):
+        # [(var, bound, is_lower)]
+        branches = []
+        for var in self.variables[::-1]:
+            var_min, var_max = leaf.state.min_max(
+                var, min_limit=None, max_limit=None
+            )
+            if var_min is not None:
+                branches.append((var, var_min, True))
+
+            if var_max is not None:
+                branches.append((var, var_max, False))
+
+        var, bound, is_lower = branches.pop(0)
+        nl = Leaf(np.inf, action=None)
+        low, high = (nl, leaf) if is_lower else (leaf, nl)
+
+        new_node = Node(var, self.var2id[var], bound, low=low, high=high)
+
+        for var, bound, is_lower in branches:
+            nl = Leaf(np.inf, action=None)
+            low, high = (new_node, nl) if is_lower else (nl, new_node)
+            new_node = Node(var, self.var2id[var], bound, low=low, high=high)
+
+        new_node.set_state(State(self.variables))
+        return new_node
+
+
+    def make_root_from_leaf_old(self, leaf):
         root = None
         last = None
         for var in self.variables:
