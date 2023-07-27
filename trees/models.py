@@ -346,6 +346,7 @@ class DecisionTree:
         return tree
 
     def make_root_from_leaf(self, leaf):
+        leaf = Leaf.copy(leaf)
         # [(var, bound, is_lower)]
         branches = []
         for var in self.variables[::-1]:
@@ -366,7 +367,7 @@ class DecisionTree:
 
         for var, bound, is_lower in branches:
             nl = Leaf(np.inf, action=None)
-            low, high = (new_node, nl) if is_lower else (nl, new_node)
+            low, high = (nl, new_node) if is_lower else (new_node, nl)
             new_node = Node(var, self.var2id[var], bound, low=low, high=high)
 
         new_node.set_state(State(self.variables))
