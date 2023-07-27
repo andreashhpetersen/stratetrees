@@ -147,6 +147,7 @@ def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
     write_trans_results(data, './trans_results.csv')
     return best_tree, (np.array(data), best_tree_i)
 
+
 def run_experiment(model_dir, k=10):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
     sample_logs = glob(f'{model_dir}/samples/*')
@@ -156,7 +157,6 @@ def run_experiment(model_dir, k=10):
 
     model_names = [
         'qt_strategy', 'dt_original',
-        'old_max_parts', 'dt_old_max_parts',
         'new_max_parts', 'dt_new_max_parts',
         'new_max_parts_trans', 'dt_new_max_parts_trans',
     ] + [ 'dt_prune_{}'.format(re.findall(r"\d+", s)[0]) for s in sample_logs ]
@@ -199,29 +199,6 @@ def run_single_experiment(
 
     results.append([tree.size, p.time])
     dump_json(tree, f'{store_path}/dt_original.json')
-
-
-    # do old max_parts
-    mp_tree, (data, best) = transitive_max_parts(tree, alg=max_parts, max_iter=20)
-    results.append([data[0,1], data[0,3]])
-    results.append([data[0,2], data[0,3] + data[0,4]])
-
-    results.append([data[best,1], data[:best,3:].sum() + data[best,3]])
-    results.append([data[best,2], data[:best + 1,3:].sum()])
-
-    # with performance() as p:
-    #     leaves = max_parts(tree)
-
-    # results.append([len(leaves), p.time])
-
-    # with performance() as p:
-    #     mp_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
-    #     mp_tree.meta = qtree.meta
-
-    # results.append([ mp_tree.size, p.time + results[-1][1] ])
-    mp_tree.meta = qtree.meta
-    dump_json(mp_tree, f'{store_path}/dt_old_max_parts.json')
-
 
     # do new max_parts
     mp_tree, (data, best) = transitive_max_parts(tree, max_iter=20)
