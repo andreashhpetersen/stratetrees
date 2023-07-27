@@ -372,7 +372,6 @@ class DecisionTree:
         new_node.set_state(State(self.variables))
         return new_node
 
-
     def make_root_from_leaf_old(self, leaf):
         root = None
         last = None
@@ -438,7 +437,6 @@ class DecisionTree:
             root,
             variables,
             actions,
-            size=root.size,
             meta=data.get('meta', '')
         )
 

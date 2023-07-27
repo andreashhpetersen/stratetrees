@@ -168,7 +168,7 @@ def find_unexplored_state_bfs(n, state):
     return False, None
 
 
-def find_unexplored_state_dfs_new(n, state, func):
+def find_unexplored_state_dfs(n, state, func):
     child1, state1, child2, state2 = func(n, state)
 
     if child1.is_leaf and child1.action is None:
@@ -190,7 +190,7 @@ def find_unexplored_state_dfs_new(n, state, func):
     return state
 
 
-def find_unexplored_state_dfs(n, state, func):
+def find_unexplored_state_dfs_old(n, state, func):
     ostate = state.copy()
     first, first_state, second, second_state = func(n, ostate)
     if not first.is_leaf:
@@ -251,12 +251,19 @@ def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None
 
     mstate = make_state(tuple((0,) * K for _ in range(2)), bounds)
     ts = []
-    while mstate is not None:
-        ts.append(track.size)
+    while True:
+        # ts.append(track.n_leaves)
         if len(regions) % 100 == 0:
-            print(f'{len(regions)} regions, track size: {track.size}')
+            print(f'{len(regions)} regions, track size: {track.n_leaves}')
 
-        node_id = tree.predict_node_id(mstate[:,0], cheat=True)
+        if track.root is None:
+            node_id = tree.predict_node_id(mstate[:,0], cheat=True)
+        else:
+            mstate = State(tree.variables)
+            mstate = find_unexplored_state_dfs(track.root, mstate, func)
+            if mstate is None:
+                break
+            node_id = tree.predict_node_id(mstate[:,0], cheat=True)
 
         # get updated pmin and pmax
         pmin, pmax = lmap[node_id]
@@ -336,9 +343,6 @@ def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None
         update_track_tree(track, reg)
         update_region_bounds((pmin, pmax), reg, tree, lmap)
 
-        mstate = State(tree.variables)
-        mstate = find_unexplored_state_dfs(track.root, mstate, func)
-
         if animate:
             bs = leaves_to_state_constraints(regions)[:,draw_dims,:]
             acts = [l.action for l in regions]
@@ -352,10 +356,10 @@ def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None
 
             plot_voxels(bs, acts, max_v=max_v)
 
-
-    ts = np.array(ts)
-    print(f'avg track size: {ts.mean():0.2f} (+/- {ts.std():0.2f})')
-    print(f'max track size: {ts.max()}')
+    if len(ts) > 0:
+        ts = np.array(ts)
+        print(f'avg track size: {ts.mean():0.2f} (+/- {ts.std():0.2f})')
+        print(f'max track size: {ts.max()}')
     return regions
 
 
