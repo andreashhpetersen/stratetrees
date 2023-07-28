@@ -373,55 +373,6 @@ class DecisionTree:
         new_node.set_state(State(self.variables))
         return new_node
 
-    def make_root_from_leaf_old(self, leaf):
-        root = None
-        last = None
-        for var in self.variables:
-            var_min, var_max = leaf.state.min_max(
-                var, min_limit=None, max_limit=None
-            )
-            if var_min is not None:
-                new_node = Node(var, self.var2id[var], var_min)
-                new_node.low = Leaf(np.inf, action=None)
-
-                if last is None:
-                    last = new_node
-                else:
-                    if last.low is None:
-                        last.low = new_node
-                    else:
-                        last.high = new_node
-
-                    last = new_node
-
-                if root is None:
-                    root = last
-
-            if var_max is not None:
-                new_node = Node(var, self.var2id[var], var_max)
-                new_node.high = Leaf(np.inf, action=None)
-
-                if last is None:
-                    last = new_node
-                else:
-                    if last.low is None:
-                        last.low = new_node
-                    else:
-                        last.high = new_node
-
-                    last = new_node
-
-                if root is None:
-                    root = last
-
-        if last.low is None:
-            last.low = leaf
-        else:
-            last.high = leaf
-
-        root.set_state(State(self.variables))
-        return root
-
     @classmethod
     def load_from_file(cls, filepath):
         with open(filepath, 'r') as f:
