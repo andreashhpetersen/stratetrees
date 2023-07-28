@@ -12,7 +12,7 @@ from time import perf_counter
 
 from trees.advanced import max_parts, max_parts3, boxes_to_tree
 from trees.models import QTree, DecisionTree
-from trees.utils import parse_from_sampling_log
+from trees.utils import parse_from_sampling_log, performance
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -38,16 +38,6 @@ args = parser.parse_args()
 
 EXPORT_UPPAAL = args.store_uppaal
 S_ID, T_ID = 0, 1   # size and time
-
-
-class performance:
-    def __enter__(self):
-        self.start = perf_counter()
-        return self
-
-    def __exit__(self, *args):
-        self.stop = perf_counter()
-        self.time = self.stop - self.start
 
 
 def dump_json(tree, fp):

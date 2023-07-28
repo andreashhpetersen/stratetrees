@@ -1,11 +1,12 @@
 import csv
 import json
+import time
 import pydot
 import operator
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import  matplotlib.animation as animation
+import matplotlib.animation as animation
 
 from copy import deepcopy
 from itertools import product
@@ -252,6 +253,24 @@ def parse_from_sampling_log(filepath, as_numpy=True):
 
 ###### Misc
 
+class performance:
+    def __enter__(self):
+        self.start = time.perf_counter()
+        return self
+
+    def __exit__(self, *args):
+        self.stop = time.perf_counter()
+        self.time = self.stop - self.start
+
+
+def time_it(alg, *args, **kwargs):
+    tic = time.perf_counter()
+    boxes = alg(*args, *kwargs)
+    toc = time.perf_counter()
+    print(f'found {len(boxes)} boxes in {toc - tic:0.4f} seconds')
+    return boxes
+
+
 def in_box(b, s, inclusive=True):
     if not isinstance(b, np.ndarray):
         b = np.array(b).T
@@ -458,3 +477,26 @@ def calc_volume(bs, leaves=False):
     if len(bs.shape) == 2:
         bs = np.expand_dims(bs, axis=0)
     return np.product(bs[:,:,1] - bs[:,:,0], axis=1).sum()
+
+
+def compare_volumes(ls1, ls2):
+    edges = get_edge_vals(ls1, leaves=True, broadcast=False)
+    bs = set_edges(ls2, edges=edges, leaves=True)
+
+    vol1 = calc_volume(ls1, leaves=True)
+    vol2 = calc_volume(bs)
+
+    return np.isclose(vol1, vol2), (vol1, vol2)
+
+
+def is_consistent(tree, ntree, verbose=False):
+    bad_leaves = []
+    for leaf in ntree.leaves():
+        action = leaf.action
+        state = leaf.state.constraints
+        if not tree.get_for_region(state[:,0], state[:,1]) == set([action]):
+            if verbose:
+                bad_leaves.append(leaf)
+            else:
+                return False
+    return len(bad_leaves) == 0, bad_leaves if verbose else True
