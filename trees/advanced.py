@@ -15,6 +15,68 @@ from trees.utils import has_overlap, cut_overlaps, in_box, in_list, make_state,\
     make_leaf, breaks_box, plot_voxels, leaves_to_state_constraints, draw_graph
 
 
+class SearchHeuristics:
+    @classmethod
+    def pre_order_low_first(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        return n.low, low_state, n.high, high_state
+
+    @classmethod
+    def pre_order_high_first(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        return n.high, high_state, n.low, low_state
+
+    @classmethod
+    def pre_order_random(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        if np.random.random() > 0.5:
+            return n.low, low_state, n.high, high_state
+        else:
+            return n.high, high_state, n.low, low_state
+
+    @classmethod
+    def choose_max_depth(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        if n.low._max_depth >= n.high._max_depth:
+            return n.low, low_state, n.high, high_state
+        else:
+            return n.high, high_state, n.low, low_state
+
+    @classmethod
+    def choose_min_depth(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        if n.low._min_depth <= n.high._min_depth:
+            return n.low, low_state, n.high, high_state
+        else:
+            return n.high, high_state, n.low, low_state
+
+    @classmethod
+    def choose_max_size(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        if n.low.size >= n.high.size:
+            return n.low, low_state, n.high, high_state
+        else:
+            return n.high, high_state, n.low, low_state
+
+    @classmethod
+    def choose_min_size(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        if n.low.size <= n.high.size:
+            return n.low, low_state, n.high, high_state
+        else:
+            return n.high, high_state, n.low, low_state
+
+    @classmethod
+    def greedy_then_low(cls, n, s):
+        low_state, high_state = s.split(n.var_id, n.bound)
+        if n.low.is_leaf and n.low.action is None:
+            return n.low, low_state, n.high, high_state
+        elif n.high.is_leaf and n.high.action is None:
+            return n.high, high_state, n.low, low_state
+        else:
+            return n.low, low_state, n.high, high_state
+
+
 def is_explored(min_state, max_state, tree):
     """
     Returns True, if any part of the region given by `min_state` and `max_state`
@@ -74,6 +136,7 @@ def init_bounds(partitions, K):
 
 
 def get_unexhausted_dim(exhausted):
+    # return np.arange(exhausted.shape[0])[exhausted == 0][0]
     return np.random.choice(np.arange(exhausted.shape[0])[exhausted == 0])
 
 
@@ -123,113 +186,28 @@ def add_points(p_state, points, n_bounds):
     return npoints
 
 
-def pre_order_low_first(n, s):
-    low_state, high_state = s.split(n.var_id, n.bound)
-    return n.low, low_state, n.high, high_state
-
-
-def pre_order_high_first(n, s):
-    low_state, high_state = s.split(n.var_id, n.bound)
-    return n.high, high_state, n.low, low_state
-
-
-def pre_order_random(n, s):
-    low_state, high_state = s.split(n.var_id, n.bound)
-    if np.random.random() > 0.5:
-        return n.low, low_state, n.high, high_state
-    else:
-        return n.high, high_state, n.low, low_state
-
-
-def find_unexplored_state_bfs(n, state):
-    queue = [(n, state.copy())]
-
-    while len(queue) > 0:
-        n, ostate = queue.pop(0)
-
-        if n.low.is_leaf and n.low.action is None:
-            ostate.less_than(n.var_id, n.bound)
-            return True, ostate
-
-        if n.high.is_leaf and n.high.action is None:
-            ostate.greater_than(n.var_id, n.bound)
-            return True, ostate
-
-        low_state, high_state = ostate.copy(), ostate.copy()
-
-        if not n.low.is_leaf:
-            low_state.less_than(n.var_id, n.bound)
-            queue.append((n.low, low_state))
-
-        if not n.high.is_leaf:
-            high_state.greater_than(n.var_id, n.bound)
-            queue.append((n.high, high_state))
-
-    return False, None
-
-
 def find_unexplored_state_dfs(n, state, func):
     child1, state1, child2, state2 = func(n, state)
 
-    if child1.is_leaf and child1.action is None:
+    if not child1.is_leaf:
+        return find_unexplored_state_dfs(child1, state1, func)
+
+    elif child1.action is None:
         return state1
 
-    elif not child1.is_leaf:
-        state = find_unexplored_state_dfs(child1, state1, func)
-
-        if state is not None:
-            return state
-
     if not child2.is_leaf:
-        state = find_unexplored_state_dfs(child2, state2, func)
+        return find_unexplored_state_dfs(child2, state2, func)
+
     elif child2.action is None:
-        state = state2
-    else:
-        state = None
+        return state2
 
-    return state
+    return None
 
 
-def find_unexplored_state_dfs_old(n, state, func):
-    ostate = state.copy()
-    first, first_state, second, second_state = func(n, ostate)
-    if not first.is_leaf:
-        # ostate.less_than(n.var_id, n.bound)
-        ostate = find_unexplored_state_dfs(first, first_state, func)
+def max_parts3(tree, seed=None, return_info=False, \
+               heuristic_func=SearchHeuristics.pre_order_low_first,
+               animate=False, draw_dims=[], min_v=0, max_v=None):
 
-        if ostate is None:
-            # ostate = state.copy()
-            if not second.is_leaf:
-                # ostate.greater_than(n.var_id, n.bound)
-                ostate = find_unexplored_state_dfs(second, second_state, func)
-            elif second.action is None:
-                found = True
-                # ostate.greater_than(n.var_id, n.bound)
-                ostate = second_state
-            else:
-                found = False
-                ostate = None
-
-    else:
-        if first.action is None:
-            found = True
-            # ostate.less_than(n.var_id, n.bound)
-            ostate = first_state
-        elif not second.is_leaf:
-            # ostate.greater_than(n.var_id, n.bound)
-            ostate = find_unexplored_state_dfs(second, second_state, func)
-        elif second.action is None:
-            found = True
-            # ostate.greater_than(n.var_id, n.bound)
-            ostate = second_state
-        else:
-            found = False
-            ostate = None
-
-    return ostate
-
-
-def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None):
     if seed is not None:
         np.random.seed(seed)
 
@@ -245,22 +223,26 @@ def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None
     if animate and max_v is None:
         max_v = n_bounds.max() + 1
 
-    func = pre_order_low_first
+    # used to gather track sizes (if return_info=True)
+    ts = []
+
     regions = []
     track = DecisionTree.empty_tree(tree.variables, tree.actions)
 
     mstate = make_state(tuple((0,) * K for _ in range(2)), bounds)
-    ts = []
     while True:
-        # ts.append(track.n_leaves)
-        if len(regions) % 100 == 0:
-            print(f'{len(regions)} regions, track size: {track.n_leaves}')
+        # if len(regions) % 100 == 0:
+        #     print(f'{len(regions)} regions, track size: {track.n_leaves}')
 
         if track.root is None:
             node_id = tree.predict_node_id(mstate[:,0], cheat=True)
         else:
             mstate = State(tree.variables)
-            mstate = find_unexplored_state_dfs(track.root, mstate, func)
+            mstate = find_unexplored_state_dfs(
+                track.root,
+                mstate,
+                heuristic_func
+            )
             if mstate is None:
                 break
             node_id = tree.predict_node_id(mstate[:,0], cheat=True)
@@ -271,10 +253,6 @@ def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None
         # make state and check if it is explored
         state = make_state((pmin, pmax), bounds)
         min_state, max_state = state[:,0], state[:,1]
-
-        # import ipdb; ipdb.set_trace()
-        if is_explored(min_state, max_state, track):
-            continue
 
         # predict action
         action = tree.predict(max_state)
@@ -343,12 +321,12 @@ def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None
         update_track_tree(track, reg)
         update_region_bounds((pmin, pmax), reg, tree, lmap)
 
+        if return_info:
+            ts.append(track.n_leaves)
+
         if animate:
             bs = leaves_to_state_constraints(regions)[:,draw_dims,:]
             acts = [l.action for l in regions]
-
-            # astate = State(tree.variables)
-            # astate = find_unexplored_state_dfs(track.root, astate, func)
 
             if mstate is not None:
                 bs = np.vstack((bs, [mstate.constraints]))
@@ -356,10 +334,15 @@ def max_parts3(tree, seed=None, animate=False, draw_dims=[], min_v=0, max_v=None
 
             plot_voxels(bs, acts, max_v=max_v)
 
-    if len(ts) > 0:
-        ts = np.array(ts)
-        print(f'avg track size: {ts.mean():0.2f} (+/- {ts.std():0.2f})')
-        print(f'max track size: {ts.max()}')
+    # if len(ts) > 0:
+    #     ts = np.array(ts)
+    #     print(f'avg track size: {ts.mean():0.2f} (+/- {ts.std():0.2f})')
+    #     print(f'max track size: {ts.max()}')
+
+    if return_info:
+        info = { 'track_sizes': np.array(ts) }
+        return regions, info
+
     return regions
 
 
