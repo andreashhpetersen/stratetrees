@@ -499,20 +499,23 @@ class Leaf:
         self._max_depth = 0
         self._min_depth = 0
 
+    @property
+    def size(self):
+        return self._size
+
     def split(self, variable, bound, state):
-
         low_state, high_state = state.split(variable, bound)
-
-        # low_state = state.copy()
-        # low_state.less_than(variable, bound)
         low = Leaf(self.cost, action=self.action, state=low_state)
-
-        # high_state = state.copy()
-        # high_state.greater_than(variable, bound)
         high = Leaf(self.cost, action=self.action, state=high_state)
 
-        new_node = Node(variable, state.var2id[variable], bound, low=low, high=high, state=state)
-        return new_node
+        return Node(
+            variable,
+            state.var2id[variable],
+            bound,
+            low=low,
+            high=high,
+            state=state
+        )
 
     def put_leaf(self, leaf, state, prune=False):
         """
