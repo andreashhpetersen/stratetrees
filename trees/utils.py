@@ -238,17 +238,11 @@ def parse_from_sampling_log(filepath, as_numpy=True):
     Return data as a list (or as a `np.array` if `as_numpy=True`) of floats
     parsed from a log file (of the format [timestep, var1, var2, ...])
     """
-    # import ipdb; ipdb.set_trace()
-    # data = smc2py.parseEngineOuput(filepath)
     with open(filepath, 'r') as f:
         data = f.readlines()
 
     data = [list(map(float, s.strip().split(','))) for s in data]
-    if as_numpy:
-        data = np.array(data)
-    # print(data)
-    # exit(0);
-    return data
+    return np.array(data) if as_numpy else data
 
 
 ###### Misc
