@@ -14,7 +14,7 @@ from trees.advanced import max_parts, max_parts3, boxes_to_tree
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, performance
 
-from experiments.run_experiments import dump_json, write_results, \
+from experiments.experiments import dump_json, write_results, \
     write_trans_results, transitive_max_parts, run_experiment, \
     run_single_experiment
 

@@ -1,7 +1,6 @@
 */__pycache__/*
 __pycache__/*
 trees/tests/__pycache__/*
-experiments/*
 uppaal_models/*
 .benchmark_suite/*
 dtcontrol/*
