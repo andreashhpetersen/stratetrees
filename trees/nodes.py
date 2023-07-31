@@ -149,6 +149,15 @@ class Node:
     def n_leaves(self):
         return (self.size + 1) // 2
 
+    def visitor(self, func, *args):
+        func(self, *args)
+
+        if not self.low.is_leaf:
+            self.low.visitor(func, *args)
+
+        if not self.high.is_leaf:
+            self.high.visitor(func, *args)
+
     def count_leaves(self):
         low_count = 1 if self.low.is_leaf else self.low.count_leaves()
         high_count = 1 if self.high.is_leaf else self.high.count_leaves()
