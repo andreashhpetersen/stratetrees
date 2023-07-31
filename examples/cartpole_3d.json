@@ -1,0 +1,152 @@
+{
+    "variables": [
+        "CartPole.cart_pos",
+        "CartPole.pole_ang",
+        "CartPole.pole_vel"
+    ],
+    "actions": [
+        "0",
+        "1"
+    ],
+    "root": {
+        "var": "CartPole.pole_vel",
+        "bound": 1.0,
+        "low": {
+            "var": "CartPole.cart_pos",
+            "bound": 3.0,
+            "low": {
+                "var": "CartPole.cart_pos",
+                "bound": 1.0,
+                "low": {
+                    "action": 1,
+                    "cost": 0.004138125490631703
+                },
+                "high": {
+                    "var": "CartPole.pole_ang",
+                    "bound": 2.0,
+                    "low": {
+                        "var": "CartPole.cart_pos",
+                        "bound": 2.0,
+                        "low": {
+                            "action": 1,
+                            "cost": 0.003536910077516321
+                        },
+                        "high": {
+                            "action": 0,
+                            "cost": 0.003619500990188913
+                        }
+                    },
+                    "high": {
+                        "var": "CartPole.pole_ang",
+                        "bound": 3.0,
+                        "low": {
+                            "action": 0,
+                            "cost": 0.003373381055301885
+                        },
+                        "high": {
+                            "action": 1,
+                            "cost": 0.004138125490631703
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "CartPole.pole_ang",
+                "bound": 1.0,
+                "low": {
+                    "var": "CartPole.cart_pos",
+                    "bound": 4.0,
+                    "low": {
+                        "action": 0,
+                        "cost": 0.003624849630541512
+                    },
+                    "high": {
+                        "action": 1,
+                        "cost": 0.003715616267004423
+                    }
+                },
+                "high": {
+                    "action": 1,
+                    "cost": 0.003715616267004423
+                }
+            }
+        },
+        "high": {
+            "var": "CartPole.pole_ang",
+            "bound": 4.0,
+            "low": {
+                "var": "CartPole.cart_pos",
+                "bound": 2.0,
+                "low": {
+                    "action": 1,
+                    "cost": 0.003347109004958104
+                },
+                "high": {
+                    "var": "CartPole.cart_pos",
+                    "bound": 3.0,
+                    "low": {
+                        "var": "CartPole.pole_vel",
+                        "bound": 2.0,
+                        "low": {
+                            "var": "CartPole.pole_ang",
+                            "bound": 2.0,
+                            "low": {
+                                "action": 0,
+                                "cost": 0.003619500990188913
+                            },
+                            "high": {
+                                "var": "CartPole.pole_ang",
+                                "bound": 3.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0.003373381055301885
+                                },
+                                "high": {
+                                    "action": 1,
+                                    "cost": 0.003651626621718198
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "CartPole.pole_ang",
+                            "bound": 2.0,
+                            "low": {
+                                "action": 0,
+                                "cost": 0.003619500990188913
+                            },
+                            "high": {
+                                "action": 1,
+                                "cost": 0.003651626621718198
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "CartPole.pole_ang",
+                        "bound": 1.0,
+                        "low": {
+                            "var": "CartPole.cart_pos",
+                            "bound": 4.0,
+                            "low": {
+                                "action": 0,
+                                "cost": 0.003624849630541512
+                            },
+                            "high": {
+                                "action": 1,
+                                "cost": 0.003715616267004423
+                            }
+                        },
+                        "high": {
+                            "action": 1,
+                            "cost": 0.003715616267004423
+                        }
+                    }
+                }
+            },
+            "high": {
+                "action": 1,
+                "cost": 0.004138125490631703
+            }
+        }
+    },
+    "meta": {}
+}

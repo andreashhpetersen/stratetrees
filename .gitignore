@@ -3,6 +3,7 @@ __pycache__/*
 trees/tests/__pycache__/*
 uppaal_models/*
 .benchmark_suite/*
+ignore/*
 dtcontrol/*
 papers/*
 random/*
@@ -11,7 +12,6 @@ automated/*/samples/*
 automated/*/generated/*
 build/*
 *.egg-info/*
-examples/*
 old_texts/*
 dist/*
 secrets.txt
