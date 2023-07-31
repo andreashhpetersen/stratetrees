@@ -221,7 +221,7 @@ def max_parts3(tree, seed=None, return_info=False, \
         draw_dims = np.arange(K)
 
     if animate and max_v is None:
-        max_v = n_bounds.max() + 1
+        max_v = int(bounds[np.arange(K), n_bounds - 1].max() + 1)
 
     # used to gather track sizes (if return_info=True)
     ts = []
@@ -328,7 +328,7 @@ def max_parts3(tree, seed=None, return_info=False, \
             bs = leaves_to_state_constraints(regions)[:,draw_dims,:]
             acts = [l.action for l in regions]
 
-            if mstate is not None:
+            if mstate is not None and isinstance(bs, State):
                 bs = np.vstack((bs, [mstate.constraints]))
                 acts.append(2)
 
