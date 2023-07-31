@@ -494,3 +494,31 @@ def is_consistent(tree, ntree, verbose=False):
             else:
                 return False
     return len(bad_leaves) == 0, bad_leaves if verbose else True
+
+
+def transform_bounds(tree, pad=1, inline=False):
+    """
+    Transform the bounds of `tree` to simple integer values in the range
+    [0, N*`pad`], where N is the number of bounds in the dimension that has the
+    most bounds. If `inline=True`, the transformation is performed on the
+    provided tree, else a new tree is returned.
+    """
+    bounds = tree.get_bounds()
+    bmap = [{} for _ in range(len(tree.variables))]
+    upper = (max([len(bs) for bs in bounds])) * pad
+
+    for v in range(len(bounds)):
+        for i, b in enumerate(bounds[v]):
+            bmap[v][b] = upper if i == len(bounds[v]) - 1 else i * pad
+
+    def rec(n, bmap):
+        n.bound = bmap[n.var_id][n.bound]
+
+    if not inline:
+        tree_copy = tree.copy()
+        tree_copy.root.visitor(rec, bmap)
+        tree.set_state()
+        return tree_copy
+    else:
+        tree.root.visitor(rec, bmap)
+        tree.set_state()
