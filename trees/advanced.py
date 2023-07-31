@@ -625,9 +625,7 @@ def find_best_cut(boxes, variables, vmap):
         import ipdb; ipdb.set_trace()
 
     # create the new branch node with a cut on v <= max_val
-    node = Node(v, vmap[v], max_val)
-
-    return node, low, high
+    return (v, vmap[v], max_val), low, high
 
 
 def cut_to_node(boxes, variables, vmap):
@@ -640,11 +638,11 @@ def cut_to_node(boxes, variables, vmap):
         return res
 
     # else
-    node, low, high = res
+    (v, v_id, bound), low_ls, high_ls = res
 
-    node.low = cut_to_node(low, variables, vmap)
-    node.high = cut_to_node(high, variables, vmap)
-    return node
+    low = cut_to_node(low_ls, variables, vmap)
+    high = cut_to_node(high_ls, variables, vmap)
+    return Node(v, v_id, bound, low=low, high=high)
 
 
 def boxes_to_tree(boxes, variables, actions=[]):
