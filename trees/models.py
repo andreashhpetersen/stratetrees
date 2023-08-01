@@ -174,7 +174,7 @@ class MpTree:
 
 
 class DecisionTree:
-    def __init__(self, root, variables, actions, size=None, meta={}):
+    def __init__(self, root, variables, actions, meta={}):
         self.root = root
         self.variables = variables
         self.var2id = { v: i for i, v in enumerate(variables) }
@@ -339,46 +339,6 @@ class DecisionTree:
         return DecisionTree(None, variables, actions)
 
     @classmethod
-    def build_from_leaves(cls, leaves, actions, variables, meta=None):
-        tree = DecisionTree.empty_tree(variables, actions)
-        leaves.sort(key=lambda x: x.cost)
-        root = tree.make_root_from_leaf(leaves[0])
-        for i in range(1, len(leaves)):
-            root = root.put_leaf(leaves[i], State(variables))
-
-        tree.root = root.prune()
-        tree.meta = meta
-        return tree
-
-    def make_root_from_leaf(self, leaf):
-        leaf = Leaf.copy(leaf)
-        # [(var, bound, is_lower)]
-        branches = []
-        for var in self.variables[::-1]:
-            var_min, var_max = leaf.state.min_max(
-                var, min_limit=None, max_limit=None
-            )
-            if var_min is not None:
-                branches.append((var, var_min, True))
-
-            if var_max is not None:
-                branches.append((var, var_max, False))
-
-        var, bound, is_lower = branches.pop(0)
-        nl = Leaf(np.inf, action=None)
-        low, high = (nl, leaf) if is_lower else (leaf, nl)
-
-        new_node = Node(var, self.var2id[var], bound, low=low, high=high)
-
-        for var, bound, is_lower in branches:
-            nl = Leaf(np.inf, action=None)
-            low, high = (nl, new_node) if is_lower else (new_node, nl)
-            new_node = Node(var, self.var2id[var], bound, low=low, high=high)
-
-        new_node.set_state(State(self.variables))
-        return new_node
-
-    @classmethod
     def load_from_file(cls, filepath):
         with open(filepath, 'r') as f:
             data = json.load(f)
@@ -503,9 +463,13 @@ class QTree:
         dt : DecisionTree
             A decision tree instance.
         """
-        return DecisionTree.build_from_leaves(
-            self.leaves(), self.actions, self.variables, meta=self.meta
-        )
+        leaves = self.leaves()
+        leaves.sort(key=lambda x: x.cost)
+        root = Node.make_node_from_leaf(leaves[0], self.variables)
+        for leaf in leaves[1:]:
+            root = root.put_leaf(leaf, State(self.variables), prune=True)
+
+        return DecisionTree(root, self.variables, self.actions, meta=self.meta)
 
     def leaves(self, sort='min') -> list[Leaf]:
         """

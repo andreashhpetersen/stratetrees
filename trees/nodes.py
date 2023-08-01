@@ -94,8 +94,7 @@ class State:
         return vmin, vmax
 
     def copy(self):
-        state = State(self.variables, constraints=self.constraints.copy())
-        return state
+        return State(self.variables, constraints=self.constraints.copy())
 
     def __eq__(self, other):
         return self.variables == other.variables and \
@@ -348,8 +347,6 @@ class Node:
         s += '{}{}\n'.format(tab, '}')
         return s
 
-
-
     def export_to_uppaal(
             self, actions, variables, meta, path='./out.json', loc='(1)'
     ):
@@ -515,6 +512,39 @@ class Node:
         node.high = high
         return node.prune()
 
+    @classmethod
+    def make_node_from_leaf(cls, leaf, variables):
+        """
+        Create the node(s) required to represent `leaf` and return the root
+        """
+        leaf = leaf.copy()
+        vmap = { v: i for i, v in enumerate(variables) }
+        branches = []
+
+        for var in variables[::-1]:
+            var_min, var_max = leaf.state.min_max(
+                var, min_limit=None, max_limit=None
+            )
+            if var_min is not None:
+                branches.append((var, var_min, True))
+
+            if var_max is not None:
+                branches.append((var, var_max, False))
+
+        var, bound, is_lower = branches.pop(0)
+        nl = Leaf(np.inf, action=None)
+        low, high = (nl, leaf) if is_lower else (leaf, nl)
+
+        new_node = Node(var, vmap[var], bound, low=low, high=high)
+
+        for var, bound, is_lower in branches:
+            nl = Leaf(np.inf, action=None)
+            low, high = (nl, new_node) if is_lower else (new_node, nl)
+            new_node = Node(var, vmap[var], bound, low=low, high=high)
+
+        new_node.set_state(State(variables))
+        return new_node
+
 
 class Leaf:
     def __init__(self, cost, action=None, act_id=None, state=None):
@@ -602,12 +632,8 @@ class Leaf:
             'cost': self.cost
         }
 
-    @classmethod
-    def copy(cls, leaf):
-        """
-        Returns a new Leaf that is a copy of `leaf`
-        """
-        return Leaf(leaf.cost, action=leaf.action, state=leaf.state.copy())
+    def copy(self):
+        return Leaf(self.cost, action=self.action, state=self.state.copy())
 
     def __copy__(self):
         return type(self)(self.cost, self.action, self.act_id, self.state.copy)
