@@ -436,6 +436,6 @@ def make_branch_node(leaves, variables, vmap):
 
 
 def leaves_to_tree(leaves, variables, actions=[]):
-    vmap = { v: i for i, v in enumerate(variables) }
+    vmap = leaves[0].state.var2id
     root = make_branch_node(leaves, variables, vmap)
     return DecisionTree(root.prune(), variables, actions)
