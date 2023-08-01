@@ -199,6 +199,14 @@ class DecisionTree:
 
         return self.root.n_leaves
 
+    @property
+    def max_depth(self):
+        return self.root._max_depth
+
+    @property
+    def min_depth(self):
+        return self.root._min_depth
+
     def predict(self, state: ArrayLike) -> int:
         """
         Predict the best action based on a `state`.
