@@ -6,6 +6,7 @@ import operator
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.patches as mpatches
 import matplotlib.animation as animation
 
 from copy import deepcopy
@@ -135,17 +136,19 @@ def draw_graph(
 
 def draw_partitioning(
     leaves, x_var, y_var, xlim, ylim, cmap,
-    dpi=100, lw=0, bounds=False, show=False, out_fp='./tmp.svg'
+    labels={}, dpi=100, lw=0, bounds=False, show=False, out_fp='./tmp.svg'
 ):
     min_x, max_x = xlim
     min_y, max_y = ylim
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8,6))
 
     bounds_data = []
 
+    actions = []
     for l in leaves:
         s = l.state
+        actions.append(l.action)
         x_start, x_end = s.min_max(x_var, min_limit=min_x, max_limit=max_x)
         y_start, y_end = s.min_max(y_var, min_limit=min_y, max_limit=max_y)
 
@@ -172,11 +175,22 @@ def draw_partitioning(
     for args, kwargs in bounds_data:
         ax.plot(*args, **kwargs)
 
+
+    proxies = []
+    if isinstance(labels, dict):
+        for k, v in labels.items():
+            proxies.append(mpatches.Patch(label=v, color=cmap[k]))
+
+    plt.legend(handles=proxies)
+
     plt.xlim(xlim)
     plt.ylim(ylim)
 
     plt.xlabel(x_var)
     plt.ylabel(y_var)
+
+    plt.grid(None)
+    plt.tight_layout()
 
     if show:
         plt.show()
