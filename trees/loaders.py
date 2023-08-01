@@ -43,7 +43,7 @@ class UppaalLoader:
         for action, location_roots in action_location_roots.items():
             root = deepcopy(org_root)
             for loc, tree in location_roots.items():
-                cls._put_tree(root, loc_state[loc], Leaf(0, action=tree))
+                cls._put_tree(root, loc_state[loc], Leaf(tree))
 
             cls._fix_tree(root, action)
             root.set_state(State(variables))
@@ -64,7 +64,7 @@ class UppaalLoader:
             node.high = node.high.action
 
         if node.low.is_leaf and node.high.is_leaf:
-            return Leaf(np.inf, action=action)
+            return Leaf(action, cost=np.inf)
         else:
             return node
 
@@ -72,7 +72,13 @@ class UppaalLoader:
     def _put_loc(cls, node, loc, names, i):
         if node is None or node.is_leaf:
             if i < len(loc):
-                node = Node(names[i], i, loc[i], low=Leaf(np.inf), high=Leaf(np.inf))
+                node = Node(
+                    names[i],
+                    i,
+                    loc[i],
+                    Leaf(None, cost=np.inf),
+                    Leaf(None, cost=np.inf)
+                )
                 return cls._put_loc(node, loc, names, i + 1)
             else:
                 return node
@@ -116,14 +122,14 @@ class UppaalLoader:
     @classmethod
     def _build_tree(cls, tree, variables, S=0):
         if isinstance(tree, float) or isinstance(tree, int):
-            return Leaf(cost=float(tree))
+            return Leaf(None, cost=float(tree))
 
         return Node(
             variables[tree['var'] + S],
             tree['var'] + S,  # var_id
             tree['bound'],
-            low=cls._build_tree(tree['low'], variables, S),
-            high=cls._build_tree(tree['high'], variables, S)
+            cls._build_tree(tree['low'], variables, S),
+            cls._build_tree(tree['high'], variables, S)
         )
 
 
@@ -150,12 +156,12 @@ class SklearnLoader:
                 self.variables[self.features[node_id]],
                 self.features[node_id],
                 self.bounds[node_id],
-                low=self.build_root(self.children_left[node_id]),
-                high=self.build_root(self.children_right[node_id]),
+                self.build_root(self.children_left[node_id]),
+                self.build_root(self.children_right[node_id]),
             )
         else:
             act_id = np.argmax(self.values[node_id])
-            return Leaf(0, action=self.actions[act_id], act_id=act_id)
+            return Leaf(self.actions[act_id], act_id=act_id)
 
     def load_classifier(self, path):
         return load(path)

@@ -497,13 +497,13 @@ class Node:
                 branches.append((var, var_max, False))
 
         var, bound, is_lower = branches.pop(0)
-        nl = Leaf(np.inf, action=None)
+        nl = Leaf(None)
         low, high = (nl, leaf) if is_lower else (leaf, nl)
 
         new_node = Node(var, vmap[var], bound, low, high)
 
         for var, bound, is_lower in branches:
-            nl = Leaf(np.inf, action=None)
+            nl = Leaf(None)
             low, high = (nl, new_node) if is_lower else (new_node, nl)
             new_node = Node(var, vmap[var], bound, low, high)
 
