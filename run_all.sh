@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$UPPAAL_PATH" ] ; then
-    UPPAAL_PATH="$(pwd)/uppaal-4.1.20-stratego-11-beta1-linux64"
+    UPPAAL_PATH="$(pwd)/uppaal-5.0.0-linux64"
     export UPPAAL_PATH
 fi
 
