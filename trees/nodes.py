@@ -285,12 +285,12 @@ class Node:
         """
         Export to dict with in a way that's ready for UPPAAL json format
         """
-        if isinstance(self.low, Leaf):
+        if self.low.is_leaf:
             low = self.low.cost
         else:
             low = self.low.to_uppaal(var_map)
 
-        if isinstance(self.high, Leaf):
+        if self.high.is_leaf:
             high = self.high.cost
         else:
             high = self.high.to_uppaal(var_map)
@@ -328,6 +328,27 @@ class Node:
             root.prune(cost_prune=True)
             out.append((action, root))
         return out
+
+    def to_c_code(self, lvl):
+        tab = '  ' * lvl
+        s = '{}if ({} <= {}) {}\n'.format(
+            tab, self.var_name, self.bound, '{'
+        )
+        if self.low.is_leaf:
+            s += '{}return {};\n'.format(tab + '  ', self.low.action)
+        else:
+            s += self.low.to_c_code(lvl + 1)
+
+        s += '{}{} else {}\n'.format(tab, '}', '{')
+        if self.high.is_leaf:
+            s += '{}return {};\n'.format(tab + '  ', self.high.action)
+        else:
+            s += self.high.to_c_code(lvl + 1)
+
+        s += '{}{}\n'.format(tab, '}')
+        return s
+
+
 
     def export_to_uppaal(
             self, actions, variables, meta, path='./out.json', loc='(1)'

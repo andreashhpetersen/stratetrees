@@ -290,18 +290,23 @@ class DecisionTree:
         roots = self.root.to_q_trees([self.act2id[a] for a in self.actions])
         meta = self.meta.copy()
         for action, root in roots:
-            try:
-                meta['regressors'][loc]['regressor'][action] = root.to_uppaal(
-                    self.var2id
-                )
-            except:
-                import ipdb; ipdb.set_trace()
+            meta['regressors'][loc]['regressor'][action] = root.to_uppaal(
+                self.var2id
+            )
 
         return meta
 
     def export_to_uppaal(self, filepath, loc='(1)'):
         with open(filepath, 'w') as f:
             json.dump(self.get_uppaal_meta(loc=loc), f, indent=4)
+
+    def export_to_c_code(self, out_fp='tree.c'):
+        s = 'int takeAction() {\n  '
+        s += self.root.to_c_code(1)
+        s += '\n}'
+
+        with open(out_fp, 'w') as f:
+            f.write(s)
 
     def copy(self):
         return deepcopy(self)
