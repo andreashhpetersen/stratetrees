@@ -432,7 +432,7 @@ def make_branch_node(leaves, variables, vmap):
     high = make_branch_node(high_ls, variables, vmap)
 
     # return branch node
-    return Node(v, vmap[v], bound, low=low, high=high)
+    return Node(v, vmap[v], bound, low, high)
 
 
 def leaves_to_tree(leaves, variables, actions=[]):

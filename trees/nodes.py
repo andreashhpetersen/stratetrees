@@ -111,7 +111,7 @@ class State:
 
 
 class Node:
-    def __init__(self, variable, var_id, bound, low=None, high=None, state=None):
+    def __init__(self, variable, var_id, bound, low, high, state=None):
         self.variable = variable
         self.bound = bound
         self.state = state
@@ -405,37 +405,6 @@ class Node:
         return root, list(variables), list(actions)
 
     @classmethod
-    def parse_from_dot(cls, filepath, variables=None):
-        graph = pydot.graph_from_dot_file(filepath)[0]
-
-        nodes = []
-        for node in graph.get_nodes():
-            try:
-                int(node.get_name())
-            except ValueError:
-                continue
-
-            label = node.get_attributes()['label'].strip('"').split(" ")
-            if len(label) == 1:
-                nodes.append(Leaf(int(label[0])))
-            else:
-                var = variables[label[0]] if variables else label[0]
-                bound = float(label[2])
-                nodes.append(Node(var, bound))
-
-        for edge in graph.get_edges():
-            src = nodes[int(edge.get_source())]
-            dst = nodes[int(edge.get_destination())]
-            low = True if edge.get_label().strip('"') == 'True' else False
-
-            if low:
-                src.low = dst
-            else:
-                src.high = dst
-
-        return nodes[0]
-
-    @classmethod
     def build_from_dict(cls, node_dict, var2id):
         """
         Recursively build a tree using the top level in `node_dict` as root and
@@ -452,8 +421,8 @@ class Node:
             var,
             var2id[var],
             node_dict['bound'],
-            low=cls.build_from_dict(node_dict['low'], var2id),
-            high=cls.build_from_dict(node_dict['high'], var2id)
+            cls.build_from_dict(node_dict['low'], var2id),
+            cls.build_from_dict(node_dict['high'], var2id)
         )
 
     @classmethod
@@ -531,12 +500,12 @@ class Node:
         nl = Leaf(np.inf, action=None)
         low, high = (nl, leaf) if is_lower else (leaf, nl)
 
-        new_node = Node(var, vmap[var], bound, low=low, high=high)
+        new_node = Node(var, vmap[var], bound, low, high)
 
         for var, bound, is_lower in branches:
             nl = Leaf(np.inf, action=None)
             low, high = (nl, new_node) if is_lower else (new_node, nl)
-            new_node = Node(var, vmap[var], bound, low=low, high=high)
+            new_node = Node(var, vmap[var], bound, low, high)
 
         new_node.set_state(State(variables))
         return new_node
@@ -559,19 +528,17 @@ class Leaf:
     def size(self):
         return self._size
 
-    def split(self, variable, bound, state):
-        low_state, high_state = state.split(variable, bound)
+    def split(self, v, bound, state):
+        """
+        Split leaf in two and return the parent branching node that splits on
+        `v <= bound`
+        """
+        low_state, high_state = state.split(v, bound)
         low = Leaf(self.action, cost=self.cost, state=low_state)
         high = Leaf(self.action, cost=self.cost, state=high_state)
 
-        return Node(
-            variable,
-            state.var2id[variable],
-            bound,
-            low=low,
-            high=high,
-            state=state
-        )
+        v_id = state.var2id[v]
+        return Node(v, v_id, bound, low, high, state=state)
 
     def put_leaf(self, leaf, state, prune=False):
         """
