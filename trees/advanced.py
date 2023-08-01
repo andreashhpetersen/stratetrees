@@ -177,7 +177,7 @@ def find_unexplored_state_dfs(n, state, func):
     return None
 
 
-def max_parts3(tree, seed=None, return_info=False, \
+def max_parts(tree, seed=None, return_info=False, \
                heuristic_func=SearchHeuristics.pre_order_low_first,
                animate=False, draw_dims=[], min_v=0, max_v=None):
 

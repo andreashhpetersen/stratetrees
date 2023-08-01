@@ -1,6 +1,6 @@
 import numpy as np
 
-from trees.advanced import max_parts, boxes_to_tree
+from trees.advanced import max_parts, leaves_to_tree
 from trees.models import Node, Leaf, State, DecisionTree
 from trees.utils import draw_partitioning, draw_graph
 
@@ -26,11 +26,11 @@ for x in range(2):
         leaves.append(l)
 
 
-tree = boxes_to_tree(leaves, variables, [0,1])
+tree = leaves_to_tree(leaves, variables, [0,1])
 tree.save_as('./examples/counter_example/full_tree.json')
 
 # min_leaves = max_parts(tree, [0,0], [8,8])
-# min_tree = boxes_to_tree(min_leaves, variables, ['a', 'b', 'c'])
+# min_tree = leaves_to_tree(min_leaves, variables, ['a', 'b', 'c'])
 
 # draw_graph([min_tree.root], out_fp='tree_counter_example.png')
 

@@ -5,7 +5,7 @@ from glob import glob
 
 from trees.models import DecisionTree
 from trees.nodes import Leaf, State
-from trees.advanced import max_parts, max_parts3
+from trees.advanced import max_parts
 from trees.utils import draw_partitioning, calc_volume, set_edges, get_edge_vals
 
 
@@ -86,7 +86,7 @@ class TestMaxParts3(unittest.TestCase):
             inp_tree = DecisionTree.load_from_file(inp_f)
             exp_leaves = self.__class__.read_boxes(exp_f)
 
-            boxes, track = max_parts3(inp_tree, seed=42, return_track_tree=True)
+            boxes, track = max_parts(inp_tree, seed=42, return_track_tree=True)
 
             if len(inp_tree.variables) == 2:
                 # draw it

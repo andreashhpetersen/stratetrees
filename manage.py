@@ -10,7 +10,6 @@ from glob import glob
 from copy import deepcopy
 from time import perf_counter
 
-from trees.advanced import max_parts, max_parts3, boxes_to_tree
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, performance
 

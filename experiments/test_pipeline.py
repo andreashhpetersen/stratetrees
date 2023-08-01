@@ -4,7 +4,7 @@ input partitioning to rebuilding it as a decision tree.
 """
 import numpy as np
 
-from trees.advanced import max_parts3, boxes_to_tree
+from trees.advanced import max_parts, leaves_to_tree
 from trees.models import DecisionTree
 from trees.utils import calc_volume
 
@@ -14,7 +14,7 @@ strategy_path = './automated/cartpole/generated/constructed_0/trees/dt_original.
 tree = DecisionTree.load_from_file(strategy_path)
 
 print(f'running max_parts on the original tree of size {tree.size}')
-boxes = max_parts3(tree, seed=42)
+boxes = max_parts(tree, seed=42)
 print(f'found {len(boxes)} regions\n')
 
 print('asserting that none of the found regions violate the singular mapping ' \
@@ -55,7 +55,7 @@ print()
 print('asserting that the tree constructed from the found regions are ' \
       'equivalent to the original tree')
 try:
-    ntree = boxes_to_tree(boxes, tree.variables, actions=tree.actions)
+    ntree = leaves_to_tree(boxes, tree.variables, actions=tree.actions)
     for leaf in ntree.leaves():
         state = leaf.state.constraints
         assert len(tree.get_for_region(state[:,0], state[:,1])) == 1

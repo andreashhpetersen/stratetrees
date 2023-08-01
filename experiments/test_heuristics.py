@@ -4,7 +4,7 @@ import numpy as np
 
 from trees.models import DecisionTree
 from trees.utils import performance, is_consistent
-from trees.advanced import SearchHeuristics, max_parts3
+from trees.advanced import SearchHeuristics, max_parts
 
 
 if __name__ == '__main__':
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         n_regions = []
         for i in range(N):
             with performance() as perf:
-                regions, info = max_parts3(
+                regions, info = max_parts(
                     tree,
                     return_info=True,
                     heuristic_func=func

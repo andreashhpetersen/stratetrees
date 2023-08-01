@@ -9,7 +9,7 @@ from glob import glob
 from copy import deepcopy
 from time import perf_counter
 
-from trees.advanced import max_parts, max_parts3, boxes_to_tree
+from trees.advanced import max_parts, leaves_to_tree
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, performance
 
@@ -61,16 +61,16 @@ def write_trans_results(data, path):
             writer.writerow(d)
 
 
-def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
+def transitive_max_parts(tree, alg=max_parts, max_iter=10):
     variables, actions = tree.variables, tree.actions
 
     with performance() as p:
-        boxes = max_parts3(tree)
+        boxes = max_parts(tree)
 
     time1 = p.time
 
     with performance() as p:
-        ntree = boxes_to_tree(boxes, variables, actions)
+        ntree = leaves_to_tree(boxes, variables, actions)
 
     time2 = p.time
 
@@ -93,7 +93,7 @@ def transitive_max_parts(tree, alg=max_parts3, max_iter=10):
         time1 = p.time
 
         with performance() as p:
-            ntree = boxes_to_tree(boxes, variables, actions)
+            ntree = leaves_to_tree(boxes, variables, actions)
 
         time2 = p.time
 
@@ -185,7 +185,7 @@ def run_single_experiment(
             prune_tree.count_visits(samples)
             prune_tree.emp_prune()
             leaves = max_parts(prune_tree)
-            prune_tree = boxes_to_tree(leaves, qtree.variables, qtree.actions)
+            prune_tree = leaves_to_tree(leaves, qtree.variables, qtree.actions)
             prune_tree.meta = qtree.meta
 
         results.append([prune_tree.size, p.time])
