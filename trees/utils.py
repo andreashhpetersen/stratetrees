@@ -342,28 +342,6 @@ def breaks_box(box, breaker):
     return False
 
 
-def breaks_box_wrong(box, breaker):
-    """
-    THIS DOESN'T WORK CAUSE CORNERS ARE NOT ENOUGH TO DETERMINE BREAKING
-
-    Returns `True` if any corner point in `ps2` is contained in `ps1`.
-    """
-    corners = list(product(*[[mi, ma] for mi, ma in zip(*breaker)]))
-    K = len(corners[0])
-
-    max_allowed = 1 if K == 1 else 0
-    total = 0
-
-    for c in corners:
-        if in_box(box, c, inclusive=False):
-            total += 1
-            if total > max_allowed:
-                return True
-
-
-    return False
-
-
 def cut_overlaps(ps_main, ps_to_cut, allow_multiple=False):
     """
     If `ps_main` and `ps_to_cut` has any overlap, return a tuple with the min
