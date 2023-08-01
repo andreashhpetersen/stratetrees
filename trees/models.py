@@ -373,7 +373,7 @@ class DecisionTree:
             label = node.get_attributes()['label'].strip('"').split("<=")
             label = list(map(lambda x: x.strip(' '), label))
             if len(label) == 1:
-                nodes.append(Leaf(0, action=int(float(label[0]))))
+                nodes.append(Leaf(int(float(label[0]))))
             else:
                 var = varmap[label[0]]
                 var_id = tree.var2id[var]

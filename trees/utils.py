@@ -306,7 +306,7 @@ def make_state(p_state, bounds):
 
 
 def make_leaf(action, variables, state, cost=0):
-    return Leaf(cost, action=action, state=State(variables, constraints=state))
+    return Leaf(action, cost=cost, state=State(variables, constraints=state))
 
 
 def has_overlap(ps1, ps2):

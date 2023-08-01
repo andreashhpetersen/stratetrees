@@ -181,8 +181,8 @@ class Node:
                     self.low.action == self.high.action:
 
                 return Leaf(
-                    max(self.low.cost, self.high.cost),
-                    action=self.low.action
+                    self.low.action,
+                    cost=max(self.low.cost, self.high.cost),
                 )
 
         self._size = 1 + self.low._size + self.high._size
@@ -258,8 +258,8 @@ class Node:
         if self.low.is_leaf and self.high.is_leaf and self.low.action == self.high.action:
             if not cost_prune or self.low.cost == self.high.cost:
                 return Leaf(
-                    max(self.low.cost, self.high.cost),
-                    action=self.low.action
+                    self.low.action,
+                    cost=max(self.low.cost, self.high.cost)
                 )
 
         elif not (self.low.is_leaf or self.high.is_leaf):
@@ -417,7 +417,7 @@ class Node:
 
             label = node.get_attributes()['label'].strip('"').split(" ")
             if len(label) == 1:
-                nodes.append(Leaf(0, action=int(label[0])))
+                nodes.append(Leaf(int(label[0])))
             else:
                 var = variables[label[0]] if variables else label[0]
                 bound = float(label[2])
@@ -445,7 +445,7 @@ class Node:
         # is this a leaf?
         if not 'low' in node_dict:
             action = node_dict['action']
-            return Leaf(cost=node_dict.get('cost', -1), action=action)
+            return Leaf(action, cost=node_dict.get('cost', -1))
 
         var = node_dict['var']
         return Node(
@@ -481,10 +481,6 @@ class Node:
             return False
 
         return True
-
-    @classmethod
-    def is_leaf(cls, tree):
-        return isinstance(tree, Leaf)
 
     @classmethod
     def emp_prune(cls, node, sub_action=None, thresh=0.0):
@@ -547,7 +543,7 @@ class Node:
 
 
 class Leaf:
-    def __init__(self, cost, action=None, act_id=None, state=None):
+    def __init__(self, action, cost=0, act_id=None, state=None):
         self.cost = cost
         self.action = action
         self.act_id = act_id
@@ -565,8 +561,8 @@ class Leaf:
 
     def split(self, variable, bound, state):
         low_state, high_state = state.split(variable, bound)
-        low = Leaf(self.cost, action=self.action, state=low_state)
-        high = Leaf(self.cost, action=self.action, state=high_state)
+        low = Leaf(self.action, cost=self.cost, state=low_state)
+        high = Leaf(self.action, cost=self.cost, state=high_state)
 
         return Node(
             variable,
@@ -601,7 +597,7 @@ class Leaf:
                 return new_node.put_leaf(leaf, state, prune=prune)
 
         # all variables are checked
-        return Leaf.copy(leaf)
+        return leaf.copy()
 
     def get(self, *args):
         return self
@@ -633,18 +629,23 @@ class Leaf:
         }
 
     def copy(self):
-        return Leaf(self.cost, action=self.action, state=self.state.copy())
+        return Leaf(self.action, cost=self.cost, state=self.state.copy())
 
     def __copy__(self):
-        return type(self)(self.cost, self.action, self.act_id, self.state.copy)
+        return type(self)(
+            self.action,
+            cost=self.cost,
+            act_id=self.act_id,
+            state=self.state.copy
+        )
 
     def __deepcopy__(self, memo):
         id_self = id(self)
         _copy = memo.get(id_self)
         if _copy is None:
             _copy = type(self)(
-                deepcopy(self.cost, memo),
                 deepcopy(self.action, memo),
+                deepcopy(self.cost, memo),
                 deepcopy(self.act_id, memo),
                 deepcopy(self.state, memo)
             )
@@ -658,7 +659,7 @@ class Leaf:
         return _copy
 
     def __str__(self):
-        return f'Leaf(action: {self.action}, cost: {self.cost}, {self.state})'
+        return f'Leaf(action: {self.action}, {self.state})'
 
     def __repr__(self):
         return self.__str__()

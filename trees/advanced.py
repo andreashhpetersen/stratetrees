@@ -325,8 +325,8 @@ def split_leaf(leaf, v, c):
         lstate.less_than(v, c)
         hstate.greater_than(v, c)
 
-        low = Leaf(0, action=leaf.action, state=lstate)
-        high = Leaf(0, action=leaf.action, state=hstate)
+        low = Leaf(leaf.action, state=lstate)
+        high = Leaf(leaf.action, state=hstate)
 
     elif vmax <= c:
         low, high = leaf, None
@@ -422,7 +422,7 @@ def make_branch_node(leaves, variables, vmap):
 
     # only one leaf, return it
     if len(leaves) == 1:
-        return Leaf(0.0, action=leaves[0].action)
+        return Leaf(leaves[0].action)
 
     # split on v <= bound
     (v, bound), low_ls, high_ls = split_leaves_list(leaves, variables)
