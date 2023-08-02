@@ -332,7 +332,6 @@ class DecisionTree:
                 deepcopy(self.root, memo),
                 deepcopy(self.variables, memo),
                 deepcopy(self.actions, memo),
-                deepcopy(self.size, memo),
                 deepcopy(self.meta, memo),
             )
             memo[id_self] = _copy
