@@ -331,6 +331,7 @@ def minimize_tree(tree, max_iter=10, \
 
     leaves = max_parts(tree)
     ntree = leaves_to_tree(leaves, variables, actions)
+    ntree.meta = tree.meta
 
     if verbose:
         print(f'found {len(leaves)} leaves')

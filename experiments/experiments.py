@@ -9,7 +9,7 @@ from glob import glob
 from copy import deepcopy
 from time import perf_counter
 
-from trees.advanced import max_parts, leaves_to_tree
+from trees.advanced import max_parts, leaves_to_tree, minimize_tree
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, performance
 
@@ -59,58 +59,6 @@ def write_trans_results(data, path):
         writer = csv.writer(f)
         for d in data:
             writer.writerow(d)
-
-
-def transitive_max_parts(tree, alg=max_parts, max_iter=10):
-    variables, actions = tree.variables, tree.actions
-
-    with performance() as p:
-        boxes = max_parts(tree)
-
-    time1 = p.time
-
-    with performance() as p:
-        ntree = leaves_to_tree(boxes, variables, actions)
-
-    time2 = p.time
-
-    i = 0
-    best_n_boxes = len(boxes)
-    best_n_tree = ntree.size
-    best_tree = ntree
-    best_tree_i = 0
-    data = [[i, len(boxes), ntree.size, time1, time2]]
-    print(data[0])
-
-    while i < max_iter and \
-            (len(boxes) < best_n_boxes + 1 or ntree.size < best_n_tree + 1):
-
-        i += 1
-
-        with performance() as p:
-            boxes = alg(ntree)
-
-        time1 = p.time
-
-        with performance() as p:
-            ntree = leaves_to_tree(boxes, variables, actions)
-
-        time2 = p.time
-
-        res = [i, len(boxes), ntree.size, time1, time2]
-        print(res)
-        data.append(res)
-
-        if len(boxes) < best_n_boxes:
-            best_n_boxes = len(boxes)
-
-        if ntree.size < best_n_tree:
-            best_n_tree = ntree.size
-            best_tree = ntree
-            best_tree_i = i
-
-    write_trans_results(data, './trans_results.csv')
-    return best_tree, (np.array(data), best_tree_i)
 
 
 def run_experiment(model_dir, k=10):
@@ -166,7 +114,7 @@ def run_single_experiment(
     dump_json(tree, f'{store_path}/dt_original.json')
 
     # do new max_parts
-    mp_tree, (data, best) = transitive_max_parts(tree, max_iter=20)
+    mp_tree, (data, best) = minimize_tree(tree, max_iter=20, verbose=False)
     results.append([data[0,1], data[0,3]])
     results.append([data[0,2], data[0,3] + data[0,4]])
 
