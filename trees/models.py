@@ -178,7 +178,7 @@ class DecisionTree:
         self.root = root
         self.variables = variables
         self.var2id = { v: i for i, v in enumerate(variables) }
-        self.actions = actions
+        self.actions = [ int(a) for a in actions ]
         self.act2id = { a: i for i, a in enumerate(actions) }
         self.meta = meta
 
@@ -409,8 +409,8 @@ class QTree:
         self.variables = variables
         self.meta = meta
 
+        self.actions = [ int(a) for a in actions ]
         self.act2id = { a: i for i, a in enumerate(actions) }
-        self.actions = actions
         self.roots = roots
 
         for r, a in zip(roots, actions):
