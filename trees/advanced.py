@@ -312,16 +312,27 @@ def max_parts(tree, seed=None, return_info=False, \
     return regions
 
 
-def max_parts_repeat(tree, max_iter=10, verbose=1, greedy=True):
+def minimize_tree(tree, max_iter=10, \
+                  verbose=True, early_stopping=True, return_trace=True):
+    """
+    Run max_parts on `tree` and convert the result into a new decision tree.
+    If `max_iter` is bigger than 0, repeat the process for that many times.
+    If `early_stopping` is True, stop if neither the amount of leaves found by
+    max_parts nor the size of the new tree has decreased since last step.
+    If `return_trace` is True, the function returns a tuple with data on the
+    intermediate steps as well as the index of the best results in addition to
+    returning the minimal tree.
+    """
+
     variables, actions = tree.variables, tree.actions
 
-    if verbose == 1:
+    if verbose:
         print(f'minimizing original tree with {tree.n_leaves} leaves')
 
     leaves = max_parts(tree)
     ntree = leaves_to_tree(leaves, variables, actions)
 
-    if verbose == 1:
+    if verbose:
         print(f'found {len(leaves)} leaves')
         print(f'constructed new tree of with {ntree.n_leaves} leaves')
         print(f'max/min depth: {ntree.max_depth}/{ntree.min_depth}\n')
@@ -333,13 +344,16 @@ def max_parts_repeat(tree, max_iter=10, verbose=1, greedy=True):
 
     i = 1
     while i < max_iter + 1:
-        if greedy and len(leaves) > best_n_leaves and ntree.size > best_n_tree:
+        progress = len(leaves) > best_n_leaves and ntree.size > best_n_tree
+        if early_stopping and not progress:
+            if verbose:
+                print(f'stopping early as no progress was seen')
             break
 
         leaves = max_parts(ntree)
         ntree = leaves_to_tree(leaves, variables, actions)
 
-        if verbose == 1:
+        if verbose:
             print(f'found {len(leaves)} leaves')
             print(f'constructed new tree of with {ntree.n_leaves} leaves')
             print(f'max/min depth: {ntree.max_depth}/{ntree.min_depth}\n')
