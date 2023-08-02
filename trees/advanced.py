@@ -312,6 +312,55 @@ def max_parts(tree, seed=None, return_info=False, \
     return regions
 
 
+def max_parts_repeat(tree, max_iter=10, verbose=1, greedy=True):
+    variables, actions = tree.variables, tree.actions
+
+    if verbose == 1:
+        print(f'minimizing original tree with {tree.n_leaves} leaves')
+
+    leaves = max_parts(tree)
+    ntree = leaves_to_tree(leaves, variables, actions)
+
+    if verbose == 1:
+        print(f'found {len(leaves)} leaves')
+        print(f'constructed new tree of with {ntree.n_leaves} leaves')
+        print(f'max/min depth: {ntree.max_depth}/{ntree.min_depth}\n')
+
+    best_n_leaves, best_n_tree = len(leaves), ntree.size
+    best_tree, best_tree_i = ntree, 0
+
+    data = [[len(leaves), ntree.size, ntree.max_depth, ntree.min_depth]]
+
+    i = 1
+    while i < max_iter + 1:
+        if greedy and len(leaves) > best_n_leaves and ntree.size > best_n_tree:
+            break
+
+        leaves = max_parts(ntree)
+        ntree = leaves_to_tree(leaves, variables, actions)
+
+        if verbose == 1:
+            print(f'found {len(leaves)} leaves')
+            print(f'constructed new tree of with {ntree.n_leaves} leaves')
+            print(f'max/min depth: {ntree.max_depth}/{ntree.min_depth}\n')
+
+        data.append(
+            [len(leaves), ntree.n_leaves, ntree.max_depth, ntree.min_depth]
+        )
+
+        if len(leaves) < best_n_leaves:
+            best_n_leaves = len(leaves)
+
+        if ntree.size < best_n_tree:
+            best_n_tree = ntree.size
+            best_tree = ntree
+            best_tree_i = i
+
+        i += 1
+
+    return best_tree, (np.array(data), best_tree_i)
+
+
 ### Functions for reconstructing a DecisionTree from a list of leaves ###
 
 
