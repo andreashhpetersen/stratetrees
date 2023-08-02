@@ -244,6 +244,26 @@ def plot_voxels(bs, actions, points=[], max_v=10, animate=False):
         plt.show()
 
 
+def visualize_strategy(tree, *args, **kwargs):
+    K = len(tree.variables)
+    colors = ['b', 'r', 'g', 'c', 'm', 'y', 'k', 'w']
+    cmap = { a: c for a, c in zip(tree.actions, colors) }
+    leaves = tree.leaves()
+
+    if K == 2:
+        bounds = tree.get_bounds()
+        x, y = tree.variables
+
+        xlim = kwargs.pop('xlim', (bounds[0][0] - 1, bounds[0][-1] + 1))
+        ylim = kwargs.pop('ylim', (bounds[1][0] - 1, bounds[1][-1] + 1))
+
+        draw_partitioning(leaves, x, y, xlim, ylim, cmap, *args, **kwargs)
+    elif K == 3:
+        raise NotImplementedError(f'visualization not implemented for 3 dims')
+    else:
+        raise ValueError(f'can only visualize 2 or 3 dimensions (tree has {K})')
+
+
 ####### Functions to load and add statistics to a tree #######
 
 
