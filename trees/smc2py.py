@@ -1,8 +1,6 @@
 import re
 
 class SMCSimulation:
-
-
     def __init__(self, line, is_gui = False):
         self.points = []
         if(is_gui):
@@ -10,12 +8,9 @@ class SMCSimulation:
         else:
             self.loadFromEngine(line)
 
-
-
     def loadFromGUI(self, line):
 
         return
-
 
     def loadFromEngine(self, line):
         m = re.findall(r'\(\s*(-\d+|-\d+\.\d+|\d+|\d+\.\d+)\s*,\s*(-\d+|-\d+\.\d+|\d+|\d+\.\d+)\s*\)', line)
@@ -55,7 +50,6 @@ class SMCSimulation:
 
         (t, v) = self.points[len(self.points) - 1]
         if not found and t != time:
-            print("Time is out of range for simulation " + str(time))
             value = v
             hint = len(self.points) - 1
 
@@ -69,18 +63,12 @@ class SMCSimulation:
         return t
 
 
-
 class SMCData:
-
     def __init__(self):
         self.fields = []
         self.data = []
 
-
     def loadFromGUI(self, stream):
-
-
-
         return self
 
     def loadFromEngine(self, stream):
@@ -136,7 +124,7 @@ class SMCData:
         return m
 
 
-def parseEngineOutput(filename):
+def parse_engine_output(filename):
     res = []
     with open(filename) as stream:
 
@@ -146,4 +134,3 @@ def parseEngineOutput(filename):
                 d.loadFromEngine(stream)
                 res.append(d)
     return res
-

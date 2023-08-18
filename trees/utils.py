@@ -15,6 +15,7 @@ from collections import defaultdict
 from matplotlib.patches import Rectangle
 
 from trees.nodes import Node, Leaf, State
+from trees.smc2py import parse_engine_output
 
 
 ####### Functions to add color gradients #######
@@ -267,16 +268,65 @@ def visualize_strategy(tree, *args, **kwargs):
 ####### Functions to load and add statistics to a tree #######
 
 
-def parse_from_sampling_log(filepath, as_numpy=True):
+def convert_uppaal_samples(infile):
     """
-    Return data as a list (or as a `np.array` if `as_numpy=True`) of floats
-    parsed from a log file (of the format [timestep, var1, var2, ...])
+    Convert the UPPAAL Stratego sample output from `infile` to a file where each
+    line contains a timestamp and the value of each state variable at that time.
+
+    Parameters
+    ----------
+    infile : str
+        The filepath to the sample log
+
+    Returns
+    -------
+    outfile : str
+        The path to the file with the converted samples. If `infile` is
+        'samples.log' then `outfile` will be 'samples_converted.log'
+
+    Author: Peter Gjøl Jensen
     """
+    filepath = infile.split('.')
+    if len(filepath) > 2:
+        filepath = ['.'.join(filepath[:-1])] + [filepath[-1]]
+
+    outfile = '.'.join([filepath[0] + '_converted', filepath[-1]])
+
+    from_engine = parse_engine_output(infile)
+    trajectories = from_engine[-1]
+    with open(outfile, "w") as out:
+        for i in range(len(trajectories)):
+            hints = [0 for _ in trajectories.fields]
+            for (t, v) in trajectories.data[0][i].points:
+                if v > 0:
+                    # the controller is in power
+                    values = []
+                    for d in range(1, len(trajectories.fields)):
+                        (value, hint) = trajectories.data[d][i].predict(t,hints[d])
+                        if isinstance(value, list):
+                            value = value[0]
+                        values.append(str(value))
+                        hints[d] = hint
+
+                    out.write(",".join(values))
+                    out.write("\n")
+
+    return outfile
+
+
+def parse_from_sampling_log(filepath, from_uppaal=True):
+    """
+    Parse the sample data in `filepath` and return a numpy array. If the data
+    comes directly from the UPPAAL Stratego sampling call, set `from_uppaal` to
+    `True`
+    """
+    if from_uppaal:
+        filepath = convert_uppaal_samples(filepath)
+
     with open(filepath, 'r') as f:
         data = f.readlines()
 
-    data = [list(map(float, s.strip().split(','))) for s in data]
-    return np.array(data) if as_numpy else data
+    return np.array([list(map(float, s.strip().split(','))) for s in data])
 
 
 ###### Misc
