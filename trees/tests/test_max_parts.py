@@ -9,7 +9,7 @@ from trees.advanced import max_parts
 from trees.utils import draw_partitioning, calc_volume, set_edges, get_edge_vals
 
 
-class TestMaxParts3(unittest.TestCase):
+class TestMaxParts(unittest.TestCase):
     DATA_PATH = 'trees/tests/data'
     RENDER_PATH = 'trees/tests/data/renders'
 
