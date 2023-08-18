@@ -5,6 +5,8 @@ import re
 import csv
 import sys
 import json
+import pathlib
+import unittest
 import argparse
 import numpy as np
 
@@ -13,6 +15,8 @@ from glob import glob
 from copy import deepcopy
 from time import perf_counter
 
+import trees.tests as test_module
+from trees.tests.test_max_parts import TestMaxParts
 from trees.advanced import minimize_tree
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, performance, visualize_strategy
@@ -24,19 +28,10 @@ from experiments.experiments import dump_json, write_results, \
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parent = argparse.ArgumentParser()
-    parent.add_argument(
-        '-x', '--output-dir',
-        type=str, nargs='?', default='empty',
-        help='(optional) The directory to store the output in (the path will ' \
-             'be created if it does not already exist)'
-    )
-
     subparsers = parser.add_subparsers(title='actions', dest='command')
 
     parser_exp = subparsers.add_parser(
         'run_experiments',
-        parents=[parent], add_help=False,
         help='Run the experiments suite'
     )
 
@@ -62,7 +57,6 @@ def parse_args():
 
     parser_min = subparsers.add_parser(
         'minimize',
-        parents=[parent], add_help=False,
         help='Minimize a strategy'
     )
     parser_min.add_argument(
@@ -79,23 +73,44 @@ def parse_args():
         action='store_true',
         help='Make visualization of the minimized state space (2D only)'
     )
+    parser_min.add_argument(
+        '-x', '--output-dir',
+        type=str, nargs='?', default='',
+        help='(optional) The directory to store the output in (the path will ' \
+             'be created if it does not already exist)'
+    )
+
+
+    parser_test = subparsers.add_parser(
+        'test', help='Run the test suite'
+    )
+    parser_test.add_argument(
+        '--draw', '-d', action='store_true',
+        help='Draw test cases'
+    )
 
     return parser.parse_args()
 
-S_ID, T_ID = 0, 1   # size and time
 
+def run_tests():
+    suite = unittest.TestLoader().loadTestsFromModule(test_module)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+
+S_ID, T_ID = 0, 1   # size and time
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    OUT_DIR = args.output_dir
-    OUT_DIR = OUT_DIR.split('/')
-    if OUT_DIR[0] == '.':
-        OUT_DIR = OUT_DIR[1:]
-
     if args.command == 'minimize':
-        OUT_PATH = OUT_DIR + ['minimized_output']
+
+        OUT_DIR = args.output_dir
+        if len(OUT_DIR) > 0 and not OUT_DIR.endswith('/'):
+            OUT_DIR += '/'
+
+        OUT_PATH = OUT_DIR + 'minimized_output'
+        pathlib.Path(OUT_PATH).mkdir(parents=True, exist_ok=True)
 
         qtree = QTree(args.STRATEGY_FILE)
 
@@ -120,14 +135,6 @@ if __name__ == '__main__':
             ctree.emp_prune()
             ctree, _ = minimize_tree(ctree)
             print(f'Constructed new tree with {ctree.n_leaves} leaves\n')
-
-        for i in range(1, len(OUT_PATH) + 1):
-            try:
-                os.mkdir('/'.join(OUT_PATH[:i]))
-            except FileExistsError:
-                pass
-
-        OUT_PATH = '/'.join(OUT_PATH)
 
         ntree.export_to_uppaal(f'{OUT_PATH}/maxparts_uppaal.json')
         ntree.save_as(f'{OUT_PATH}/maxparts_dt.json')
@@ -159,7 +166,9 @@ if __name__ == '__main__':
             ctree.export_to_uppaal(f'{OUT_PATH}/empprune_uppaal.json')
             ctree.save_as(f'{OUT_PATH}/empprune_dt.json')
 
-    else:
+        print(f'Output stored in {OUT_PATH}/\n')
+
+    elif args.command == 'run_experiments':
 
         model_dir, k = args.MODEL_DIR, args.repeats
         model_names, data = run_experiment(model_dir, k=k)
@@ -179,3 +188,10 @@ if __name__ == '__main__':
                     model_d[S_ID].std(),
                     int(model_d[S_ID].min())
                 ))
+
+    elif args.command == 'test':
+
+        if args.draw:
+            TestMaxParts.draw_all()
+
+        run_tests()
