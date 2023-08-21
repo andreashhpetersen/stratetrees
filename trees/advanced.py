@@ -12,7 +12,8 @@ from time import perf_counter
 from collections import defaultdict
 from trees.models import Node, Leaf, State, DecisionTree, MpTree
 from trees.utils import has_overlap, cut_overlaps, in_box, in_list, make_state,\
-    make_leaf, breaks_box, plot_voxels, leaves_to_state_constraints, draw_graph
+    make_leaf, breaks_box, plot_voxels, leaves_to_state_constraints, \
+    draw_graph, performance
 
 
 class SearchHeuristics:
@@ -329,8 +330,10 @@ def minimize_tree(tree, max_iter=10, \
     if verbose:
         print(f'minimizing original tree with {tree.n_leaves} leaves')
 
-    leaves = max_parts(tree)
-    ntree = leaves_to_tree(leaves, variables, actions)
+    with performance() as p:
+        leaves = max_parts(tree)
+        ntree = leaves_to_tree(leaves, variables, actions)
+
     ntree.meta = tree.meta
 
     if verbose:
@@ -341,18 +344,13 @@ def minimize_tree(tree, max_iter=10, \
     best_n_leaves, best_n_tree = len(leaves), ntree.size
     best_tree, best_tree_i = ntree, 0
 
-    data = [[len(leaves), ntree.size, ntree.max_depth, ntree.min_depth]]
+    data = [[len(leaves), ntree.n_leaves, ntree.max_depth, ntree.min_depth, p.time]]
 
     i = 1
-    while i < max_iter + 1:
-        progress = len(leaves) > best_n_leaves and ntree.size > best_n_tree
-        if early_stopping and not progress:
-            if verbose:
-                print(f'stopping early as no progress was seen')
-            break
-
-        leaves = max_parts(ntree)
-        ntree = leaves_to_tree(leaves, variables, actions)
+    while i < max_iter:
+        with performance() as p:
+            leaves = max_parts(ntree)
+            ntree = leaves_to_tree(leaves, variables, actions)
 
         if verbose:
             print(f'found {len(leaves)} leaves')
@@ -360,8 +358,14 @@ def minimize_tree(tree, max_iter=10, \
             print(f'max/min depth: {ntree.max_depth}/{ntree.min_depth}\n')
 
         data.append(
-            [len(leaves), ntree.n_leaves, ntree.max_depth, ntree.min_depth]
+            [len(leaves), ntree.n_leaves, ntree.max_depth, ntree.min_depth, p.time]
         )
+
+        progress = len(leaves) < best_n_leaves or ntree.size < best_n_tree
+        if early_stopping and not progress:
+            if verbose:
+                print(f'stopping early as no progress was seen')
+            break
 
         if len(leaves) < best_n_leaves:
             best_n_leaves = len(leaves)
