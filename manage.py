@@ -21,8 +21,9 @@ from trees.advanced import minimize_tree
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, performance, visualize_strategy
 
-from experiments.experiments import dump_json, write_results, \
-    write_trans_results, run_experiment, run_single_experiment
+from experiments.main import main, make_samples
+# from experiments.experiments import dump_json, write_results, \
+#     write_trans_results, run_experiment, run_single_experiment
 
 
 def parse_args():
@@ -54,6 +55,10 @@ def parse_args():
         action='store_true',
         help='Print results to screen'
     )
+    parser_exp.add_argument(
+        '--early_stopping', '-e', action='store_true',
+        help='Use early stopping for repeated maxparts application'
+    )
 
     parser_min = subparsers.add_parser(
         'minimize',
@@ -78,6 +83,14 @@ def parse_args():
         type=str, nargs='?', default='',
         help='(optional) The directory to store the output in (the path will ' \
              'be created if it does not already exist)'
+    )
+
+    parser_make_samples = subparsers.add_parser(
+        'make_samples', help='Generate samples by running UPPAAL Stratego'
+    )
+    parser_make_samples.add_argument(
+        'MODEL_DIR',
+        help='The directory containing the model to run experiments on.'
     )
 
 
@@ -170,24 +183,14 @@ if __name__ == '__main__':
 
     elif args.command == 'run_experiments':
 
+        early_stopping = args.early_stopping
         model_dir, k = args.MODEL_DIR, args.repeats
-        model_names, data = run_experiment(model_dir, k=k)
-        if args.print_results:
-            for i in range(len(model_names)):
-                model_d = data[:,i].T
-                print(model_names[i])
-                print('\tTime:\t\t(avg)\t\t(std)\t\t(best)')
-                print('\t     \t\t{:0.2f}\t\t{:0.2f}\t\t{:0.2f}'.format(
-                    model_d[T_ID].mean(),
-                    model_d[T_ID].std(),
-                    model_d[T_ID].min()
-                ))
-                print('\tSize:\t\t(avg)\t\t(std)\t\t(best)')
-                print('\t     \t\t{:0.2f}\t\t{:0.2f}\t\t{}'.format(
-                    model_d[S_ID].mean(),
-                    model_d[S_ID].std(),
-                    int(model_d[S_ID].min())
-                ))
+        main(model_dir, k=k, early_stopping=early_stopping)
+
+    elif args.command == 'make_samples':
+
+        model_dir = args.MODEL_DIR
+        make_samples(model_dir)
 
     elif args.command == 'test':
 
