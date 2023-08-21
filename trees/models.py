@@ -425,6 +425,11 @@ class QTree:
             self._size = sum([r.size for r in self.roots])
         return self._size
 
+    @property
+    def n_leaves(self):
+        """Get the combined number of leaves of all roots in the QTree"""
+        return sum([r.n_leaves for r in self.roots])
+
     def predict(self, state: ArrayLike, maximize=False) -> int:
         """
         Predict the best action based on a `state`.
