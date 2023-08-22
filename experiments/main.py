@@ -66,7 +66,7 @@ def run_single_experiment(
 
     mp_tree, (data, best) = minimize_tree(
         tree,
-        max_iter=20,
+        max_iter=10,
         verbose=False,
         early_stopping=early_stopping
     )
@@ -105,36 +105,6 @@ def run_single_experiment(
         ])
 
     return trees, np.array(results), data
-
-
-def run_experiment(model_dir, k=10):
-    qt_strat_file = f'{model_dir}/qt_strategy.json'
-    sample_logs = glob(f'{model_dir}/samples/*')
-
-    qtree = QTree(qt_strat_file)
-
-    # data: [#leaves, max_depth, min_depth, construction time]
-    q_tree_data = np.array([qtree.n_leaves, -1, -1, -1])
-
-    model_names = [
-        'qt_strategy', 'dt_original', 'maxparts_leaves', 'dt_maxparts'
-    ] + [ 'dt_empprune_{}'.format(re.findall(r"\d+", s)[0]) for s in sample_logs ]
-
-    data = []
-    for i in tqdm(range(k)):
-        store_path = f'{model_dir}/generated/constructed_{i}'
-
-        pathlib.Path(store_path).mkdir(parents=True, exist_ok=True)
-        pathlib.Path(store_path + '/trees').mkdir(exist_ok=True)
-        pathlib.Path(store_path + '/uppaal').mkdir(exist_ok=True)
-
-        res = run_single_experiment(qtree, sample_logs, store_path)
-        data.append(np.vstack((q_tree_data, res)))
-
-    data = np.array(data)
-    import ipdb; ipdb.set_trace()
-    write_results(data, model_names, model_dir)
-    return model_names, data
 
 
 def parse_uppaal_results(output):
@@ -213,7 +183,7 @@ def get_mean_and_std_matrix(data):
 
 def main(model_dir, k=10, early_stopping=False):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
-    sample_logs = glob(f'{model_dir}/samples/*')
+    sample_logs = glob(f'{model_dir}/samples/*_converted.log')
 
     results_columns = [
         'leaves', 'max depth', 'min depth',
@@ -284,8 +254,12 @@ def main(model_dir, k=10, early_stopping=False):
         )
         results.append(np.concatenate((res, evaluation)))
 
-    all_res = get_mean_and_std_matrix(all_res)
+    if early_stopping:
+        maxlen = max([len(d) for d in all_mp_data])
+        all_mp_data = [d[:maxlen] for d in all_mp_data]
+
     all_mp = get_mean_and_std_matrix(all_mp_data)
+    all_res = get_mean_and_std_matrix(all_res)
 
     # export results
     print(f'\nSaving results to {model_dir}/generated/')
@@ -318,4 +292,15 @@ def main(model_dir, k=10, early_stopping=False):
         maxparts_df[leaves] + maxparts_df[leaves + ' (std)'],
         facecolor='#089FFF'
     )
+    ticks = np.linspace(
+        0, len(maxparts_df),
+        int(np.ceil((len(maxparts_df) + 1) / 2))
+    )
+    plt.xticks(
+        ticks=ticks, labels=np.int_(ticks+1)
+    )
+
+    plt.xlabel('# maxpartition episodes')
+    plt.ylabel('# leaves/regions')
+
     plt.savefig(f'{store_path("results")}maxparts_plot.png')

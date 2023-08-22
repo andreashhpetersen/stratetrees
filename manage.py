@@ -41,23 +41,23 @@ def parse_args():
         help='The directory containing the model to run experiments on.'
     )
     parser_exp.add_argument(
+        '--all', '-a', action='store_true',
+        help='If this flag is passed, MODEL_DIR is considered a parent ' \
+        'directory containing the actual model directories to run' \
+        'experiments on'
+    )
+    parser_exp.add_argument(
         '-k', '--repeats',
         nargs='?', type=int, const=1, default=1,
         help='Specify how many times the experiment should run (default 1)'
     )
     parser_exp.add_argument(
-        '-u', '--store-uppaal',
-        action='store_true',
-        help='Export the constructed strategies to a UPPAAL Stratego format'
-    )
-    parser_exp.add_argument(
-        '-p', '--print-results',
-        action='store_true',
-        help='Print results to screen'
-    )
-    parser_exp.add_argument(
         '--early_stopping', '-e', action='store_true',
         help='Use early stopping for repeated maxparts application'
+    )
+    parser.add_argument(
+        '--skip-sampling', '-s', action='store_true',
+        help='Set if you do not want to make samples before running experiments'
     )
 
     parser_min = subparsers.add_parser(
@@ -185,7 +185,18 @@ if __name__ == '__main__':
 
         early_stopping = args.early_stopping
         model_dir, k = args.MODEL_DIR, args.repeats
-        main(model_dir, k=k, early_stopping=early_stopping)
+        if args.all:
+            model_dirs = glob(f'{model_dir}/*/')
+        else:
+            model_dirs = [model_dir]
+
+        for model_dir in model_dirs:
+            msg = f"RUNNING EXPERIMENTS FOR '{model_dir}'"
+            print('\n{}\n{}\n{}\n'.format('#' * len(msg), msg, '#' * len(msg)))
+
+            if not args.skip_sampling:
+                make_samples(model_dir)
+            main(model_dir, k=k, early_stopping=early_stopping)
 
     elif args.command == 'make_samples':
 
