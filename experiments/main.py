@@ -6,6 +6,7 @@ import pathlib
 import subprocess
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from glob import glob
 from tqdm import tqdm
@@ -52,47 +53,6 @@ def write_results(data, model_names, model_dir):
 
 
 def run_single_experiment(
-        qtree: QTree, sample_logs: list[str], store_path: str
-    ) -> np.ndarray:
-    results = []
-
-    with performance() as p:
-        tree = qtree.to_decision_tree()
-
-    results.append([tree.n_leaves, p.time])
-    dump_json(tree, f'{store_path}/dt_original.json')
-
-    # do new max_parts
-    mp_tree, (data, best) = minimize_tree(tree, max_iter=20, verbose=False)
-    results.append([data[0,1], data[0,3]])
-    results.append([data[0,2], data[0,3] + data[0,4]])
-
-    results.append([data[best,1], data[:best,3:].sum() + data[best,3]])
-    results.append([data[best,2], data[:best + 1,3:].sum()])
-
-    mp_tree.meta = qtree.meta
-    dump_json(mp_tree, f'{store_path}/dt_new_max_parts_trans.json')
-
-    for sample_log in sample_logs:
-        from_uppaal = not sample_log.endswith('_converted.log')
-        samples = parse_from_sampling_log(sample_log, from_uppaal=from_uppaal)
-        sample_size = int(re.findall(r'\d+', sample_log)[0])
-
-        prune_tree = mp_tree.copy()
-        with performance() as p:
-            prune_tree.count_visits(samples)
-            prune_tree.emp_prune()
-            leaves = max_parts(prune_tree)
-            prune_tree = leaves_to_tree(leaves, qtree.variables, qtree.actions)
-            prune_tree.meta = qtree.meta
-
-        results.append([prune_tree.size, p.time])
-        dump_json(prune_tree, f'{store_path}/dt_prune_{sample_size}.json')
-
-    return np.array(results)
-
-
-def run_single_experiment2(
         qtree: QTree, sample_logs: list[str], early_stopping=False
     ) -> np.ndarray:
     results = []
@@ -119,8 +79,13 @@ def run_single_experiment2(
     mp_tree.meta = qtree.meta
 
     for sample_log in sample_logs:
-        from_uppaal = not sample_log.endswith('_converted.log')
-        samples = parse_from_sampling_log(sample_log, from_uppaal=from_uppaal)
+        try:
+            from_uppaal = not sample_log.endswith('_converted.log')
+            samples = parse_from_sampling_log(sample_log, from_uppaal=from_uppaal)
+        except IndexError:
+            print(f"'{sample_log}' is not in the correct format, skipping...")
+            continue
+
         sample_size = int(re.findall(r'\d+', sample_log)[0])
 
         prune_tree = mp_tree.copy()
@@ -235,15 +200,15 @@ def make_samples(model_dir, clear_first=True):
     subprocess.run(args)
 
 
-def get_mean_and_var_matrix(data):
+def get_mean_and_std_matrix(data):
     data = np.array(data)
 
     _, n_models, n_metrics = data.shape
 
-    ms = data.T.mean(axis=2).T.reshape(-1, n_metrics, 1)
-    vs = data.T.var(axis=2).T.reshape(-1, n_metrics, 1)
+    exps = data.T.mean(axis=2).T.reshape(-1, n_metrics, 1)
+    stds = data.T.std(axis=2, ddof=1).T.reshape(-1, n_metrics, 1)
 
-    return np.dstack((ms, vs)).reshape(n_models, -1)
+    return np.dstack((exps, stds)).reshape(n_models, -1)
 
 
 def main(model_dir, k=10, early_stopping=False):
@@ -251,22 +216,26 @@ def main(model_dir, k=10, early_stopping=False):
     sample_logs = glob(f'{model_dir}/samples/*')
 
     results_columns = [
-        'leaves', 'max_depth', 'min_depth',
+        'leaves', 'max depth', 'min depth',
         'construction time', 'performance', 'performance std'
     ]
     mean_results_columns = [
-        'leaves', 'variance', 'max_depth', 'variance',
-        'min_depth', 'variance', 'construction time', 'variance'
+        'leaves', 'leaves (std)',
+        'max depth', 'max depth (std)',
+        'min depth', 'min depth (std)',
+        'construction time', 'construction time (std)'
     ]
     maxparts_columns = [
-        'regions found', 'variance',
-        'leaves in tree', 'variance', 'max depth', 'variance',
-        'min depth', 'variance', 'construction time', 'variance'
+        'regions found', 'regions found (std)',
+        'leaves in tree', 'leaves in tree (std)',
+        'max depth', 'max depth (std)',
+        'min depth', 'min depth (std)',
+        'construction time', 'construction time (std)'
     ]
 
     results, model_names = [], []
 
-    print('evaluate original Qtree-strategy\n')
+    print('\nEvaluate original Qtree-strategy')
     qtree = QTree(qt_strat_file)
     uppaal_res = parse_uppaal_results(run_uppaal(model_dir, 'qt_strategy.json'))
 
@@ -279,9 +248,9 @@ def main(model_dir, k=10, early_stopping=False):
     best_trees, res_i = [], 0
     smallest = np.inf
 
-    print(f'generate minimized trees (best of {k} attempts)')
+    print(f'\nGenerate minimized trees (best of {k} attempts)')
     for i in tqdm(range(k)):
-        trees, res, mp_data = run_single_experiment2(
+        trees, res, mp_data = run_single_experiment(
             qtree,
             sample_logs,
             early_stopping=early_stopping
@@ -300,8 +269,9 @@ def main(model_dir, k=10, early_stopping=False):
 
     pathlib.Path(store_path('trees')).mkdir(parents=True, exist_ok=True)
     pathlib.Path(store_path('uppaal')).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(store_path('results')).mkdir(parents=True, exist_ok=True)
 
-    print(f'\nevaluate minimized trees')
+    print(f'\nEvaluate minimized trees')
     for (model, tree), res in zip(tqdm(best_trees), best_res):
         model_names.append(model)
         filename = f'{model}.json'
@@ -314,19 +284,38 @@ def main(model_dir, k=10, early_stopping=False):
         )
         results.append(np.concatenate((res, evaluation)))
 
-    all_res = get_mean_and_var_matrix(all_res)
-    all_mp = get_mean_and_var_matrix(all_mp_data)
+    all_res = get_mean_and_std_matrix(all_res)
+    all_mp = get_mean_and_std_matrix(all_mp_data)
 
     # export results
+    print(f'\nSaving results to {model_dir}/generated/')
     results_df = pd.DataFrame(
         np.array(results), index=model_names, columns=results_columns
     )
+    results_df.to_csv(f'{store_path("results")}results.csv')
+
     mean_results_df = pd.DataFrame(
         all_res, index=model_names[1:], columns=mean_results_columns
     )
-    import ipdb; ipdb.set_trace()
+    mean_results_df.to_csv(f'{store_path("results")}mean_results.csv')
+
     maxparts_df = pd.DataFrame(
         all_mp, index=range(len(all_mp)), columns=maxparts_columns
     )
+    maxparts_df.to_csv(f'{store_path("results")}maxparts_results.csv')
 
-    import ipdb; ipdb.set_trace()
+    regs, leaves = 'regions found', 'leaves in tree'
+    maxparts_df[[regs, leaves]].plot(color=['#CC4F1B', '#1B2ACC'])
+    plt.fill_between(
+        range(len(maxparts_df)),
+        maxparts_df[regs] - maxparts_df[regs + ' (std)'],
+        maxparts_df[regs] + maxparts_df[regs + ' (std)'],
+        facecolor='#FF9848'
+    )
+    plt.fill_between(
+        range(len(maxparts_df)),
+        maxparts_df[leaves] - maxparts_df[leaves + ' (std)'],
+        maxparts_df[leaves] + maxparts_df[leaves + ' (std)'],
+        facecolor='#089FFF'
+    )
+    plt.savefig(f'{store_path("results")}maxparts_plot.png')
