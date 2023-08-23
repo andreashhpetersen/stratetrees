@@ -1,7 +1,5 @@
 import os
 import re
-import json
-import glob
 import pathlib
 import subprocess
 import numpy as np
@@ -13,43 +11,7 @@ from tqdm import tqdm
 
 from trees.advanced import max_parts, minimize_tree, leaves_to_tree
 from trees.models import QTree, DecisionTree
-from trees.utils import parse_from_sampling_log, performance
-
-
-def dump_json(tree, fp):
-    path = fp.split('/')
-    tree_path = path[:-1] + ['trees'] + path[-1:]
-    uppaal_path = path[:-1] + ['uppaal'] + path[-1:]
-
-    tree.save_as('/'.join(tree_path))
-    tree.export_to_uppaal('/'.join(uppaal_path))
-
-
-def write_results(data, model_names, model_dir):
-    smallest = np.argmin(data[:,1,S_ID])
-    with open(f'{model_dir}/generated/smallest.txt', 'w') as f:
-        f.write(f'constructed_{smallest}')
-
-    headers = [
-        'model_name', 'time (best)', 'time (avg)', 'time (std)',
-        'size (best)', 'size (avg)', 'size (std)'
-    ]
-    with open(f'{model_dir}/generated/dt_results.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-
-        for i in range(len(model_names)):
-            row = [model_names[i]]
-            model_d = data[:,i].T
-            row.extend([
-                model_d[T_ID].min(),
-                model_d[T_ID].mean(),
-                model_d[T_ID].std(),
-                model_d[S_ID].min(),
-                model_d[S_ID].mean(),
-                model_d[S_ID].std(),
-            ])
-            writer.writerow(row)
+from trees.utils import parse_from_sampling_log, performance, convert_uppaal_samples
 
 
 def run_single_experiment(
@@ -162,12 +124,16 @@ def run_uppaal(model_dir, strategy_name):
 
 
 def make_samples(model_dir, clear_first=True):
+    samples_path = pathlib.Path(f'{model_dir}/samples/')
     if clear_first:
-        for p in pathlib.Path(f'{model_dir}/samples/').glob('*.log'):
+        for p in samples_path.glob('*.log'):
             p.unlink()
 
     args = (f'{model_dir}/make_samples.sh',)
     subprocess.run(args)
+
+    for file in samples_path.glob('*_uppaal.log'):
+        convert_uppaal_samples(file)
 
 
 def get_mean_and_std_matrix(data):
@@ -181,7 +147,7 @@ def get_mean_and_std_matrix(data):
     return np.dstack((exps, stds)).reshape(n_models, -1)
 
 
-def main(model_dir, k=10, early_stopping=False):
+def run_experiments(model_dir, k=10, early_stopping=False):
     qt_strat_file = f'{model_dir}/qt_strategy.json'
     sample_logs = glob(f'{model_dir}/samples/*_converted.log')
 
@@ -252,6 +218,7 @@ def main(model_dir, k=10, early_stopping=False):
         evaluation = parse_uppaal_results(
             run_uppaal(model_dir, f'generated/uppaal/{filename}')
         )
+        import ipdb; ipdb.set_trace()
         results.append(np.concatenate((res, evaluation)))
 
     if early_stopping:
