@@ -1,33 +1,14 @@
 #!/usr/bin/env python3
 
-import os
-import re
-import csv
-import sys
-import json
-import pathlib
-import unittest
 import argparse
-import numpy as np
-
-from tqdm import tqdm
 from glob import glob
-from copy import deepcopy
-from time import perf_counter
 
-import trees.tests as test_module
-from trees.tests.test_max_parts import TestMaxParts
-from trees.advanced import minimize_tree
-from trees.models import QTree, DecisionTree
-from trees.utils import parse_from_sampling_log, performance, visualize_strategy
-
-from experiments.main import main, make_samples
-# from experiments.experiments import dump_json, write_results, \
-#     write_trans_results, run_experiment, run_single_experiment
+from trees.commands import minimize, run_tests
+from experiments.main import run_experiments, make_samples
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
+def get_parser():
+    parser = argparse.ArgumentParser(prog='stratetrees')
 
     subparsers = parser.add_subparsers(title='actions', dest='command')
 
@@ -55,7 +36,7 @@ def parse_args():
         '--early_stopping', '-e', action='store_true',
         help='Use early stopping for repeated maxparts application'
     )
-    parser.add_argument(
+    parser_exp.add_argument(
         '--skip-sampling', '-s', action='store_true',
         help='Set if you do not want to make samples before running experiments'
     )
@@ -79,7 +60,7 @@ def parse_args():
         help='Make visualization of the minimized state space (2D only)'
     )
     parser_min.add_argument(
-        '-x', '--output-dir',
+        '-o', '--output-dir',
         type=str, nargs='?', default='',
         help='(optional) The directory to store the output in (the path will ' \
              'be created if it does not already exist)'
@@ -102,19 +83,12 @@ def parse_args():
         help='Draw test cases'
     )
 
-    return parser.parse_args()
-
-
-def run_tests():
-    suite = unittest.TestLoader().loadTestsFromModule(test_module)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
-
-S_ID, T_ID = 0, 1   # size and time
+    return parser
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    parser = get_parser()
+    args = parser.parse_args()
 
     if args.command == 'minimize':
 
@@ -123,63 +97,13 @@ if __name__ == '__main__':
             OUT_DIR += '/'
 
         OUT_PATH = OUT_DIR + 'minimized_output'
-        pathlib.Path(OUT_PATH).mkdir(parents=True, exist_ok=True)
+        minimize(
+            args.STRATEGY_FILE,
+            OUT_PATH,
+            samples=args.samples,
+            visualize=args.visualize
+        )
 
-        qtree = QTree(args.STRATEGY_FILE)
-
-        print(f'Imported QTree-strategy of size {qtree.size} leaves\n')
-
-        print('Converting to decision tree...')
-
-        tree = qtree.to_decision_tree()
-        print(f'Constructed decision tree with {tree.n_leaves} leaves\n')
-
-        print('Minimizing tree with repeated application of maxparts...')
-        ntree, (data, best_i) = minimize_tree(tree)
-
-        print(f'Constructed minimized tree with {ntree.n_leaves} leaves\n')
-
-        ctree = None
-        if args.samples:
-            samples = parse_from_sampling_log(args.samples)
-            print('performing empirical pruning...')
-            ctree = ntree.copy()
-            ctree.count_visits(samples)
-            ctree.emp_prune()
-            ctree, _ = minimize_tree(ctree)
-            print(f'Constructed new tree with {ctree.n_leaves} leaves\n')
-
-        ntree.export_to_uppaal(f'{OUT_PATH}/maxparts_uppaal.json')
-        ntree.save_as(f'{OUT_PATH}/maxparts_dt.json')
-
-        if len(ntree.variables) == 2:
-            visualize_strategy(
-                tree,
-                labels={ a: a for a in tree.actions },
-                lw=0.2,
-                out_fp=f'{OUT_PATH}/original_visual.png'
-            )
-
-            visualize_strategy(
-                ntree,
-                labels={ a: a for a in tree.actions },
-                lw=0.2,
-                out_fp=f'{OUT_PATH}/maxparts_visual.png'
-            )
-
-            if ctree is not None:
-                visualize_strategy(
-                    ctree,
-                    labels={ a: a for a in tree.actions },
-                    lw=0.2,
-                    out_fp=f'{OUT_PATH}/empprune_visual.png'
-                )
-
-        if ctree is not None:
-            ctree.export_to_uppaal(f'{OUT_PATH}/empprune_uppaal.json')
-            ctree.save_as(f'{OUT_PATH}/empprune_dt.json')
-
-        print(f'Output stored in {OUT_PATH}/\n')
 
     elif args.command == 'run_experiments':
 
@@ -196,7 +120,7 @@ if __name__ == '__main__':
 
             if not args.skip_sampling:
                 make_samples(model_dir)
-            main(model_dir, k=k, early_stopping=early_stopping)
+            run_experiments(model_dir, k=k, early_stopping=early_stopping)
 
     elif args.command == 'make_samples':
 
@@ -205,7 +129,4 @@ if __name__ == '__main__':
 
     elif args.command == 'test':
 
-        if args.draw:
-            TestMaxParts.draw_all()
-
-        run_tests()
+        run_tests(draw=args.draw)
