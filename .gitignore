@@ -8,8 +8,8 @@ dtcontrol/*
 papers/*
 random/*
 .idea
-automated/*/samples/*
-automated/*/generated/*
+*/automated/*/samples/*
+*/automated/*/generated/*
 build/*
 *.egg-info/*
 old_texts/*
