@@ -4,7 +4,7 @@ import argparse
 from glob import glob
 
 from trees.commands import minimize, run_tests
-from experiments.main import run_experiments, make_samples
+from experiments.commands import run_experiments, make_samples
 
 
 def get_parser():
