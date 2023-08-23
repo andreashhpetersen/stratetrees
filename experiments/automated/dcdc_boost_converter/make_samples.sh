@@ -14,5 +14,5 @@ for s in $S ; do
     Q=$(mktemp)
     echo "strategy s = loadStrategy {} -> {Converter.location, x1, x2} (\"$MODEL_DIR/qt_strategy.json\")" > $Q
     echo "simulate [<=500;$s] {Converter.location, Converter.location, x1, x2} under s" >> $Q
-    $VERIFYTA_PATH $M $Q &> $SAMPLE_DIR/sample_${s}.log
+    $VERIFYTA_PATH $M $Q &> $SAMPLE_DIR/sample_${s}_uppaal.log
 done

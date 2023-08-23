@@ -14,5 +14,5 @@ for s in $S ; do
     Q=$(mktemp)
     echo "strategy s = loadStrategy {} -> {rVelocityEgo - rVelocityFront, rDistance} (\"$MODEL_DIR/qt_strategy.json\")" > $Q
     echo "simulate [<=1000;$s] {Ego.Choose, rVelocityEgo - rVelocityFront, rDistance} under s" >> $Q
-    $VERIFYTA_PATH $M $Q &> $SAMPLE_DIR/sample_${s}.log
+    $VERIFYTA_PATH $M $Q &> $SAMPLE_DIR/sample_${s}_uppaal.log
 done
