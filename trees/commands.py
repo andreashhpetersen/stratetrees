@@ -30,6 +30,7 @@ def minimize(strategy_fp, output_dir, samples=None, visualize=False):
 
     print('Minimizing tree with repeated application of maxparts...')
     ntree, (data, best_i) = minimize_tree(tree)
+    ntree.meta = tree.meta
 
     print(f'Constructed minimized tree with {ntree.n_leaves} leaves\n')
 
