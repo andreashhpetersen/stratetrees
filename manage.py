@@ -3,7 +3,7 @@
 import argparse
 from glob import glob
 
-from trees.commands import minimize, run_tests
+from trees.commands import minimize, run_tests, convert
 from experiments.commands import run_experiments, make_samples
 
 
@@ -39,6 +39,20 @@ def get_parser():
     parser_exp.add_argument(
         '--skip-sampling', '-s', action='store_true',
         help='Set if you do not want to make samples before running experiments'
+    )
+
+    parser_convert = subparsers.add_parser(
+        'convert',
+        help='Convert a QTree-strategy (from UPPAAL Stratego) to a Decision Tree'
+    )
+    parser_convert.add_argument(
+        'STRATEGY_FILE',
+        help='Path to the strategy file'
+    )
+    parser_convert.add_argument(
+        '--output-name', '-o',
+        nargs='?', type=str,
+        help='Name for output file'
     )
 
     parser_min = subparsers.add_parser(
@@ -104,6 +118,11 @@ if __name__ == '__main__':
             visualize=args.visualize
         )
 
+    elif args.command == 'convert':
+        if args.output_name:
+            convert(args.STRATEGY_FILE, output_fp=args.output_name)
+        else:
+            convert(args.STRATEGY_FILE)
 
     elif args.command == 'run_experiments':
 

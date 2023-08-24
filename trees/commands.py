@@ -16,6 +16,19 @@ def run_tests(draw=False):
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 
+def convert(strategy_fp, output_fp='./dt_strategy.json'):
+    qtree = QTree(strategy_fp)
+
+    print(f'Imported QTree-strategy of size {qtree.size} leaves\n')
+    print('Converting to decision tree...')
+
+    tree = qtree.to_decision_tree()
+    tree.save_as(output_fp)
+    tree.export_to_uppaal(output_fp.replace('.json', '_uppaal.json'))
+
+    print(f"Stored decision tree as '{output_fp}(/_uppaal.json)'")
+
+
 def minimize(strategy_fp, output_dir, samples=None, visualize=False):
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
