@@ -3,9 +3,10 @@ import unittest
 
 import trees.tests as test_module
 from trees.advanced import minimize_tree
-from trees.models import QTree
+from trees.models import QTree, DecisionTree
 from trees.tests.test_max_parts import TestMaxParts
-from trees.utils import parse_from_sampling_log, visualize_strategy
+from trees.utils import parse_from_sampling_log, visualize_strategy, \
+    draw_graph
 
 
 def run_tests(draw=False):
@@ -88,3 +89,21 @@ def minimize(strategy_fp, output_dir, samples=None, visualize=False):
         ctree.save_as(f'{output_dir}/empprune_dt.json')
 
     print(f'Output stored in {output_dir}/\n')
+
+
+def draw(in_fp, out_fp=None, qtree=False):
+    kwargs = { 'out_fp': out_fp } if out_fp is not None else {}
+
+    if qtree:
+        tree = QTree(in_fp)
+        draw_graph(
+            tree.roots,
+            labels=tree.actions,
+            print_action=False,
+            print_cost=True,
+            **kwargs
+        )
+
+    else:
+        tree = DecisionTree.load_from_file(in_fp)
+        draw_graph([tree.root], **kwargs)

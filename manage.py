@@ -3,7 +3,7 @@
 import argparse
 from glob import glob
 
-from trees.commands import minimize, run_tests, convert
+from trees.commands import minimize, run_tests, convert, draw
 from experiments.commands import run_experiments, make_samples
 
 
@@ -80,6 +80,22 @@ def get_parser():
              'be created if it does not already exist)'
     )
 
+    parser_draw = subparsers.add_parser(
+        'draw', help='Draw a tree as a graph'
+    )
+    parser_draw.add_argument(
+        'STRATEGY_FILE',
+        help='Path to the strategy file'
+    )
+    parser_draw.add_argument(
+        '--outfile', '-o', nargs='?',
+        help='Optional file to store the drawing in'
+    )
+    parser_draw.add_argument(
+        '--qtree', action='store_true',
+        help='Set this flag if the strategy is a QTree'
+    )
+
     parser_make_samples = subparsers.add_parser(
         'make_samples', help='Generate samples by running UPPAAL Stratego'
     )
@@ -123,6 +139,9 @@ if __name__ == '__main__':
             convert(args.STRATEGY_FILE, output_fp=args.output_name)
         else:
             convert(args.STRATEGY_FILE)
+
+    elif args.command == 'draw':
+        draw(args.STRATEGY_FILE, args.outfile, qtree=args.qtree)
 
     elif args.command == 'run_experiments':
 
