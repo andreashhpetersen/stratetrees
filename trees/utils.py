@@ -132,7 +132,8 @@ def draw_graph(
     elif out_fp.endswith('.svg'):
         graph.write_svg(out_fp)
     else:
-        print('format not supported')
+        suffix = out_fp.split('.')[-1]
+        raise ValueError(f'{suffix} format not supported')
 
 
 def draw_partitioning(
