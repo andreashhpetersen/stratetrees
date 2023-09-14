@@ -1,0 +1,72 @@
+\section{Introduction}%
+\label{sec:intro}
+
+With the tool UPPAAL Stratego~\cite{David2015UppaalS} it is possible to learn
+safe and (near-)optimal strategies for controllers of any system that can be
+modelled as a Markov Decision Process (MDP). This has many important
+applications, one being the government of cyber-physical systems that often have
+important safety requirements to avoid real-world catastrophees while also
+needing to perform at a certain level of expectation to satisfy consumers,
+citizens or other participants in a network.
+
+For these cases of cyber-physical systems -- especially within critical
+infrastructure such as water management, transport or energy distribution ---
+another important feature of a controller is that it is explainable and
+understandable by a human expert. A well-established technique for representing
+machine learning strategies in ways interpretable by humans is with decision
+trees, where the path from a root node to a leaf node directly specifies how a
+state of the system is evaluated so that a specific action is decided upon.
+
+In UPPAAL Stratego the strategies learned are represented by a collection of
+decision trees, one for each action. The leaf nodes of each tree then gives an
+evaluation of the expected cost of taking that action in the state under
+evaluation. In Q-learning, the Reinforcement Learning technique powering UPPAAL
+Stratego, this is called the Q-value and as such, we call the trees Q-trees.
+While this approach allows for an online discretization of a continuous state
+space and improved approximation of the optimal strategy, it does not retain the
+expressive nature of the decision tree representation of its strategy, as each
+decision is now an $\argmin$ function over the unique evaluation of the expected
+cost of state-action pairs.
+
+In this paper, we therefore suggest a method for converting a set of Q-trees to
+a single decision tree representing the same deterministic strategy that the
+$\argmin$ over the set of Q-trees would yield. This makes UPPAAL Stratego able
+to not only give safe and near-optimal strategies but also to provide them in a
+fashion that has the benefits of decision tree representation.
+
+However, we often see that the number of paths in these trees grows very large,
+which again makes them exceedingly hard for humans to actually comprehend.
+Furthermore, since many controllers of cyber-physical systems will run on
+embedded hardware with limited space and memory capacity, large strategies might
+be impossible to even run get running in these systems. Therefore, we also
+provide an algorithm for minimizing the number of leaf nodes the decision tree
+by inspecting the Euclidean state space of the system under consideration and
+the partitions that the strategy entails.
+
+\paragraph{Example 1}\label{ex:runningExample} As a running example, we consider
+an articifial strategy $\sigma$ with a Q-table given by
+Table~\ref{tab:exStrategyQTable}. The state space $\mathcal{S} \in \mathbb{R}^2
+$ of the underlying environment is given by $x \in [0,3]$ and $y \in [0,3]$ and
+the set of possible actions is $Act = \{ a, b, c \}$. Each entry in the Q-table
+is a tuple $(a,b,c)$ representing the Q-value (cost) of each of the three
+actions in that state. The dimensionality of the Q-table is $3 \times 3 \times
+3$ and it has 27 Q-entries.
+
+\begin{table}[htpb]
+    \centering
+    \caption{%
+        Q-table for example strategy. Each entry is a tuple of the Q-values
+        (expected cost) of action $a$, $b$ and $c$ respectively for some
+        configuration of $x$ and $y$.
+    }\label{tab:exStrategyQTable}
+    \begin{tabular}{l@{\quad}c@{\quad}c@{\quad}c}
+        \toprule
+         & $0 < x \le 1$ & $1 < x \le 2$ & $2 < x \le 3$ \\
+        \midrule
+        $0 < y \le 1$ & (2, 7, 3) & (4, 3, 1) & (6, 8, 1) \\
+        $1 < y \le 2$  & (3, 4, 4) & (3, 2, 4) & (3, 5, 9) \\
+        $2 < y \le 3$  & (3, 3, 1) & (4, 3, 1) & (2, 7, 3) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
