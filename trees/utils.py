@@ -138,7 +138,8 @@ def draw_graph(
 
 def draw_partitioning(
     leaves, x_var, y_var, xlim, ylim, cmap,
-    labels={}, dpi=100, lw=0, bounds=False, show=False, out_fp='./tmp.svg'
+    labels={}, dpi=100, lw=0, bounds=False, show=False,
+    grid=False, out_fp='./tmp.svg'
 ):
     min_x, max_x = xlim
     min_y, max_y = ylim
@@ -191,7 +192,9 @@ def draw_partitioning(
     plt.xlabel(x_var)
     plt.ylabel(y_var)
 
-    plt.grid(None)
+    if grid:
+        plt.grid(None)
+
     plt.tight_layout()
 
     if show:
@@ -344,10 +347,10 @@ class performance:
 
 def time_it(alg, *args, **kwargs):
     tic = time.perf_counter()
-    boxes = alg(*args, *kwargs)
+    out = alg(*args, *kwargs)
     toc = time.perf_counter()
-    print(f'found {len(boxes)} boxes in {toc - tic:0.4f} seconds')
-    return boxes
+    print(f'finished in {toc - tic:0.4f} seconds')
+    return out
 
 
 def in_box(b, s, inclusive=True):
