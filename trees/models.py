@@ -1,5 +1,6 @@
 import json
 import pydot
+import pathlib
 import operator
 import numpy as np
 
@@ -365,6 +366,11 @@ class DecisionTree:
         )
 
     @classmethod
+    def from_sklearn(cls, src, variables=None, actions=None):
+        root, variables, actions = SklearnLoader.load(src, variables, actions)
+        return DecisionTree(root, variables, actions)
+
+    @classmethod
     def parse_from_dot(cls, filepath, varmap):
         tree = DecisionTree.empty_tree(list(varmap.values()), [])
 
@@ -400,7 +406,6 @@ class DecisionTree:
         tree.root = nodes[0]
         tree.size = tree.root.size
         return tree
-
 
 class QTree:
     def __init__(self, path: str):
@@ -446,8 +451,11 @@ class QTree:
         action_id : int
             The index of the preferred action
         """
+        state = np.array(state)
+        a = len(state.shape) - 1
+
         qs = self.predict_qs(state)
-        return np.argmax(qs) if maximize else np.argmin(qs)
+        return np.argmax(qs, axis=a) if maximize else np.argmin(qs, axis=a)
 
     def predict_qs(self, state: ArrayLike) -> np.ndarray:
         """
@@ -463,7 +471,21 @@ class QTree:
         q_values : numpy.ndarry
             An array of Q values for each action
         """
-        return np.array([r.get(state).cost for r in self.roots])
+        squeeze = False
+        state = np.array(state)
+        if len(state.shape) == 1:
+            squeeze = True
+            state = np.array([state])
+
+        qs = []
+        for obs in state:
+            qs.append([r.get(obs).cost for r in self.roots])
+
+        qs = np.array(qs)
+        if squeeze:
+            qs = qs.squeeze()
+
+        return qs
 
     def to_decision_tree(self) -> DecisionTree:
         """
