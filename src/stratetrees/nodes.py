@@ -48,15 +48,34 @@ class State:
 
         return center if point else vcenters
 
-    def greater_than(self, var, bound):
+    def split(self, var, bound):
         if isinstance(var, str):
             var = self.var2id[var]
-        self.constraints[var,0] = bound
 
-    def less_than(self, var, bound):
+        return (self.less_than(var, bound, inline=False), \
+            self.greater_than(var, bound, inline=False))
+
+    def greater_than(self, var, bound, inline=True):
         if isinstance(var, str):
             var = self.var2id[var]
-        self.constraints[var,1] = bound
+
+        if not inline:
+            state = self.copy()
+            state.constraints[var, 0] = bound
+            return state
+        else:
+            self.constraints[var,0] = bound
+
+    def less_than(self, var, bound, inline=True):
+        if isinstance(var, str):
+            var = self.var2id[var]
+
+        if not inline:
+            state = self.copy()
+            state.constraints[var, 1] = bound
+            return state
+        else:
+            self.constraints[var,1] = bound
 
     def min_max(self, var, min_limit=-np.inf, max_limit=np.inf):
         """
@@ -75,8 +94,7 @@ class State:
         return vmin, vmax
 
     def copy(self):
-        state = State(self.variables, constraints=self.constraints.copy())
-        return state
+        return State(self.variables, constraints=self.constraints.copy())
 
     def __eq__(self, other):
         return self.variables == other.variables and \
@@ -93,7 +111,7 @@ class State:
 
 
 class Node:
-    def __init__(self, variable, var_id, bound, low=None, high=None, state=None):
+    def __init__(self, variable, var_id, bound, low, high, state=None):
         self.variable = variable
         self.bound = bound
         self.state = state
@@ -103,6 +121,11 @@ class Node:
 
         self.var_name = variable
         self.var_id = var_id
+
+        if low is not None and high is not None:
+            self._size = 1 + low._size + high._size
+            self._max_depth = 1 + max(self.low._max_depth, self.high._max_depth)
+            self._min_depth = 1 + min(self.low._min_depth, self.high._min_depth)
 
     def set_depth(self, depth=0):
         self.depth = depth
@@ -119,27 +142,52 @@ class Node:
 
     @property
     def size(self):
-        return self.count_leaves()
+        return self._size
+
+    @property
+    def n_leaves(self):
+        return (self.size + 1) // 2
+
+    def visitor(self, func, *args):
+        func(self, *args)
+
+        if not self.low.is_leaf:
+            self.low.visitor(func, *args)
+
+        if not self.high.is_leaf:
+            self.high.visitor(func, *args)
 
     def count_leaves(self):
         low_count = 1 if self.low.is_leaf else self.low.count_leaves()
         high_count = 1 if self.high.is_leaf else self.high.count_leaves()
         return low_count + high_count
 
-    def put_leaf(self, leaf, state):
+    def put_leaf(self, leaf, state, prune=False):
         var_min, var_max = leaf.state.min_max(self.variable)
         if var_min < self.bound:
             low_state = state.copy()
             low_state.less_than(self.variable, self.bound)
 
-            self.low = self.low.put_leaf(leaf, low_state)
+            self.low = self.low.put_leaf(leaf, low_state, prune=prune)
 
         if var_max > self.bound:
             high_state = state.copy()
             high_state.greater_than(self.variable, self.bound)
 
-            self.high = self.high.put_leaf(leaf, high_state)
+            self.high = self.high.put_leaf(leaf, high_state, prune=prune)
 
+        if prune:
+            if self.low.is_leaf and self.high.is_leaf and \
+                    self.low.action == self.high.action:
+
+                return Leaf(
+                    self.low.action,
+                    cost=max(self.low.cost, self.high.cost),
+                )
+
+        self._size = 1 + self.low._size + self.high._size
+        self._max_depth = 1 + max(self.low._max_depth, self.high._max_depth)
+        self._min_depth = 1 + min(self.low._min_depth, self.high._min_depth)
         return self
 
     def get(self, state):
@@ -201,8 +249,6 @@ class Node:
         self.high.set_state(high_state)
 
     def prune(self, cost_prune=False):
-        # self.low.is_leaf, self.high.is_leaf = self.low.is_leaf, self.high.is_leaf
-
         if not self.low.is_leaf:
             self.low = self.low.prune(cost_prune=cost_prune)
 
@@ -212,8 +258,8 @@ class Node:
         if self.low.is_leaf and self.high.is_leaf and self.low.action == self.high.action:
             if not cost_prune or self.low.cost == self.high.cost:
                 return Leaf(
-                    max(self.low.cost, self.high.cost),
-                    action=self.low.action
+                    self.low.action,
+                    cost=max(self.low.cost, self.high.cost)
                 )
 
         elif not (self.low.is_leaf or self.high.is_leaf):
@@ -238,12 +284,12 @@ class Node:
         """
         Export to dict with in a way that's ready for UPPAAL json format
         """
-        if isinstance(self.low, Leaf):
+        if self.low.is_leaf:
             low = self.low.cost
         else:
             low = self.low.to_uppaal(var_map)
 
-        if isinstance(self.high, Leaf):
+        if self.high.is_leaf:
             high = self.high.cost
         else:
             high = self.high.to_uppaal(var_map)
@@ -281,6 +327,25 @@ class Node:
             root.prune(cost_prune=True)
             out.append((action, root))
         return out
+
+    def to_c_code(self, lvl):
+        tab = '  ' * lvl
+        s = '{}if ({} <= {}) {}\n'.format(
+            tab, self.var_name, self.bound, '{'
+        )
+        if self.low.is_leaf:
+            s += '{}return {};\n'.format(tab + '  ', self.low.action)
+        else:
+            s += self.low.to_c_code(lvl + 1)
+
+        s += '{}{} else {}\n'.format(tab, '}', '{')
+        if self.high.is_leaf:
+            s += '{}return {};\n'.format(tab + '  ', self.high.action)
+        else:
+            s += self.high.to_c_code(lvl + 1)
+
+        s += '{}{}\n'.format(tab, '}')
+        return s
 
     def export_to_uppaal(
             self, actions, variables, meta, path='./out.json', loc='(1)'
@@ -340,37 +405,6 @@ class Node:
         return root, list(variables), list(actions)
 
     @classmethod
-    def parse_from_dot(cls, filepath, variables=None):
-        graph = pydot.graph_from_dot_file(filepath)[0]
-
-        nodes = []
-        for node in graph.get_nodes():
-            try:
-                int(node.get_name())
-            except ValueError:
-                continue
-
-            label = node.get_attributes()['label'].strip('"').split(" ")
-            if len(label) == 1:
-                nodes.append(Leaf(0, action=int(label[0])))
-            else:
-                var = variables[label[0]] if variables else label[0]
-                bound = float(label[2])
-                nodes.append(Node(var, bound))
-
-        for edge in graph.get_edges():
-            src = nodes[int(edge.get_source())]
-            dst = nodes[int(edge.get_destination())]
-            low = True if edge.get_label().strip('"') == 'True' else False
-
-            if low:
-                src.low = dst
-            else:
-                src.high = dst
-
-        return nodes[0]
-
-    @classmethod
     def build_from_dict(cls, node_dict, var2id):
         """
         Recursively build a tree using the top level in `node_dict` as root and
@@ -380,15 +414,15 @@ class Node:
         # is this a leaf?
         if not 'low' in node_dict:
             action = node_dict['action']
-            return Leaf(cost=node_dict.get('cost', -1), action=action)
+            return Leaf(action, cost=node_dict.get('cost', -1))
 
         var = node_dict['var']
         return Node(
             var,
             var2id[var],
             node_dict['bound'],
-            low=cls.build_from_dict(node_dict['low'], var2id),
-            high=cls.build_from_dict(node_dict['high'], var2id)
+            cls.build_from_dict(node_dict['low'], var2id),
+            cls.build_from_dict(node_dict['high'], var2id)
         )
 
     @classmethod
@@ -418,10 +452,6 @@ class Node:
         return True
 
     @classmethod
-    def is_leaf(cls, tree):
-        return isinstance(tree, Leaf)
-
-    @classmethod
     def emp_prune(cls, node, sub_action=None, thresh=0.0):
         if node.is_leaf:
             if node.ratio <= thresh:
@@ -447,9 +477,42 @@ class Node:
         node.high = high
         return node.prune()
 
+    @classmethod
+    def make_node_from_leaf(cls, leaf, variables):
+        """
+        Create the node(s) required to represent `leaf` and return the root
+        """
+        leaf = leaf.copy()
+        vmap = { v: i for i, v in enumerate(variables) }
+        branches = []
+
+        for var in variables[::-1]:
+            var_min, var_max = leaf.state.min_max(
+                var, min_limit=None, max_limit=None
+            )
+            if var_min is not None:
+                branches.append((var, var_min, True))
+
+            if var_max is not None:
+                branches.append((var, var_max, False))
+
+        var, bound, is_lower = branches.pop(0)
+        nl = Leaf(None, cost=np.inf)
+        low, high = (nl, leaf) if is_lower else (leaf, nl)
+
+        new_node = Node(var, vmap[var], bound, low, high)
+
+        for var, bound, is_lower in branches:
+            nl = Leaf(None, cost=np.inf)
+            low, high = (nl, new_node) if is_lower else (new_node, nl)
+            new_node = Node(var, vmap[var], bound, low, high)
+
+        new_node.set_state(State(variables))
+        return new_node
+
 
 class Leaf:
-    def __init__(self, cost, action=None, act_id=None, state=None):
+    def __init__(self, action, cost=0, act_id=None, state=None):
         self.cost = cost
         self.action = action
         self.act_id = act_id
@@ -457,20 +520,27 @@ class Leaf:
         self.visits = 0
         self.is_leaf = True
 
-    def split(self, variable, bound, state):
-        new_node = Node(variable, state.var2id[variable], bound)
+        self._size = 1
+        self._max_depth = 0
+        self._min_depth = 0
 
-        low_state = state.copy()
-        low_state.less_than(variable, bound)
-        new_node.low = Leaf(self.cost, action=self.action, state=low_state)
+    @property
+    def size(self):
+        return self._size
 
-        high_state = state.copy()
-        high_state.greater_than(variable, bound)
-        new_node.high = Leaf(self.cost, action=self.action, state=high_state)
+    def split(self, v, bound, state):
+        """
+        Split leaf in two and return the parent branching node that splits on
+        `v <= bound`
+        """
+        low_state, high_state = state.split(v, bound)
+        low = Leaf(self.action, cost=self.cost, state=low_state)
+        high = Leaf(self.action, cost=self.cost, state=high_state)
 
-        return new_node
+        v_id = state.var2id[v]
+        return Node(v, v_id, bound, low, high, state=state)
 
-    def put_leaf(self, leaf, state):
+    def put_leaf(self, leaf, state, prune=False):
         """
         If all variables in `leaf` has been checked, compare cost value to
         determine action. Otherwise, insert Node checking for unchecked
@@ -487,14 +557,14 @@ class Leaf:
 
             if self_var_min < leaf_var_min:
                 new_node = self.split(var, leaf_var_min, state)
-                return new_node.put_leaf(leaf, state)
+                return new_node.put_leaf(leaf, state, prune=prune)
 
             if self_var_max > leaf_var_max:
                 new_node = self.split(var, leaf_var_max, state)
-                return new_node.put_leaf(leaf, state)
+                return new_node.put_leaf(leaf, state, prune=prune)
 
         # all variables are checked
-        return Leaf.copy(leaf)
+        return leaf.copy()
 
     def get(self, *args):
         return self
@@ -525,23 +595,24 @@ class Leaf:
             'cost': self.cost
         }
 
-    @classmethod
-    def copy(cls, leaf):
-        """
-        Returns a new Leaf that is a copy of `leaf`
-        """
-        return Leaf(leaf.cost, action=leaf.action, state=leaf.state.copy())
+    def copy(self):
+        return Leaf(self.action, cost=self.cost, state=self.state.copy())
 
     def __copy__(self):
-        return type(self)(self.cost, self.action, self.act_id, self.state.copy)
+        return type(self)(
+            self.action,
+            cost=self.cost,
+            act_id=self.act_id,
+            state=self.state.copy
+        )
 
     def __deepcopy__(self, memo):
         id_self = id(self)
         _copy = memo.get(id_self)
         if _copy is None:
             _copy = type(self)(
-                deepcopy(self.cost, memo),
                 deepcopy(self.action, memo),
+                deepcopy(self.cost, memo),
                 deepcopy(self.act_id, memo),
                 deepcopy(self.state, memo)
             )
@@ -555,7 +626,7 @@ class Leaf:
         return _copy
 
     def __str__(self):
-        return f'Leaf(action: {self.action}, cost: {self.cost}, {self.state})'
+        return f'Leaf(action: {self.action}, {self.state})'
 
     def __repr__(self):
         return self.__str__()
