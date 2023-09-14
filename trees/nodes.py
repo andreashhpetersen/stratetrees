@@ -123,9 +123,7 @@ class Node:
         self.var_id = var_id
 
         if low is not None and high is not None:
-            self._size = 1 + low._size + high._size
-            self._max_depth = 1 + max(self.low._max_depth, self.high._max_depth)
-            self._min_depth = 1 + min(self.low._min_depth, self.high._min_depth)
+            self._update_size_and_depth()
 
     def set_depth(self, depth=0):
         self.depth = depth
@@ -267,6 +265,7 @@ class Node:
                 # arbitrary if we here choose high or low
                 return self.low
 
+        self._update_size_and_depth()
         return self
 
     def as_dict(self, var_func=lambda x: x):
@@ -366,6 +365,11 @@ class Node:
 
     def copy(self):
         return self.__deepcopy__()
+
+    def _update_size_and_depth(self):
+        self._size = 1 + self.low._size + self.high._size
+        self._max_depth = 1 + max(self.low._max_depth, self.high._max_depth)
+        self._min_depth = 1 + min(self.low._min_depth, self.high._min_depth)
 
     def __str__(self):
         return f'Node(var: {self.var_name}, bound: {self.bound})'
