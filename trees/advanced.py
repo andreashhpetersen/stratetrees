@@ -463,6 +463,104 @@ def split_leaves_list(leaves, variables):
             # add the triplet to our list of possible cuts
             cuts.append((v, i, impurity))
 
+    # all leaves had same action
+    if len(cuts) == 0:
+        return Leaf(leaves[0].action)
+
+    # sort according to impurity and take the 'most pure' cut
+    v, b_id, _ = sorted(cuts, key=lambda x: x[2])[0]
+
+    # grab that optimal value
+    max_val = leaves[max_sorted[v][b_id]].state.max(v)
+
+    # separate the leaves into list of those that are lower than our cut, those
+    # that are higher or both if it falls on both sides of the cut
+    low, high = [], []
+    for b in leaves:
+        l, h = split_leaf(b, v, max_val)
+        if l is not None:
+            low.append(l)
+        if h is not None:
+            high.append(h)
+
+    # something went wrong if we end up here
+    assert not (len(low) == 0 or len(high) == 0)
+
+    # create the new branch node with a cut on v <= max_val
+    return (v, max_val), low, high
+
+
+def find_cut_impurity(idx, leaves, sorted_idxs):
+    # this is the lowest max value for v in the rest of the list (ie.
+    # leaves[curr_l[i]].state.max(v) <= leaves[curr_l[j]].state.max(v)
+    # for all j > i)
+    max_v = leaves[sorted_idxs[i]].state.max(v)
+
+    if max_v == leaves[sorted_idxs[i+1]].state.max(v):
+        return None
+
+    # ideally, we'd split at i == len(leaves) / 2, so we start by
+    # defining impurity as the difference between `i' and the optimal
+    # value (the halfway point)
+    impurity = abs((len(leaves) / 2) - (i + 1))
+
+    # look at the rest of curr_l (with large max values for v)
+    n_cuts = 0
+    for j in range(i + 1, len(sorted_idxs)):
+
+        # if the min value for v in curr_l[j] is less that max_v, we
+        # know that the box will be cut in 2, since it's max value for
+        # v by design must be greater than max_v
+        if leaves[sorted_idxs[j]].state.min(v) < max_v:
+            n_cuts += 1
+
+    impurity = abs(((len(leaves) + n_cuts) / 2) - (i + 1 + n_cuts)) + n_cuts
+    return impurity
+
+
+def split_leaves_list2(leaves, variables):
+
+    # map each variable to a sorted list of indicies of the leaves in `leaves'
+    # where the sorting is done according to maximum value of the respective
+    # variable for that leaf
+    max_sorted = {
+        # the variable is key, the list is the value
+        v: sorted(
+            # this just generates indicies from [0, 1, ..., len(leaves) - 1]
+            range(len(leaves)),
+
+            # this sorts the above indicies in ascending order according to the
+            # maximum value of v in the box that the index corresponds to
+            key=lambda x: list(leaves[x].state.min_max(v))[::-1]
+        )
+
+        # iterate the variables
+        for v in variables
+    }
+
+    # store potential cuts here
+    cuts = []
+
+    # go through each variable
+    for v in variables:
+
+        # list of indicies of entries in `leaves' sorted according to their max
+        # value for the variable `v'
+        curr_l = max_sorted[v]
+
+        # go through each index in the sorted list
+        for i in range(len(curr_l) - 1):
+            impurity = find_cut_impurity(i, leaves, curr_l)
+
+            # add the triplet to our list of possible cuts (if impurity was
+            # found)
+            if impurity is not None:
+                cuts.append((v, i, impurity))
+
+    # all leaves had same action
+    if len(cuts) == 0:
+        return Leaf(leaves[0].action)
+
     # sort according to impurity and take the 'most pure' cut
     v, b_id, _ = sorted(cuts, key=lambda x: x[2])[0]
 
@@ -492,8 +590,14 @@ def make_branch_node(leaves, variables, vmap):
     if len(leaves) == 1:
         return Leaf(leaves[0].action)
 
+    split = split_leaves_list(leaves, variables)
+
+    # all leaves had same action, so just return leaf
+    if isinstance(split, Leaf):
+        return split
+
     # split on v <= bound
-    (v, bound), low_ls, high_ls = split_leaves_list(leaves, variables)
+    (v, bound), low_ls, high_ls = split
 
     # make child nodes
     low = make_branch_node(low_ls, variables, vmap)
