@@ -135,11 +135,13 @@ class UppaalLoader:
 
 class SklearnLoader:
 
-    def __init__(self, path: str, actions, variables):
-        self.variables = variables
-        self.actions = actions
+    def __init__(self, clf, variables, actions):
+        if isinstance(clf, str):
+            clf = self.load_classifier(clf)
 
-        clf = self.load_classifier(path)
+        self.variables = variables or clf.feature_names_in_
+        self.actions = actions or clf.classes_
+
         self.children_left = clf.tree_.children_left
         self.children_right = clf.tree_.children_right
         self.features = clf.tree_.feature
@@ -147,7 +149,7 @@ class SklearnLoader:
         self.values = clf.tree_.value
 
         self.root = self.build_root(0)
-        self.root.set_state(State(variables))
+        self.root.set_state(State(self.variables))
 
     def build_root(self, node_id: int):
         is_branch = self.children_left[node_id] != self.children_right[node_id]
@@ -167,6 +169,6 @@ class SklearnLoader:
         return load(path)
 
     @classmethod
-    def load(cls, path, actions, variables):
-        loader = SklearnLoader(path, actions, variables)
-        return loader.root
+    def load(cls, path, variables=None, actions=None):
+        loader = SklearnLoader(path, variables, actions)
+        return loader.root, loader.variables, loader.actions
