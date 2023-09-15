@@ -111,7 +111,7 @@ def init_bounds(partitions, K):
     # make lmap map from a node_id to an index pointer representation of the
     # state of the node. Also get number of bounds in each dimension.
     # K x M x 2 operation
-    n_bounds = np.zeros((K,), dtype=np.int)
+    n_bounds = np.zeros((K,), dtype=np.int32)
     for i in range(K):
         n_bounds[i] = len(sorted_bounds[i]) - 1
         for idx, bound in enumerate(sorted_bounds[i]):
