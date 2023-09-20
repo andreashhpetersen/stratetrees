@@ -61,9 +61,9 @@ def draw_leaf(
 
     if print_action:
         if hasattr(leaf, 'verbose_action'):
-            label += f'Action: {leaf.verbose_action}\n'
+            label += f'{leaf.verbose_action}\n'
         else:
-            label += f'Action: {leaf.action}\n'
+            label += f'{leaf.action}\n'
     if print_cost:
         label += f'Cost: {round(leaf.cost, 2)}'
     if print_ratio and hasattr(leaf, 'ratio'):
@@ -97,14 +97,14 @@ def draw_node(graph, root, n, print_action=False, print_cost=False):
     )
 
     new_n = high_n + 1
-    label = f'{root.variable}: {round(root.bound, 2)}'
+    label = f'{root.variable} <= {root.bound:0.2f}'
     node = graph.add_node(
         pydot.Node(str(new_n), label=label, shape='square')
     )
 
 
-    graph.add_edge(pydot.Edge(str(new_n), str(low_n), label='low'))
-    graph.add_edge(pydot.Edge(str(new_n), str(high_n), label='high'))
+    graph.add_edge(pydot.Edge(str(new_n), str(low_n), label='true'))
+    graph.add_edge(pydot.Edge(str(new_n), str(high_n), label='false'))
     return node, new_n
 
 
