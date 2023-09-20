@@ -407,6 +407,37 @@ class DecisionTree:
         tree.size = tree.root.size
         return tree
 
+
+    @classmethod
+    def from_grid(cls, grid, variables, actions, intervals, bounds):
+        root = DecisionTree._from_grid(grid, intervals, bounds, State(variables))
+        return DecisionTree(root, variables, actions)
+
+
+    @classmethod
+    def _from_grid(cls, grid, intervals, bounds, state):
+        cut_dim = np.argmax(grid.shape)
+
+        cut_idx = grid.shape[cut_dim] // 2
+
+        if cut_idx == 0:
+            return Leaf(grid.item(), state=state)
+
+        blow, bhigh = bounds[cut_dim]
+        smin, smax = state.min_max(cut_dim, min_limit=blow, max_limit=bhigh)
+
+        cut_val = smin + cut_idx * intervals[cut_dim]
+        low_state, high_state = state.split(cut_dim, cut_val)
+
+        low_grid = np.take(grid, np.arange(cut_idx), axis=cut_dim)
+        high_grid = np.take(grid, np.arange(cut_idx, grid.shape[cut_dim]), axis=cut_dim)
+
+        low_node = DecisionTree._from_grid(low_grid, intervals, bounds, low_state)
+        high_node = DecisionTree._from_grid(high_grid, intervals, bounds, high_state)
+
+        node = Node(cut_dim, cut_dim, cut_val, low_node, high_node, state=state)
+        return node
+
 class QTree:
     def __init__(self, path: str):
         roots, actions, variables, meta = UppaalLoader.load(path)
