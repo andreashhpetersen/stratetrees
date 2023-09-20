@@ -96,6 +96,8 @@ def parse_uppaal_results(output):
             exp = float(match.groups()[0])
             std = float(match.groups()[1])
             return [exp, std]
+        elif '≈ 0' in line:
+            return [0., 0.]
 
 
 def run_uppaal(model_dir, strategy_name):

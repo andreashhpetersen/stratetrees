@@ -99,6 +99,7 @@ def run_experiments(model_dir, k=10, early_stopping=False):
         )
         results.append(np.concatenate((res, evaluation)))
 
+
     if early_stopping:
         maxlen = max([len(d) for d in all_mp_data])
         all_mp_data = [d[:maxlen] for d in all_mp_data]
