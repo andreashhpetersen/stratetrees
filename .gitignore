@@ -10,7 +10,7 @@ random/*
 .idea
 */automated/*/samples/*
 */automated/*/generated/*
-build/*
+*build*
 *.egg-info/*
 old_texts/*
 dist/*
