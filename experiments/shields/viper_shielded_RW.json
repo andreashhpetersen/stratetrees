@@ -1,0 +1,287 @@
+{
+    "variables": [
+        "x",
+        "t"
+    ],
+    "actions": [
+        0,
+        1
+    ],
+    "root": {
+        "var": "t",
+        "bound": 0.8487058877944946,
+        "low": {
+            "var": "t",
+            "bound": 0.23288130015134811,
+            "low": {
+                "var": "t",
+                "bound": 0.12802334874868393,
+                "low": {
+                    "action": 0,
+                    "cost": 0
+                },
+                "high": {
+                    "var": "x",
+                    "bound": 0.1036144457757473,
+                    "low": {
+                        "action": 1,
+                        "cost": 0
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 0.12916326522827148,
+                        "low": {
+                            "action": 1,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.21242031455039978,
+                            "low": {
+                                "var": "x",
+                                "bound": 0.21174024045467377,
+                                "low": {
+                                    "var": "t",
+                                    "bound": 0.20239928364753723,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 0,
+                                        "cost": 0
+                                    }
+                                },
+                                "high": {
+                                    "action": 1,
+                                    "cost": 0
+                                }
+                            },
+                            "high": {
+                                "action": 0,
+                                "cost": 0
+                            }
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "x",
+                "bound": 0.3279426097869873,
+                "low": {
+                    "var": "t",
+                    "bound": 0.2407349795103073,
+                    "low": {
+                        "var": "x",
+                        "bound": 0.22305292636156082,
+                        "low": {
+                            "action": 1,
+                            "cost": 0
+                        },
+                        "high": {
+                            "action": 0,
+                            "cost": 0
+                        }
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 0.2540261149406433,
+                        "low": {
+                            "var": "t",
+                            "bound": 0.2468455657362938,
+                            "low": {
+                                "action": 1,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "x",
+                                "bound": 0.1967148557305336,
+                                "low": {
+                                    "action": 1,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "action": 0,
+                                    "cost": 0
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.3143073320388794,
+                            "low": {
+                                "action": 1,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "x",
+                                "bound": 0.31726130843162537,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "action": 1,
+                                    "cost": 0
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "t",
+                    "bound": 0.5309429168701172,
+                    "low": {
+                        "var": "x",
+                        "bound": 0.3759194165468216,
+                        "low": {
+                            "var": "t",
+                            "bound": 0.3510289341211319,
+                            "low": {
+                                "var": "t",
+                                "bound": 0.30113938450813293,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 0.3179175704717636,
+                                    "low": {
+                                        "action": 1,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 0,
+                                        "cost": 0
+                                    }
+                                }
+                            },
+                            "high": {
+                                "action": 1,
+                                "cost": 0
+                            }
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 0.42142029106616974,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "x",
+                                "bound": 0.4726570248603821,
+                                "low": {
+                                    "action": 1,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "x",
+                                    "bound": 0.5154855847358704,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 0,
+                                        "cost": 0
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "x",
+                        "bound": 0.6695253551006317,
+                        "low": {
+                            "var": "t",
+                            "bound": 0.5629158318042755,
+                            "low": {
+                                "var": "x",
+                                "bound": 0.5762978196144104,
+                                "low": {
+                                    "action": 1,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "action": 0,
+                                    "cost": 0
+                                }
+                            },
+                            "high": {
+                                "action": 1,
+                                "cost": 0
+                            }
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.8235703706741333,
+                            "low": {
+                                "var": "t",
+                                "bound": 0.7295019626617432,
+                                "low": {
+                                    "var": "t",
+                                    "bound": 0.6619302332401276,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 0,
+                                        "cost": 0
+                                    }
+                                },
+                                "high": {
+                                    "action": 1,
+                                    "cost": 0
+                                }
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 0.8036521971225739,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "x",
+                                    "bound": 0.9234350025653839,
+                                    "low": {
+                                        "action": 1,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 0,
+                                        "cost": 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "high": {
+            "var": "x",
+            "bound": 0.9730990529060364,
+            "low": {
+                "action": 1,
+                "cost": 0
+            },
+            "high": {
+                "var": "x",
+                "bound": 0.9798434972763062,
+                "low": {
+                    "action": 0,
+                    "cost": 0
+                },
+                "high": {
+                    "action": 1,
+                    "cost": 0
+                }
+            }
+        }
+    },
+    "meta": {}
+}

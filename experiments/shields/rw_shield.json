@@ -1,0 +1,361 @@
+{
+    "variables": [
+        "x",
+        "t"
+    ],
+    "actions": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "root": {
+        "var": "t",
+        "bound": 0.64,
+        "low": {
+            "var": "t",
+            "bound": 0.45999999999999996,
+            "low": {
+                "var": "t",
+                "bound": 0.37,
+                "low": {
+                    "var": "t",
+                    "bound": 0.28,
+                    "low": {
+                        "var": "t",
+                        "bound": 0.12,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.035,
+                            "low": {
+                                "action": 2,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 0.21,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "x",
+                                    "bound": 0.16,
+                                    "low": {
+                                        "action": 2,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 0,
+                                        "cost": 0
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "x",
+                        "bound": 0.16,
+                        "low": {
+                            "var": "x",
+                            "bound": 0.09,
+                            "low": {
+                                "action": 3,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 2,
+                                "cost": 0
+                            }
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 0.3,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "x",
+                                "bound": 0.29000000000000004,
+                                "low": {
+                                    "action": 2,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "action": 0,
+                                    "cost": 0
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "x",
+                    "bound": 0.29000000000000004,
+                    "low": {
+                        "var": "x",
+                        "bound": 0.09,
+                        "low": {
+                            "action": 3,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.22,
+                            "low": {
+                                "action": 3,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 2,
+                                "cost": 0
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 0.39,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.42000000000000004,
+                            "low": {
+                                "action": 2,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 0,
+                                "cost": 0
+                            }
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "x",
+                "bound": 0.35,
+                "low": {
+                    "action": 3,
+                    "cost": 0
+                },
+                "high": {
+                    "var": "x",
+                    "bound": 0.5499999999999999,
+                    "low": {
+                        "var": "t",
+                        "bound": 0.5499999999999999,
+                        "low": {
+                            "var": "x",
+                            "bound": 0.42000000000000004,
+                            "low": {
+                                "action": 2,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 0.48,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "action": 2,
+                                    "cost": 0
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.48,
+                            "low": {
+                                "action": 3,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 2,
+                                "cost": 0
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 0.57,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "x",
+                            "bound": 0.6799999999999999,
+                            "low": {
+                                "action": 2,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 0,
+                                "cost": 0
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "high": {
+            "var": "x",
+            "bound": 0.81,
+            "low": {
+                "var": "x",
+                "bound": 0.61,
+                "low": {
+                    "action": 3,
+                    "cost": 0
+                },
+                "high": {
+                    "var": "t",
+                    "bound": 0.73,
+                    "low": {
+                        "var": "x",
+                        "bound": 0.6799999999999999,
+                        "low": {
+                            "action": 2,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 0.66,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 2,
+                                "cost": 0
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "x",
+                        "bound": 0.74,
+                        "low": {
+                            "action": 3,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 0.8200000000000001,
+                            "low": {
+                                "action": 2,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 3,
+                                "cost": 0
+                            }
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "x",
+                "bound": 0.9999999999999999,
+                "low": {
+                    "var": "t",
+                    "bound": 0.75,
+                    "low": {
+                        "action": 0,
+                        "cost": 0
+                    },
+                    "high": {
+                        "var": "x",
+                        "bound": 0.94,
+                        "low": {
+                            "var": "t",
+                            "bound": 0.8200000000000001,
+                            "low": {
+                                "action": 2,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "x",
+                                "bound": 0.87,
+                                "low": {
+                                    "action": 3,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 0.9099999999999999,
+                                    "low": {
+                                        "action": 2,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 3,
+                                        "cost": 0
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 0.84,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 0.9099999999999999,
+                                "low": {
+                                    "action": 2,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "action": 3,
+                                    "cost": 0
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "t",
+                    "bound": 0.75,
+                    "low": {
+                        "action": 0,
+                        "cost": 0
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 0.84,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 0.9999999999999999,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "action": 3,
+                                "cost": 0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "meta": {}
+}
