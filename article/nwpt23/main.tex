@@ -43,6 +43,21 @@
 
 \maketitle
 
+% \begin{abstract}
+%     When synthesizing safe and near-optimal control strategies for hybrid
+%     systems, state space partitioning is a common technique for discretizing
+%     continuous variables in the system. These partitioning tend to become
+%     extremely large if they are to capture the necessary information needed for
+%     proper synthesis, which is problematic for both explainability,
+%     verifiability and effectiveness of learned control strategies. We propose a
+%     novel algorithm called MaxPartitions that uses a decision tree
+%     representation of a partitioning to find larger regions in the partitioning
+%     that maps to the same action, thereby decreasing the overall partitioning
+%     size. We show that MaxPartitions can substantially reduce the size of
+%     partitionings that arise from both synthesis of safety shield and
+%     near-optimal control strategies. 
+% \end{abstract}
+
 \noindent
 When synthesizing safe and near-optimal control strategies for hybrid systems,
 an important issue is how to deal with the continuous behavior of the system.
@@ -63,18 +78,19 @@ detrimental for both the speed of execution and for memory consumption when the
 controller is expected to run on smaller, embedded devices (eg.\ to control a
 pump at a water basin or a traffic light at a crossing).
 
-We propose a novel algorithm for minimizing such mapped partitionings by
-using decision trees to represent the mapping of a discrete region in the state
-space to a single control action. Decision trees are elegant and versatile data
-structures, that are used across multiple disciplines within computer science
-and provide easy interpretation and inspection because of their white-box
-decision structure. Furthermore, a decision tree $\mathcal{T}$ over the domain
-$\mathcal{S} \in \mathbb{R}^{K}$ has the convenient property of inducing a
-mapped partitioning $\mathcal{A}_{\mathcal{T}}$, since each branch node
-effectively divides the space into two distinct regions and each leaf node maps
-a region to a decision (or a distribution over decisions).
+We propose a novel algorithm, \textsc{MaxPartitions} for minimizing such
+labelled partitionings by using decision trees to represent the mapping of a
+discrete region in the state space to a single control action. Decision trees
+are elegant and versatile data structures, that are used across multiple
+disciplines within computer science and provide easy interpretation and
+inspection because of their white-box decision structure. Furthermore, a
+decision tree $\mathcal{T}$ over the domain $\mathcal{S} \in \mathbb{R}^{K}$ has
+the convenient property of inducing a labelled partitioning
+$\mathcal{A}_{\mathcal{T}}$, since each branch node effectively divides the
+space into two distinct regions and each leaf node maps a region to a decision
+(or a distribution over decisions).
 
-Minimizing mapped partitionings is useful for obtaining more effective,
+Minimizing labelled partitionings is useful for obtaining more effective,
 verifiable and explainable policies in Reinforcement Learning and wherever
 partitioning (eg.\ decision trees) arise from learning. Our algorithm has the
 property of preserving the exact same mapping as the input partitioning, but we
@@ -95,7 +111,7 @@ contribution of this work.
 We define a partitioning of the (bounded) space $\mathcal{S} \in \mathbb{R}^K$
 as a set of rectangular regions $\mathcal{A}$ so that $\bigcup_{\nu \in
 \mathcal{A}} = \mathcal{S}$ and for every pair of regions $\nu,\nu' \in
-\mathcal{A}$ it holds that $\nu \cap \nu' = \emptyset$. A mapped partitioning is
+\mathcal{A}$ it holds that $\nu \cap \nu' = \emptyset$. A labelled partitioning is
 a tuple $(\mathcal{A}, Act, \sigma)$ where $\mathcal{A}$ is a partitioning,
 $Act$ is a set of labels (or actions) and $\sigma$ is a function $\sigma : \nu
 \rightarrow Act$ mapping any $\nu \in \mathcal{A}$ to a label $a \in Act$. We
@@ -118,7 +134,7 @@ defines a distinct region $\nu_{\ell} = (s^{\min}, s^{\max})$ which can be
 obtained by compiling the dimensional bounds of the predicate functions on every
 branch node on the path from the root node to $\ell$. We say that $\mathcal{T}$
 induces a partitioning $\mathcal{A}_{\mathcal{T}} = \{ \nu_{\ell} | \ell \in
-\mathcal{L} \}$. Further, we say that for any mapped partitioning
+\mathcal{L} \}$. Further, we say that for any labelled partitioning
 $(\mathcal{A}', Act, \sigma)$, a region $\nu \in \mathcal{A}'$ has
 \textit{singular mapping} in $\mathcal{T}$ if for any $s \in \nu$ it holds that
 $\sigma(s) = \mathcal{T}(s)$. Figure~\ref{fig:smallEx} gives an example of such
@@ -182,7 +198,7 @@ breaking expansion happened) as exhausted.
 Finally, we keep track of what areas of the state space have been covered by new
 regions using a separate decision tree. Whenever the outer loop starts a new
 iteration, we ask this \textit{tracking} tree for an uncovered region until the
-entire state space is covered. The algorithm then returns a mapped partitioning,
+entire state space is covered. The algorithm then returns a labelled partitioning,
 that is guaranteed to have no more regions than the original partitioning.
 
 \paragraph{Experiments} We conduct experiments on two types of cases: in the
@@ -200,15 +216,17 @@ regions and retains redundant information.
 
 Table~\ref{tab:results} shows the results of repeatedly applying the
 \textsc{MaxPartitions} algorithm on models of different types and
-dimensionality. We apply the algorithm repeatedly until a fixpoint is reached.
-\textsc{MaxPartitions} doesn't necessarily find a minimal partitioning, but it
-does guarantee to not not increase the size of the input partitioning. 
+dimensionality. Since \textsc{MaxPartitions} doesn't necessarily find a minimal
+partitioning, but only guarantees to not not increase the size of the input
+partitioning, we use the output of one run of \textsc{MaxPartitions} to
+construct a new tree and repeat the process, until the number of regions
+stabilize.
 
-Clearly, the algorithm can achieve substantial reductions in the
-partitioning size, especially in the cases where the input partitionings have
-been large. Since \textsc{MaxPartitions} retains the exact same state/action
-mapping as the original mapped partitioning, there is a natural limit to how
-few regions are needed.
+Since \textsc{MaxPartitions} retains the exact same state/action mapping as the
+original labelled partitioning, there is a natural limit to how few regions are
+needed. However, the results clearly show, that the algorithm can achieve
+substantial reductions in the partitioning size, especially in the cases where
+the input partitionings have been large. 
 
 \begin{table}[b]
     \centering
