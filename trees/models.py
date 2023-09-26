@@ -438,6 +438,7 @@ class DecisionTree:
         node = Node(cut_dim, cut_dim, cut_val, low_node, high_node, state=state)
         return node
 
+
 class QTree:
     def __init__(self, path: str):
         roots, actions, variables, meta = UppaalLoader.load(path)
