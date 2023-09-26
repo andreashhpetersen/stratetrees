@@ -15,6 +15,14 @@ the expected best score.
 On the other hand, if the shield is not enforced during execution, the shielded
 model performs absolutely horrendously.
 
+Secondly, I used VIPER to extract a strategy from an oracle that was purely
+a shield, meaning that every action (from the oracle) was either chosen randomly
+(if the shield permitted all or no actions from the state) or based on whatever
+action was enforced by the shield (for states with only one action permitted).
+
+The result was not a safe controller.
+
+
 ## Files
 
 - rw_shield.json - the shield as a minimized decision tree
@@ -28,3 +36,7 @@ model performs absolutely horrendously.
 - viper_unshielded_RW.pk - the unshielded VIPER generated strategy (in sklearn format)
 - viper_unshielded_RW.json - same as above but as in stratetrees format
 - unshielded_rw_example.png - visualization of the unshielded strategy partitioning
+
+- viper_from_shield_oracle.json - VIPER strategy obtained from oracle that is
+    _just_ as shield
+- viper_from_shield_oracle.png - a visualization of the above
