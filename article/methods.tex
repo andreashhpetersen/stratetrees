@@ -10,28 +10,16 @@ $\mathcal{A}_{\mathcal{T}}$ is its induced partitioning, can we find another
 partitioning $\mathcal{B}$ which is smaller than $\mathcal{A}_{\mathcal{T}}$ but
 still respects $\mathcal{T}$?
 
-As an example, we can consider the toy strategy from
-Example~\ref{ex:runningExample}. In Figure~\ref{fig:complexExample} the strategy
-is represented as a decision tree (\ref{fig:complexExampleTree}) by omitting the
-specification of cost values of each action and only preserving the optimal
-action for each discrete state. On the right (\ref{fig:complexExample2dVisual})
-is a 2D visualization of the induced partitioning of the state space. The
-partitioning has several redundant splits where areas of the same color (meaning
-they suggests the same optimal action) are split in two. For instance, the
-region $((0,0),(1,1))$ and the region $((0,1),(1,2))$ both specify $a$ as the
-optimal action, and we could replace these two regions with a single one given
-by $((0,0),(1,2))$.  Since each region is represented in our decision tree as a
-leaf node, the fewer regions we have the smaller a tree we need to represent it.
+As an example, consider a case where we have a state space $\mathcal{S} \in
+\mathbb{R}^2$ over variables $x$ and $y$, both of which are defined in the
+interval $[0,9]$, and a set of actions $Act = \{ action1, action2 \}$. Before
+learning, we might decide to discretize both $x$ and $y$ into 3 distinct bins,
+giving us a partitioning of $\mathcal{S}$ with $3\times3 = 9$ regions. After
+training, we end up with a Q-table that maps states to action in a way that is
+shown in Figure~\ref{fig:complexExample2dVisual}. This same mapping can also be
+represented by a decision tree, as shown in Figure~\ref{fig:complexExampleTree}.
 
 \begin{figure}[ht]
-    \begin{subfigure}[b]{.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{complexExampleTree}
-        \subcaption{%
-            % Tree representation of strategy with 2 state dimensions and 3
-            % actions
-        }\label{fig:complexExampleTree}
-    \end{subfigure}
     \begin{subfigure}[b]{.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{complexExample2dVisual}
@@ -39,25 +27,51 @@ leaf node, the fewer regions we have the smaller a tree we need to represent it.
             % 2D visualization of the state space partitioning entailed by the
             % decision tree.
         }\label{fig:complexExample2dVisual}
+    \end{subfigure}
+    \begin{subfigure}[b]{.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{complexExampleTree}
+        \subcaption{%
+            % Tree representation of strategy with 2 state dimensions and 3
+            % actions
+        }\label{fig:complexExampleTree}
     \end{subfigure}%
 
     \caption{%
-        Two representations of the toy strategy introduced in
-        Example~\ref{ex:runningExample}. In~\subref{fig:complexExampleTree} the
-        Q-table is represented as a decision tree.
-        In~\subref{fig:complexExample2dVisual} a 2D visualization of the state
-        space partitioning is showed, where the colors indicate what the optimal
-        action is in that area of the state space (red for $a$, green for $b$
-        and blue for $c$).
+        Two representations of a strategy mapping states to actions. In
+        \subref{fig:complexExample2dVisual} the strategy is represented as a
+        partitioning with colors representing the assigned action. In
+        \subref{fig:complexExampleTree} the strategy is given as a decision
+        tree, which also induces the partitioning. For this small example, it is
+        obvious to see that an equivalent state-action mapping could be achieved
+        with fever regions/leaves.
     }%
     \label{fig:complexExample}
 \end{figure}
 
-The problem of finding maximum sized regions is a local optimization probem:
-Given a point $s^{\min}$, find $s^{\max}$ such that $\nu = (s^{\min},
-s^{\max})$ has singular mapping in $\mathcal{T}$ while no other region $\nu' =
-(s^{\min}, s')$ where $s'_j = s^{\max}_j$ for $j = 1,\ldots,i-1,i+1,\ldots,K$
-and $s'_i > s^{\max}_i$ has this property.
+However, we can (in this small toy example) easily see that we do not need 9
+regions to represent this exact state-action mapping. For example, the two
+regions given by $((3,0),(6,3))$ and $((6,0),(9,3))$, respectively, both assign
+$action2$ as the optimal action, but this mapping would still be preserved if we
+replaced those two regions with a larger one $((3,0),(9,3))$. After a little bit
+of inspection, we can actually see here that we could represent the same
+state-action mapping with a partitioning consisting of only 5 regions.
+
+This example showcases how discretization techniques can easily end up with
+redundancy in the partitioning. This can be very difficult to anticipate before
+learning, especially since a very fine-grained discretization is typically
+needed for the learning to capture essential information and details for the
+strategy. Furthermore, for other learning techniques, such as the online
+partitioning refinement scheme of \textsc{UPPAAL Stratego}~\cite{Manfred2019},
+regions can be created on-the-fly, not be arranged in a straight grid and/or
+vary in size, which can enhance the problem of redundancy.
+
+We propose \textsc{MaxPartitions}, an algorithm that postprocesses a decision
+tree inducing a partitioning of a state space in order to minimize the
+partitioning by \textit{maximizing} the size of the individual regions (or
+partitions). The output of \textsc{MaxPartitions} is a new partitioning, ie.\ a
+list of regions with associated actions, which can then be arranged into a new
+decision tree.
 
 
 \subsection{Details of the algorithm}%
