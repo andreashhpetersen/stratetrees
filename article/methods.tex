@@ -84,27 +84,47 @@ By $\mathcal{T}_{i,j}$ we write the $j$th smallest bound on dimension $i$ for
 each $j = 1, 2, \ldots, |\mathcal{T}_i|$. This can be precomputed as a matrix in
 log-linear time by collecting and sorting the bounds on all branch nodes in
 $\mathcal{T}$ and allows accessing $\mathcal{T}_{i,j}$ in constant time.
-
-Exploiting this notation, if $p$ is a $K$-dimensional vector of index pointers
-to bounds in $\mathcal{T}$, such that $p_i \in p$ is a pointer to
-$\mathcal{T}_{i,p_i}$, then we can define a point at an intersection of bounds
-in all $K$ dimensions as $s^{p}_{\mathcal{T}} = (\mathcal{T}_{1,p_1},
-\mathcal{T}_{2,p_2}, \ldots, \mathcal{T}_{K,p_K})$. We will omit the subscript
-$\mathcal{T}$ on $s^{p}_{\mathcal{T}}$ when it is clear from the context.
 Further, in a slight abuse of notation, we define $\mathcal{T}_{i,
 |\mathcal{T}_i| + 1}$ to be some \textit{sentinel} value representing that we
-are outside the boundaries of dimension $i$.  Correspondingly, we define a
+are outside the boundaries of dimension $i$. Correspondingly, we define a
 sentinel action $\alpha$, and we say that $\mathcal{T}(s^p_{\mathcal{T}}) =
-\alpha$ if and only if $\exists p_i \in p, p_i = |\mathcal{T}_i| + 1$.
+\alpha$ if and only if $\exists p_i \in p,\, p_i = |\mathcal{T}_i| + 1$.
 
-The algorithm works by maintaining two vectors of index pointers, $p^{\min}$ and
-$p^{\max}$, and iteratively increasing $p^{\max}$ until a region $\nu =
-(s^{p^{\min}}, s^{p^{\max}})$ cannot be expanded further. The regions are stored
-in a list $\mathcal{R}$ and a list $\mathcal{P}$ is keeping track of the
-$p^{\min}$ vectors to use as starting points for the region search. Initially,
-$\mathcal{R}$ is empty and $\mathcal{P}$ contains the lowest bound for each
-dimension (so it equals the first column of the matrix $\mathcal{T}$). The
-pseudo-code is given in Algorithm~\ref{alg:MaxPartitions}.
+Exploiting this notation, let $p$ be a $K$-dimensional vector of integers, such
+that $p_i \leq |\mathcal{T}_i| + 1$ for all $i = 1,\ldots,K$, then we can define
+a point at an intersection of bounds in $\mathcal{T}$ as $s^{p}_{\mathcal{T}} =
+(\mathcal{T}_{1,p_1}, \mathcal{T}_{2,p_2}, \ldots, \mathcal{T}_{K,p_K})$. To
+avoid cluttering the notation, will for the most part omit the subscript
+$\mathcal{T}$ on $s^{p}_{\mathcal{T}}$. To make things clear, we will write $s$
+to refer to an actual point in the state space of $\mathcal{T}$, ie.\ $s \in
+\mathcal{S}$, and we will write $p$ to refer to a vector of integers
+representing indicies of bounds in $\mathcal{T}$.
+
+The algorithm (given in pseudo-code in Algorithm~\ref{alg:MaxPartitions}) works
+by maintaining a pair $(p^{\min}, p^{\max}$), and iteratively incrementing
+$p^{\max}$ in one dimension at a time until a region $\nu = (s^{p^{\min}},
+s^{p^{\max}})$ cannot be expanded further. When this happens, the region is
+added to a tree $\mathcal{T}_{track}$, which is used to track which areas of the
+state space have been covered and to provide new a starting point for each
+iteration of the algorithm. Expansion in dimension $i$ is disallowed if one of
+the following cases are true for the expanded region $\nu'$:
+
+\begin{itemize}
+    \item $\nu'$ does not have singular mapping in $\mathcal{T}$
+    \item $\nu'$ intersects with one or more regions already in
+        $\mathcal{T}_{track}$
+    \item $\nu'$ intersects with a region $\nu_{o}$ in the original
+        partitioning, such that the disjunction $\nu' \cap \nu_{o}$ cannot be
+        described by a single region of the form $(s^{\min}, s^{\min})$
+\end{itemize}
+
+\noindent The first two cases are directly related to the definition of the
+problem, ie.\ the produced partitioning should respect $\mathcal{T}$ and only
+have non-overlapping regions. The third case is required in order to guarantee
+that in each iteration the algorithm on average will add \textit{at least} one
+region from the original partitioning to the new partitioning. To see this,
+consider \ldots\todo{Make an example to show}.
+
 
 Let $p^{\min}$ be the result of popping the lexicographically smallest element
 of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the
@@ -220,155 +240,8 @@ In the following we provide an upper bound of the running time of
 \subsubsection{Running time}%
 \label{sec:runningTime}
 
-The first thing to notice is the outer while loop over $\mathcal{P}$. Points are
-dynamically added to $\mathcal{P}$ every time a new region is constructed, and
-in the worst case, $K$ new points (one for each dimension) are added for each
-region. The number of regions that can be found and constructed is bounded by
-the size of the original parition $\mathcal{A}_{\mathcal{T}}$, as the worst case
-is when $\mathcal{A}_{\mathcal{T}}$ is already a minimal partitioning that
-respects $\mathcal{T}$. In this case, the algorithm will produce $\mathcal{R} =
-\mathcal{A}_{\mathcal{T}}$ and the number of regions will necessarily be the
-same. Let $N = |\mathcal{A}_{\mathcal{T}}|$. Then we can state that the outer
-while loop is bounded by $O(KN)$.
-
-% Inside the loop, we first have an operation that pops the (lexicographically)
-% smallest item of $\mathcal{P}$. This can be done in logarithmic time using an
-% appropriate data structure (a priority queue) for $\mathcal{P}$. Of greater
-% interest is the check for membership of a point $s$ in $\mathcal{R}$ (which is
-% both checked for $s^{p^{\min}}$ and for each candidate of $p^{\max}$ in
-% $s^{p^{\max}}$ in the search for $\Delta_{p}$). 
-
-How about finding $\Delta_{p}$? The procedure is to increment by 1 in any one
-unexhausted dimension and then check for the validity of that increment. This
-check has two components: (a) check if the new region still has singular mapping
-in $\mathcal{T}$ and (b) check if the new region overlaps with any region
-already in $\mathcal{R}$. Let $\nu = (s^{\min}, s^{\max})$ be the candidate
-region for some $\Delta_{p} = \mathbf{1}^{K} + \mathbf{\hat{e}}_{i}$ (ie.\ so
-$s^{\max} = s^{p^{\min} + \Delta_{p}}$).
-
-For (a), we have to query $\mathcal{T}(\nu)$ which visits all leaves in $l \in
-\mathcal{T}$ for which $\lambda(l) \cap \nu \neq \emptyset$. Assuming
-$\mathcal{T}$ is balanced, then the path from the root to a leaf is $O(\log
- T)$ where $T - 1$ is the size of the tree (and $T = 2N -1$). The worst case
-for retrieving a set of size $L$, is that all $L$ leaves share the least amount
-of path. Since all paths share the root node, the worst case for $L=2$ is when
-the root is the \textit{only} shared node, in which case the operation would
-require $(2 * \log T) - 1$ visits (with the last term representing 1 shared
-node on the paths). For $L=3$ and $L=4$, all paths must at least share the root
-node as well as one of its two children. Thus, for $L=3$ we have $(3 * \log T)
-- 3$ and for $L=4$ we have $(4 * \log T) - 5$ (since now, adding the 3rd and
-4th leaf would require $\log T$ operations minus the checks on the nodes on the
-path shared by the 1st and 2nd leaf).
-
-In general, this becomes 
-
-\begin{equation}\label{eq:runtimeWithCeil}
-    L \log T - \sum^{L}_{i=1} \lceil \log i \rceil 
-\end{equation}
-
-Using Stirlings approximation~\cite{m.t.l.b.IntroductionProbabilityTheory1951}
-we can get rid of the summation further reduce:
-
-\begin{align}
-    L \log T - \sum^{L}_{i=1} \lceil \log i \rceil \notag
-    &\approx L \log T - (L \log L - L + 1) \notag \\
-    &= L \left(
-            \log T - \left( \log L - 1 + \frac{1}{L} \right)
-         \right) \notag \\
-    &= L \left(
-            \log T - \log \left( \frac{L}{2} \right) - \frac{1}{L}
-         \right) \notag \\
-    &= L \log \left( \frac{2T}{L} \right) - 1
-\end{align}
-
-In Big-$O$ notation, this is $O(L\left( \log \frac{T}{L} \right))$, ie.\ the
-complexity of the query $\mathcal{T}(\nu)$ is linear in the size of the output
-set times the logarithm of the ratio between the size of the tree and the size
-of the output set.
-
-By keeping $L$ small, we can therefore obtain a complexity that is close to $O
-\log T$. We can do this by noting, that we do not need to query the entire
-candidate region at each increment. Say we start from some region $\nu_{1} =
-(s^{p^{\min}}, s^{p^{\max}})$ with $p^{\max} = p^{\min} + \mathbf{1}^{K}$. We
-then have $\mathcal{T}(\nu_{1}) = \{ \alpha \}$ with $\alpha \in Act$ (as
-$\nu_{1}$ by design cannot span more than one region in the original
-paritioning). Then, for our next candidate region $\nu_{2} = (s^{p^{\min}},
-s^{p^{\max} + \mathbf{\hat{e}}_{i}})$ we only need to check that the region
-given by $\nu_{2} \setminus \nu_{1} = (s^{p'}, s^{p^{\max} +
-\mathbf{\hat{e}}_{i}})$ with $p' = (p^{\min}_{1}, \ldots, p^{\max}_{i}, \ldots,
-p^{\min}_{K})$ being an intermediate minimum point defining the lower bounds of
-the new part of the candidate region. With this technique, we avoid querying the
-same region again and again until the search terminates and we keep the expected
-complexity of each query operation minimal.
-
-How often is this operation performed? We increase $\Delta_{p}$ (starting from
-$\Delta_{p} = \mathbf{1}^{K}$) by $\mathbf{\hat{e}}_{i}$ until the region $\nu =
-(s^{p^{\min}}, s^{p^{\min} + \Delta_{p}})$ no longer has singular mapping and so
-for each such increment, we have to query $\mathcal{T}(\nu)$. In the worst case,
-a single search for $\Delta_{p}$ thus searches through each bound on each
-dimension. However, this would then result in the outer loop only running once
-since then a region spanning the entire state space would have been found. On
-the other hand, it is very difficult to say excactly how many increments of
-$\Delta_{p}$ can be expected.
-
-\begin{figure}[htpb]
-    \centering
-    \includegraphics[width=0.8\textwidth]{adversarialDeltaPCheck}
-    \caption{%
-        Example of a bad situation in terms of checking for $\Delta_{p}$. The
-        dashed lines extends the bounds of each region to show how the algorithm
-        processes the bounds.
-    }\label{fig:adversarialDeltaPCheck}
-\end{figure}
-
-Figure~\ref{fig:adversarialDeltaPCheck} gives an example of a partioning with a
-structure that requires checking a lot of bounds unrelated to the current region
-under construction. The algorithm would start by considering the region $\nu =
-(s^{\min}, s^{\max})$ with $s^{\min} = (0,0)$ and $s^{\max} = (1,2)$. But then,
-$s^{\max}$ would be increased to $(2,2)$ then to $(3,2)$, then $(4,2)$ and so
-forth. The same would be the case for the region starting in $s^{\min} = (0,2)$.
-In total, this partioning would make the algorithm attempt $11 + 11 + 2*10 = 42$
-increments even thoug, the number of (upper) bounds is only $13$.
-
-
-
-% For the running time, we first turn our attention to the outer while loop
-% iterating through $\mathcal{P}$. Since $\mathcal{P}$ is dynamically grown, we
-% must consider what the accumulated size during the entire run of the algorithm
-% can amount to. For this, we look at the case where new points are added to
-% $\mathcal{P}$, namely in line 27-31 where we have found a new region. We add a
-% point for each of the $K$ variables, barring some edge cases. This means, that
-% an upper bound to the number of points we must process in total is $K$ times the
-% number of regions we find.
-
-% The worst case number of regions the algorithm can find is on the other hand
-% bounded by the number of partitions (or leaf nodes) in the original tree
-% $\mathcal{T}$. This because either the partitioning $\mathcal{A}$ entailed by
-% $\mathcal{T}$ is already optimal, in which case, the algorithm will just find
-% one region for every leaf node in $\mathcal{T}$, or $\mathcal{A}$ is not
-% optimal, meaning the algorithm will find fewer (but larger) regions. Therefore,
-% the outer while loop is bounded by $O(KN)$ with $N$ being the number of leaf
-% nodes in $\mathcal{T}$.
-
-% Inside the while loop, we have two sorting operations and a for-loop. In line 6,
-% we sort $\mathcal{P}$, but we ignore this in our analysis, as $\mathcal{P}$ is
-% expected to at any time only contain a small subset of all the points entering
-% and exiting $\mathcal{P}$ during the algorithm. Secondly, a smart data structure
-% (eg.\ a heap) could sort the points at insertion and thus remove the need to
-% sort every time.
-
-% In line 11, however, we sort $\mathcal{C}$ according to the current $p^{\min}$.
-% As presented here, this sorting is unavoidable as we cannot expect to know the
-% correct sorting with respect to $p^{\min}$.\footnote{%
-%     One could imagine, that $K$ lists with the bounds in $\mathcal{C}$ sorted
-%     according their respective $V_i$ were stored and consulted in the following
-%     for-loop, thus alleviating the need to sort $\mathcal{C}$ in every
-%     iteration. This approach is not pursued here.
-% } If we assume that the sorting operation is $O(C\log C)$ with $C$ being the
-% size of $\mathcal{C}$, then question becomes one of estimating $C$. Also here we
-% have that $C$ is proportional to $N$ and $K$, as $\mathcal{C}$ is constructed
-% from all the predicates of the branch nodes in $\mathcal{T}$. This is at most
-% $N$, or rather $N-1$. Something something $\approx O(KN^2\log N)$.
+\subsubsection{Proof of correctness}%
+\label{sec:proofCorrectness}
 
 \subsection{From regions to decision tree}%
 \label{sub:regionsToDT}
@@ -452,217 +325,4 @@ not attempted to find a faster implementation as we found that the size of
 $\mathbf{R}$ obtained by using our \textsc{MaxPartitions} algorithm did not
 cause performance issues.
 
-
-\section{From Q-trees to Decision Tree}%
-\label{sec:convergeToDT}
-
-\subsection{Defining Q-trees}%
-\label{subsec:defQTrees}
-
-In Reinforcement Learning~\cite{Sutton1998} an agent is trying to estimate the
-expected value (cost or reward) of taking and action $A$ in a state $S$. This is
-called the Q-value. Let $Act$ be a finite set of actions and let $\mathcal{S}
-\in \mathbb{R}^K$ be the state space (a bounded $K$-dimensional euclidean space)
-then the goal is to learn the function $Q(s,a) : S, A \mapsto \mathbb{R}$ that
-for any $s \in \mathcal{S}$ and $a \in Act$ maps to the Q-value of the
-state-action pair.
-
-When $\mathcal{S}$ is continuous, the $Q$-function either has to be approximated
-or the state space needs to be discretized. In the latter case, $\mathcal{S}$
-can be redefined in terms of well-defined bounded subspaces where each $S \in
-2^{\mathbb{R}^{K}}$ now defines a smaller area of the original state space
-$\mathcal{S}$ and we by $S_{i,lower}$ and $S_{i,upper}$ respectively denote the lower and
-upper bound of dimension $i$ in $S$. Further, we require that $\bigcup_S S =
-\mathcal{S}$.
-
-For evaluating a particular state $s$, we say that $S = s$ iff $S_{i_{lower}}
-\le s_i < S_{i_{upper}}$ for all $i = 1, \ldots, K$.  This allows for a tabular
-representation of $Q(s,a)$, where the function is essentially just at
-lookup-table with $|\mathcal{S}| \times |Act|$ entries. The disadvantage
-of this approach is that the Q-table quickly grows very large and that many of
-the discrete states are irrelevant (in the sense that they are never actually
-visited). This can be remedied if close care is taken to designing the
-discretization, but this would in itself impose bias onto the learning.
-
-UPPAAL Stratego approaches the task of discretizing the state space in a
-different way. Instead of schematically discretizing $\mathcal{S}$ \textit{a
-priori} to the training, discretization is part of the Q-value estimation. What
-happens is \ldots\todo{The introduction of a partitioning $\mathcal{A}$ and
-    regions $\nu$ which I describe in Section~\ref{sec:maxParts} should probably
-come here instead.}
-
-The result is a strategy represented by a set of binary decision trees, each
-pertaining to a specific action in $a \in Act$, and whose leaf nodes carries the
-Q-value of taking action $a$ in the state $s$ defined by the constraints in the
-branch nodes on the path from the root to the leaf. We call these trees
-\textit{Q-trees} and denote by $\mathcal{T}_A$ the Q-tree for action $A \in Act$
-and we define $\mathcal{T}_A(s) = Q(s,a)$ when $A=a$. Given the complete set of Q-trees
-the matter of choosing the optimal action in a state $s$ can --- for a greedy
-policy $\pi$ and with the Q-values representing expected cost --- be defined as
-$\pi(s) = \argmin_{a\in Act} \mathcal{T}_A(s)$.
-
-
-\subsection{Converting to decision tree}%
-\label{subsec:convertQTtoDT}
-
-With Definition~\ref{def:qTree} we can now consider how to construct a single
-decision tree $\mathcal{T}$ so that $\pi(s) = \argmin_{a \in Act}
-\mathcal{T}_A(s) = \mathcal{T}(s)$ for all $s \in \mathcal{S}$. That is, instead
-of a Q-tree we will construct a decision tree where the leaf nodes carries the
-action $A$ that satisfies $A = \argmin_{a \in Act} T_A(\lambda(l))$ for
-a given leaf $l$. In the following, we will present the procedure for doing so
-in general terms while the full specification of the algorithm is available in
-Appendix~\ref{app:qTreeConversion}.
-
-First, let $\mathcal{L}$ be the set of every leaf in the set of Q-trees and let
-each leaf $l \in \mathcal{L}$ be defined as $l = (S^{l}, a_l, q_l)$ where $S^{l} =
-\lambda(l)$ in $T_A$, $a_l$ is the action of the Q-tree $l$ originally belonged to
-and $q_l$ is the Q-value of taking action $a_l$ in state $S^{l }$ (we use
-superscripts in $S^l$ to avoid notational clutter when we later need to index
-variables and bounds in $S^{l_i}$ and $S^{l_j}$ at the same time). We sort
-$\mathcal{L}$ in ascending order according to $q_l$ (meaning $l_0$ has the best
-Q-value of any leaf) and use the first leaf, $l_0$, to build the first path in
-the tree. This path requires $2 \times K$ branch nodes, one for each lower and
-upper bound of each dimension in  $S^{l}$.
-
-The decision about the order in which to predicate the branch nodes on each
-variable bound can and will greatly affect the size of the tree. However, as
-determining the optimal ordering of predicates is computationally
-infeasible~\cite{HYAFIL197615}, we will simply resort to a randomized picking
-order.  For the root node $v_0$, we thus pick a variable $i$ and a bound $j$ at
-random and set $\rho(v_0) = x_i \le c$ where $c = S^{l_0}_{i,j}$. If $j$ is a
-lower bound, then we set the left child node to a dummy leaf (we will complete
-this subtree later) and construct a new branch node for the right child from the
-remaining pairs of $i, j$ in $S^{l_0}$ and vice-versa if $j$ is an upper bound.
-We continue this procedure until $S^{l_0} = \lambda(l_0)$ holds true in the tree
-under construction.
-
-For inserting the another leaf, $l_j$, we now need to check at each branch node
-$v_m$ whether we should insert in the left subtree, in the right subtree or in
-both.  In other words, we do two checks: if $\rho(v_m)$ is $true$ for $x_i =
-S^{l_j}_{i,lower}$ we continue the insertion procedure in the left subtree.  If
-$\rho(v_m)$ is $false$ for $x_i = S^{l_j}_{i, upper}$ we \textit{also} insert
-$l_j$ into the right subtree. If both cases evaluates to $false$, we
-\textit{only} do the insertion in the right subtree. If we encounter a dummy
-leaf, we either construct a new branch node as we did for the initial path, ie.\ by
-randomly picking a still unchecked variable and bound to use for the predicate
-function, or --- in the case that $S^{l_j} = \lambda(l_j)$ already holds true
-for the tree under construction --- simply insert $l_j$ instead of the dummy.
-
-If we encounter a non-dummy leaf we can exploit the fact that the leaf nodes are
-inserted in a sorted order according to their Q-values. This ensures that if we
-encounter $l_i$ during insertion of $l_j$ then we know that $q_i \le  q_j$ and
-we can therefore safely stop the insertion of $l_j$ (in this particular subtree)
-as we know that for all $s \in S^{l_i} \cap S^{l_j}$ it must hold true that
-$\pi(s) = a_i$.
-
-When all leaf nodes from the set of Q-trees have been processed the resulting
-tree $\mathcal{T}$ represents the exact same strategy but now without any notion
-of Q-values. In the Python library built for this paper, it is possible to
-export a decision tree representation to a Q-tree representation that can then
-be imported into \texttt{UPPAAL Stratego} in order to test the performance of
-the strategy. This is done by for each $A \in Act$ creating
-$\mathcal{T}_A$ as a copy of $\mathcal{T}$ and then for every leaf $l$ setting
-$q_l = 0$ if $a_l = A$ and $q_l = 999$ if $a_l \neq A$.
-
-\section{Minimization techniques}%
-\label{sec:minimization}
-
-As we can give no guarantees to the minimality of the decision tree created from
-a set of Q-trees, $\mathcal{T}$ can grow very large and even contain more paths
-than all the Q-trees combined. This is unwanted, and we therefore present
-several minimization techniques that can drastically decrease the size of
-$\mathcal{T}$.
-
-\subsection{Simple pruning}%
-\label{sub:simplePrune}\todo{This subsection and the next
-    (Section~\ref{sub:simplePrune} and~\ref{sub:anaPrune}) I am not at all
-    certain about how to actually approach yet. The simple pruning is so simple,
-    that it is almost redundant to describe and the analytical pruning is only
-partially implemented and not very systematic yet.}
-
-
-The algorithm described in Section~\ref{subsec:convertQTtoDT} naively inserts
-leaf nodes without any consideration of optimality (except what little is given
-from the fact that leaf nodes are inserted in order of Q-value). This yields
-some obvious cases where branch nodes can be pruned away.
-
-Say we have a path $p = \{v_0, v_1, \dots, v_n \}$ where both children of $v_n$ 
-are leaf nodes, $l_i$ and $l_j$. If $a_i = a_j$ then the predicate at $v_n$
-bears no significance and we can replace that node with either $l_i$ or $l_j$.
-Now the child of $v_{n-1}$ that used to be $v_n$ is a leaf, which might again
-result in a situation where $v_{n-1}$ has two leaf children with the same
-action. Thus, we iteratively check for this condition all the way up through the
-tree, pruning any such cases.
-
-Something something $\lambda(v_n) = \lambda(l_i) \cup \lambda(l_j) \land a_i =
-a_j \implies \pi(\lambda(v_n)) = a_i = a_j$.
-
-\subsection{Analytical pruning}%
-\label{sub:anaPrune}
-
-\lipsum[1]
-
-
-\subsection{Empirical pruning}%
-\label{sub:empPrune}
-
-During training, the partitioning scheme used by UPPAAL Stratego to discretize
-the state space is explorative in the sense that it is non-deterministic when it
-creates new partitions. As it goes along, the algorithm discovers areas of
-interest where the choice of action seem to have greater impact on the overall
-cost and it then refines its partitioning in these areas.
-
-This leads to somewhat abundance of partitions early on in the training, where
-more or less random splits turns out to not influence the decision making. These
-splits are carried on into the final strategy and they are also imported into
-our converted decision tree where the merging of the different Q-trees actually
-amplify this abundance.
-
-This has two consequences. One is that the state space will be partitioned in
-such a way that neighboring partitions actually prescribe the same action, but
-do not necessarily appear as neighboring leafs in the strategy tree (ie.\ they
-do not have the same parent). We will deal with this problem in the
-Section~\ref{sec:maxParts}. The other consequence is that we end up with a lot
-of leaf nodes that in practice will never be visited, as the system that is
-modeled either never end up in such a state or because the strategy has the
-controller behave in such a way, that such a state is always avoided.\todo{This
-    entire intro should possible be moved to the beginning of this section
-    (Section~\ref{sec:minimization}). Also, I would like to be able to describe
-    the `issue' stemming from UPPAAL more precisely but for that, I probably
-need help from Peter.}
-
-To deal with this, we employ a technique we call \textit{empirical pruning}. In
-contrast to our other effort, this technique is not based on any analysis of the
-tree structure or state space but instead employs sample data to prune the tree
-of any leaf nodes that are either never or rarely visited. This have the
-drawback, that we loose our ability to give guarantees about the strategy, as our
-sampling \textit{might} just miss an important edge case that our empirically
-pruned strategy then does not know how to handle. On the other hand, given a
-large a enough sample, this risk is negligible since such a case would most
-likely have been just as rare during training, meaning the strategy would not
-even be ready to deal with it properly had it not been pruned from the tree.
-
-The way it works is by gathering a sample of data points $D = \{ s_0, s_1,
-\ldots, s_T\}$ representing the state of the system at each time step during a
-run (or preferably several runs) where the controller acts according to a well
-trained strategy represented by the tree $\mathcal{T}$. For each state $s_t \in
-D$ we increase a counter at the leaf node at the end of the path that came from
-evaluating $\mathcal{T}(s_t)$.
-
-When this process is done with a sufficiently large $D$, we can prune all the
-leaf nodes that were never visited or rarely visited. If we prune the never
-visited nodes, we call it \textit{zero-pruning}. Pruning nodes visited once is
-called \textit{one-pruning} and so forth. The pruning is simply done by removing
-every branch node with a leaf child that is never visited and instead
-`promoting' the subtree that is its other child.
-
-For example, if we have a path $p = \{ \ldots, v_{i-1}, v_i, v_{i+1}, \ldots \}$
-and $v_i$ has a leaf node $l$ for its other child and we see from sampling that
-$l$ is never visited, then the constraint that $v_i$ represent has no relevance
-for $v_{i+1}$. Therefore, we remove $v_i$ and set $v_{i+1}$ as a child of
-$v_{i-1}$ instead. Doing this iteratively from the `left-most' leaf and all the
-way through the tree can lead to substantial reductions, as we will show in
-Section~\ref{sec:experiments}, and provided that the sample size is large enough
-the performance of the pruned strategy stays on par with the original.
 
