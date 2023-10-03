@@ -107,16 +107,22 @@ s^{p^{\max}})$ cannot be expanded further. When this happens, the region is
 added to a tree $\mathcal{T}_{track}$, which is used to track which areas of the
 state space have been covered and to provide new a starting point for each
 iteration of the algorithm. Expansion in dimension $i$ is disallowed if one of
-the following cases are true for the expanded region $\nu'$:
+the following three \textit{expansion rules} are violated by the expanded region
+$\nu'$:
 
-\begin{itemize}
-    \item $\nu'$ does not have singular mapping in $\mathcal{T}$
-    \item $\nu'$ intersects with one or more regions already in
-        $\mathcal{T}_{track}$
-    \item $\nu'$ intersects with a region $\nu_{o}$ in the original
-        partitioning, such that the disjunction $\nu' \cap \nu_{o}$ cannot be
-        described by a single region of the form $(s^{\min}, s^{\min})$
-\end{itemize}
+\begin{definition}[Expansion rules]\label{def:expansionRules}
+    Let $\nu'$ be a candidate region for a new partitioning derived from
+    $\mathcal{A}_{T}$. Then $\nu'$ is valid if it adheres to the following rules:
+
+    \begin{enumerate}
+        \item $\nu'$ does not have singular mapping in $\mathcal{T}$
+        \item $\nu'$ intersects with one or more regions already in
+            $\mathcal{T}_{track}$
+        \item $\nu'$ intersects with a region $\nu_{o}$ in the original
+            partitioning, such that the disjunction $\nu' \cap \nu_{o}$ cannot be
+            described by a single region of the form $(s^{\min}, s^{\min})$
+    \end{enumerate}
+\end{definition}
 
 \noindent The first two cases are directly related to the definition of the
 problem, ie.\ the produced partitioning should respect $\mathcal{T}$ and only
@@ -126,28 +132,39 @@ region from the original partitioning to the new partitioning. To see this,
 consider \ldots\todo{Make an example to show}.
 
 
-Let $p^{\min}$ be the result of popping the lexicographically smallest element
-of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the
-`lower left' corner in (or the origin of) a region $\nu = (s^{\min}, s^{\max})$
-where $s^{\max}$ is the point we want to determine, so that $\nu$ is maximized
-and has singular mapping in $\mathcal{T}$. By definition, $s^{\max} =
-s^{p^{\max}}$ satifies the singular mapping requirement for $p^{\max} =
-(p^{\min}_{1} + 1, \ldots, p^{\min}_{K} + 1)$, since no branch node in
-$\mathcal{T}$ splits on a predicate $c$ where $\mathcal{T}_{i,p^{\min}_{i}} < c
-< \mathcal{T}_{i,p^{\min}_{i} + 1}$ for any $i = 1, \ldots, K$. 
+How do we determine this expansion? Let $(p^{\min}, p^{\max})$ define region in
+the original partitioning (or potentially the remains of a region previously cut
+in two). We then want to find a $\Delta_p \in \mathbb{Z}^K$ such that
+$(p^{\min}, p^{\min} + \Delta_p)$ defines a region that follows the three
+expansion rules and such that incrementing in any one dimension would result in
+a violation. By definition, a valid value for $\Delta_p$ is when $\Delta_p =
+p^{\max} - p^{\min}$, since this would just produce the original region. We are
+therefore guaranteed to at least find this region. This gives rise to the
+following definition.
 
-Finding a $p^{\max}$ that maximizes the region comes down to finding a vector
-$\Delta_{p} \in \mathbb{Z}^{K}$ so that $p^{\max} = p^{\min} + \Delta_{p}$. The
-definition of $\Delta_{p}$ is given below.
+% Let $p^{\min}$ be the result of popping the lexicographically smallest element
+% of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the
+% `lower left' corner in (or the origin of) a region $\nu = (s^{\min}, s^{\max})$
+% where $s^{\max}$ is the point we want to determine, so that $\nu$ is maximized
+% and has singular mapping in $\mathcal{T}$. By definition, $s^{\max} =
+% s^{p^{\max}}$ satifies the singular mapping requirement for $p^{\max} =
+% (p^{\min}_{1} + 1, \ldots, p^{\min}_{K} + 1)$, since no branch node in
+% $\mathcal{T}$ splits on a predicate $c$ where $\mathcal{T}_{i,p^{\min}_{i}} < c
+% < \mathcal{T}_{i,p^{\min}_{i} + 1}$ for any $i = 1, \ldots, K$. 
 
-\begin{definition}
+% Finding a $p^{\max}$ that maximizes the region comes down to finding a vector
+% $\Delta_{p} \in \mathbb{Z}^{K}$ so that $p^{\max} = p^{\min} + \Delta_{p}$. The
+% definition of $\Delta_{p}$ is given below.
+
+\begin{definition}[The expansion vector $\Delta_p$]
     Given $p^{\min} \in \mathbb{Z}^{K}$, a decision tree $\mathcal{T}$ over a
-    $K$-dimensional space and a list $\mathcal{R}$ of already found regions,
-    $\Delta_{p} \in \mathbb{Z}^{K}$ is a vector such that for $p^{\max} =
-    p^{\min} + \Delta_{p}$ the region $\nu = (s^{p^{\min}}_{\mathcal{T}},
-    s^{p^{\max}}_{\mathcal{T}})$ has singular mapping in $\mathcal{T}$, does not
-    overlap with any other region in $\mathcal{R}$ and no other $\Delta_{p'} >
-    \Delta_{p}$ has this property.
+    $K$-dimensional space and a decision tree $\mathcal{T}_{track}$ of already
+    found regions, $\Delta_{p} \in \mathbb{Z}^{K}$ is a vector such that for
+    $p^{\max} = p^{\min} + \Delta_{p}$ the region $\nu =
+    (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\max}}_{\mathcal{T}})$ does not violate
+    any of the expansion rules in Definition~\ref{def:expansionRules} and where
+    for any other $\Delta'_p = (\Delta_{p_{1}}, \ldots, \Delta_{p_{i}} + 1,
+    \ldots, \Delta_{p_{K}})$ this would not hold.
 \end{definition}\label{def:deltaP}
 
 A greedy approach to finding $\Delta_{p}$ starts with $\Delta_{p} =
