@@ -167,28 +167,28 @@ following definition.
     \ldots, \Delta_{p_{K}})$ this would not hold.
 \end{definition}\label{def:deltaP}
 
-A greedy approach to finding $\Delta_{p}$ starts with $\Delta_{p} =
-\mathbf{1}^{K}$, where $\mathbf{1}^{K}$ is the $K$-dimensional vector of ones.
-We then iteratively increment a single dimension chosen non-deterministically
-untill the invariants are violated.  Let $\mathbf{\hat{e}}_i$ denote the unit
-vector parallel to axis $i$, such that $\Delta_{p} + \mathbf{\hat{e}}_i =
+\noindent A greedy approach to finding $\Delta_{p}$ starts with $\Delta_{p} =
+p^{\max} - p^{\min}$, for some (remainder of a) region $\nu =
+(s^{p^{\min}}_{\mathcal{T}}, s^{p^{\max}}_{\mathcal{T}})$. We then iteratively
+increment a single dimension chosen non-deterministically untill the invariants
+are violated.  Let $\mathbf{\hat{e}}_i$ denote the unit vector parallel to axis
+$i$, such that $\Delta_{p} + \mathbf{\hat{e}}_i =
 (\Delta_{p_1},\ldots,\Delta_{p_i} + 1,\ldots,\Delta_{p_K})$. At each increment,
-we define a candidate region $\nu$ from $p^{\min}$ and $p^{\max} = p^{\min} +
-\Delta_{p}$ and check for singular mapping and no overlap with regions in
-$\mathcal{R}$. If any of these two do not hold, we mark dimension $i$ as
-exhausted, roll back the increment and continue with a new dimension not marked
-as exhausted. When all dimensions have been exhausted, $\Delta_{p}$ adheres to
-Defintion~\ref{def:deltaP}.
+we define a candidate region $\nu'$ from $p^{\min}$ and $p^{\max} = p^{\min} +
+\Delta_{p}$ and check for singular mapping (Rule 1) and no overlap with regions
+in $\mathcal{R}$ (Rule 2). If any of these two do not hold, we mark dimension
+$i$ as exhausted, roll back the increment and continue with a new dimension not
+marked as exhausted.
 
-Having found a region $\nu = (s^{p^{\min}}, s^{p^{\max}})$, we add it to
-$\mathcal{R}$. Further, we add to $\mathcal{P}$ the points from which the search
-should continue at future iteration. These are the $K$ points that agree with
-$p^{\min}$ in all dimensions except $i$, where they agree with $p^{\max}$, ie.\
-we add to $\mathcal{P}$ points $(p^{\min}_{1}, \ldots, p^{\max}_{i}, \ldots,
-p^{\min}_{K})$ for $i = 1,\ldots,K$ (where $p^{\max}_{i} < |\mathcal{T}_{i}|$).
-Then if $\mathcal{P}$ is not empty, we repeat the entire process. Otherwise the
-algorithm terminates and returns $\mathcal{R}$ which now represents a new
-partitioning that respects $\mathcal{T}$.
+If Rule 3 is violated, the algorithm wil initiate an attempt at \textit{healing}
+the candidate expansion, by continuing the expansion to the largest bound in
+the expansion dimension of any of the broken regions. This way we try to see if
+the violation can be overcome by simply expanding more aggressively. However,
+care is required to ensure, that we can roll back this extra expansion if it did
+not work (or if we inadverdently broke any of the other rules in the process). 
+
+When all dimensions have been
+exhausted, $\Delta_{p}$ adheres to Defintion~\ref{def:deltaP}.
 
 \begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
@@ -198,46 +198,64 @@ partitioning that respects $\mathcal{T}$.
             $\mathcal{T}$: A binary decision tree over the domain
             $\mathbb{R}^K$ inducing the partitioning $\mathcal{A}_{\mathcal{T}}$
         }
+        \State{$\mathcal{T}_{track} \gets$ empty tree}
         \State{$\mathcal{R} \gets \{\}$}
-        \State{$\mathcal{P} \gets \{ \mathbf{1}^K \} $}\Comment{%
-            $\mathbf{1}^K$ is a $K$-dimensional vector of ones
-        }
 
-        \While{$\mathcal{P}$ is not empty}
+        \While{$\mathcal{T}_{track}$ has unexplored regions}
+
             \State{%
-                $p^{\min} \gets $ Remove lexicographically smallest element of
-                $\mathcal{P}$
+                $(p^{\min}, p^{\max}) \gets$
+                select region bounds of unexplored region
             }
 
-            \If{%
-                $s^{p^{\min}}_{\mathcal{T}}$ is not covered by
-                any region in $\mathcal{R}$
+            \State{%
+                $\Delta_p \gets p^{\max} - p^{\min}$
+            }
+
+            \item[]
+            \While{%
+                not all dimensions have been exhausted
             }
 
                 \State{%
-                    $p^{\max} \gets p^{\min} + \Delta_{p}$
-                }\Comment{%
-                    See Definition~\ref{def:deltaP}
+                    $d \gets$ randomly select unexhausted dimension
+                }
+                \State{%
+                    $\Delta_{p_{d}} \gets \Delta_{p_{d}} + 1$
                 }
 
                 \State{%
-                    $\mathcal{R} \gets \mathcal{R} \cup \{\,
-                        (s^{p^{\min}}_{\mathcal{T}},s^{p^{\max}}_{\mathcal{T}})
-                    \,\}
-                $}
-
-                \State{%
-                    $\mathcal{P} \gets \mathcal{P} \cup
-                    \{\, (
-                            p^{\min}_{1}, \ldots, p^{\max}_{i},
-                            \ldots, p^{\min}_{K}
-                         ) \mid
-                         i \in 1, \ldots, K, \quad
-                         p^{\max}_{i} < |\mathcal{T}_{i}|
-                    \,\}$
+                    $\nu' \gets (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\min} +
+                    \Delta_p}_{\mathcal{T}})$
                 }
 
-            \EndIf%
+                \item[]
+                \If{%
+                    $\nu'$ violates Rule 1 or 2
+                    (Definition~\ref{def:expansionRules})
+                }
+                    \State{$\Delta_{p_{d}} \gets \Delta_{p_{d}} - 1$}
+                    \State{mark $d$ as exhausted}
+
+                \ElsIf{%
+                    $\nu'$ violates Rule 3 (Definition~\ref{def:expansionRules})
+                }
+                    \State{attempt $healing$ in dimension $d$}
+                \EndIf%
+
+            \EndWhile%
+            
+            \item[]
+            \State{%
+                $\nu' \gets (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\min} +
+                \Delta_p}_{\mathcal{T}})$
+            }
+            \State{%
+                \Call{Put}{$\mathcal{T}_{track},\, \nu'$}
+            }
+            \State{%
+                $\mathcal{R} \gets \mathcal{R} \cup \{\nu'\}$
+            }
 
         \EndWhile%
 
@@ -246,6 +264,7 @@ partitioning that respects $\mathcal{T}$.
     \end{algorithmic}
 
 \end{algorithm}
+
 
 
 \subsection{Analyzing the algorithm}%

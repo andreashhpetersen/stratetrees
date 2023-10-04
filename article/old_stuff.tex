@@ -226,6 +226,153 @@ $\mathcal{T}_A$ as a copy of $\mathcal{T}$ and then for every leaf $l$ setting
 $q_l = 0$ if $a_l = A$ and $q_l = 999$ if $a_l \neq A$.
 
 
+% ALTERNATE VERSION OF THE PSEUDO-CODE
+
+\begin{algorithm}[!ht]
+    \caption{MaxPartitions}\label{alg:MaxPartitions}
+
+    \begin{algorithmic}[1]
+        \Require{%
+            $\mathcal{T}$: A binary decision tree over the domain
+            $\mathbb{R}^K$ inducing the partitioning $\mathcal{A}_{\mathcal{T}}$
+        }
+        \State{$\mathcal{R} \gets \{\}$}
+        \State{$\mathcal{P} \gets \{ \mathbf{1}^K \} $}\Comment{%
+            $\mathbf{1}^K$ is a $K$-dimensional vector of ones
+        }
+
+        \While{$\mathcal{P}$ is not empty}
+            \State{%
+                $p^{\min} \gets $ Remove lexicographically smallest element of
+                $\mathcal{P}$
+            }
+
+            \If{%
+                $s^{p^{\min}}_{\mathcal{T}}$ is not covered by
+                any region in $\mathcal{R}$
+            }
+
+                \State{%
+                    $p^{\max} \gets p^{\min} + \Delta_{p}$
+                }\Comment{%
+                    See Definition~\ref{def:deltaP}
+                }
+
+                \State{%
+                    $\mathcal{R} \gets \mathcal{R} \cup \{\,
+                        (s^{p^{\min}}_{\mathcal{T}},s^{p^{\max}}_{\mathcal{T}})
+                    \,\}
+                $}
+
+                \State{%
+                    $\mathcal{P} \gets \mathcal{P} \cup
+                    \{\, (
+                            p^{\min}_{1}, \ldots, p^{\max}_{i},
+                            \ldots, p^{\min}_{K}
+                         ) \mid
+                         i \in 1, \ldots, K, \quad
+                         p^{\max}_{i} < |\mathcal{T}_{i}|
+                    \,\}$
+                }
+
+            \EndIf%
+
+        \EndWhile%
+
+        \State{\textbf{return} $\mathcal{R}$}
+
+    \end{algorithmic}
+
+\end{algorithm}
+
+
+\begin{algorithm}[!ht]
+    \caption{MaxPartitions}\label{alg:MaxPartitionsElaborate}
+
+    \begin{algorithmic}[1]
+        \Require{%
+            $\mathcal{T}$: A binary decision tree over the domain
+            $\mathbb{R}^K$ inducing the partitioning $\mathcal{A}_{\mathcal{T}}$
+        }
+        \State{$\mathcal{T}_{track} \gets$ empty tree}
+
+        \While{$\mathcal{T}_{track}$ has unexplored leaves}
+            \State{%
+                $\nu \gets$ find unexplored region in
+                $\mathcal{T}_{track}$
+            }
+
+            \State{%
+                $(p^{\min}, p^{\max}),\, a \gets$
+                find region bounds and action of $\nu$ in $\mathcal{T}$
+            }
+
+            \State{%
+                $\Delta_p \gets p^{\max} - p^{\min}$
+            }
+
+            \State{%
+                $healing \gets false$
+            }
+
+            \While{%
+                not all dimensions have been exhausted
+            }
+
+                \If{%
+                    $healing$ is $false$
+                }
+                    \State{%
+                        $d \gets$ randomly select unexhausted dimension
+                    }
+                    \State{%
+                        $\Delta_{p_{d}} \gets \Delta_{p_{d}} + 1$
+                    }
+                \EndIf%
+
+                \State{%
+                    $\nu' \gets (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\min} +
+                    \Delta_p}_{\mathcal{T}})$
+                }
+
+                \If{%
+                    $\nu'$ is explored in $\mathcal{T}_{track}$ or $a' \neq a$
+                    for any $a' \in \mathcal{T}(\nu')$
+                }
+                    \State{$healing \gets false$}
+                    \State{$\Delta_p \gets$ last legal value of $\Delta_p$}
+                    \State{mark $d$ as exhausted}
+
+                \ElsIf{%
+                    $\nu'$ breaks any regions in $\mathcal{T}$
+                }
+                    \State{$candUpdate \gets$ value of largest region bound in}
+                    \State{dimensoin $d$ among the broken regions}
+
+                    \If{%
+                        $candUpdate \leq \Delta_{p_{d}}$
+                    }
+                        \State{$healing \gets false$}
+                        \State{$\Delta_p \gets$ last legal value of $\Delta_p$}
+                        \State{mark $d$ as exhausted}
+                    \Else
+                        \State{$\Delta_{p_{d}} \gets candUpdate$}
+                    \EndIf%
+                \EndIf%
+
+            \EndWhile%
+
+        \EndWhile%
+
+        \State{\textbf{return} $\mathcal{R}$}
+
+    \end{algorithmic}
+
+\end{algorithm}
+
+
+
+
 % OLD DESCRIPTIONS OF MINIMIZATION TECHNIQUES
 
 \section{Minimization techniques}%
