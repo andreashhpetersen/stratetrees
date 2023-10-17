@@ -407,12 +407,10 @@ class DecisionTree:
         tree.size = tree.root.size
         return tree
 
-
     @classmethod
     def from_grid(cls, grid, variables, actions, intervals, bounds):
         root = DecisionTree._from_grid(grid, intervals, bounds, State(variables))
         return DecisionTree(root, variables, actions)
-
 
     @classmethod
     def _from_grid(cls, grid, intervals, bounds, state):
