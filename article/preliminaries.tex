@@ -1,12 +1,10 @@
-\section{Preliminaries}%
-\label{sec:preliminaries}
-
-We start by defining some relevant concepts.
+\section {Preliminaries}%
+\label {sec:preliminaries}
 
 % \begin{definition}[Strategy]%
 %     A strategy $\sigma : S \to A$ over the state space $\mathcal{S}$ is a
 %     mapping from any state $s \in \mathcal{S}$ to an action $a \in Act$ where
-%     $Act$ is a finite set of allowed actions. 
+%     $Act$ is a finite set of allowed actions.
 % \end{definition}
 
 % A strategy can be represented in several different ways. In
@@ -26,16 +24,11 @@ We start by defining some relevant concepts.
 % $s \in S$. This allows for a tabular representation of the Q-function, as in the
 % toy example in Table~\ref{tab:exStrategyQTable}.
 
-\begin{definition}[Partitionings]%
-\label{def:partitioning}
-    A partitioning $\mathcal{A}$ of the state space $\mathcal{S} \in
-    \mathbb{R}^K$ is a set of regions $\nu$ that divides $\mathcal{S}$ such that
-    $\bigcup_{\nu \in \mathcal{A}}\nu = \mathcal{S}$ and for any two regions
-    $\nu, \nu' \in \mathcal{A}$ where $\nu \neq \nu'$ it holds that $\nu \cap
-    \nu' = \emptyset$.
+\begin {definition}
+  \label {def:partitioning}
+  A \emph {partitioning} \( \mathcal A \) of the state space $\mathcal{S} \in \mathbb{R}^K$ is a set of regions $\nu$ that divides $\mathcal{S}$ such that $\bigcup_{\nu \in \mathcal{A}}\nu = \mathcal{S}$ and for any two regions $\nu, \nu' \in \mathcal{A}$ where $\nu \neq \nu'$ it holds that $\nu \cap \nu' = \emptyset$.
 \end{definition}
 
-\noindent
 For an \textit{axis aligned} partitioning, each region $\nu$ can be expressed in
 terms of two corner points, $s^{\min}, s^{\max} \in \mathcal{S}$, so that for
 each $s = (s_1, \ldots, s_K) \in \nu$ it holds that $s^{\min}_i < s_i \le
