@@ -26,8 +26,11 @@
 
 \begin {definition}
   \label {def:partitioning}
-  A \emph {partitioning} \( \mathcal A \) of the state space $\mathcal{S} \in \mathbb{R}^K$ is a set of regions $\nu$ that divides $\mathcal{S}$ such that $\bigcup_{\nu \in \mathcal{A}}\nu = \mathcal{S}$ and for any two regions $\nu, \nu' \in \mathcal{A}$ where $\nu \neq \nu'$ it holds that $\nu \cap \nu' = \emptyset$.
-\end{definition}
+  A \emph {partitioning} \Partition of the state space \( \SSpace \subseteq \Reals ^K \) is a set of non-overlapping subsets \( \Partition \subseteq \Powerset (\SSpace) \) covering \SSpace, so \( \bigcup _{\nu \in \Partition} \nu = \SSpace \) and whenever \( \nu, \nu' \in \Partition, \nu \neq \nu'  \) then \( \nu \cap \nu' = \emptyset \).
+  \looseness -1
+\end {definition}
+
+\todo {do we assume that the state space \SSpace is rectangular?}
 
 For an \textit{axis aligned} partitioning, each region $\nu$ can be expressed in
 terms of two corner points, $s^{\min}, s^{\max} \in \mathcal{S}$, so that for

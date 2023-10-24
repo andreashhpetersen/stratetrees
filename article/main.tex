@@ -22,6 +22,7 @@
   multirow,
   nicefrac,
   tikz,
+  xspace,
 }
 
 \overrideIEEEmargins % Needed to meet printer requirements.
@@ -52,6 +53,16 @@
         align = center,
     }
 }
+
+\newcommand \Reals
+  {\ensuremath {\mathbb R}\xspace}
+\newcommand \Powerset
+  {\mathcal P}
+
+\newcommand \SSpace
+  {\ensuremath {\mathcal S}\xspace}
+\newcommand \Partition
+  {\ensuremath {\mathcal A}\xspace}
 
 \title {Minimizing State Space Partitionings Using Decision Trees}
 
