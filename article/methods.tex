@@ -20,33 +20,25 @@ shown in Figure~\ref{fig:complexExample2dVisual}. This same mapping can also be
 represented by a decision tree, as shown in Figure~\ref{fig:complexExampleTree}.
 
 \begin{figure}[ht]
-    \begin{subfigure}[b]{.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{complexExample2dVisual}
-        \subcaption{%
-            % 2D visualization of the state space partitioning entailed by the
-            % decision tree.
-        }\label{fig:complexExample2dVisual}
-    \end{subfigure}
-    \begin{subfigure}[b]{.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{complexExampleTree}
-        \subcaption{%
-            % Tree representation of strategy with 2 state dimensions and 3
-            % actions
-        }\label{fig:complexExampleTree}
-    \end{subfigure}%
+  \includegraphics[width=.5 \textwidth]{complexExample2dVisual}
+  % 2D visualization of the state space partitioning entailed by the
+  % decision tree.
+  \label{fig:complexExample2dVisual}
+  \includegraphics[width=.5 \textwidth]{complexExampleTree}
+  % Tree representation of strategy with 2 state dimensions and 3
+  % actions
+  \label{fig:complexExampleTree}
 
-    \caption{%
-        Two representations of a strategy mapping states to actions. In
-        \subref{fig:complexExample2dVisual} the strategy is represented as a
-        partitioning with colors representing the assigned action. In
-        \subref{fig:complexExampleTree} the strategy is given as a decision
-        tree, which also induces the partitioning. For this small example, it is
-        obvious to see that an equivalent state-action mapping could be achieved
-        with fever regions/leaves.
-    }%
-    \label{fig:complexExample}
+  \caption{%
+    Two representations of a strategy mapping states to actions. In
+    \cref{fig:complexExample2dVisual} the strategy is represented as a
+    partitioning with colors representing the assigned action. In
+    \cref{fig:complexExampleTree} the strategy is given as a decision
+    tree, which also induces the partitioning. For this small example, it is
+    obvious to see that an equivalent state-action mapping could be achieved
+    with fever regions/leaves.
+  }%
+  \label{fig:complexExample}
 \end{figure}
 
 However, we can (in this small toy example) easily see that we do not need 9
@@ -150,7 +142,7 @@ following definition.
 % s^{p^{\max}}$ satifies the singular mapping requirement for $p^{\max} =
 % (p^{\min}_{1} + 1, \ldots, p^{\min}_{K} + 1)$, since no branch node in
 % $\mathcal{T}$ splits on a predicate $c$ where $\mathcal{T}_{i,p^{\min}_{i}} < c
-% < \mathcal{T}_{i,p^{\min}_{i} + 1}$ for any $i = 1, \ldots, K$. 
+% < \mathcal{T}_{i,p^{\min}_{i} + 1}$ for any $i = 1, \ldots, K$.
 
 % Finding a $p^{\max}$ that maximizes the region comes down to finding a vector
 % $\Delta_{p} \in \mathbb{Z}^{K}$ so that $p^{\max} = p^{\min} + \Delta_{p}$. The
@@ -185,7 +177,7 @@ the candidate expansion, by continuing the expansion to the largest bound in
 the expansion dimension of any of the broken regions. This way we try to see if
 the violation can be overcome by simply expanding more aggressively. However,
 care is required to ensure, that we can roll back this extra expansion if it did
-not work (or if we inadverdently broke any of the other rules in the process). 
+not work (or if we inadverdently broke any of the other rules in the process).
 
 When all dimensions have been
 exhausted, $\Delta_{p}$ adheres to Defintion~\ref{def:deltaP}.
@@ -244,7 +236,7 @@ exhausted, $\Delta_{p}$ adheres to Defintion~\ref{def:deltaP}.
                 \EndIf%
 
             \EndWhile%
-            
+
             \item[]
             \State{%
                 $\nu' \gets (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\min} +
@@ -343,7 +335,7 @@ Now we can write our impurity measure in terms of these quantities:
     I(\mathbf{R}_{low}, \mathbf{R}_{high}) = abs(j - (n - j)) +
     \sum^{n}_{m=1} \mathbbm{1}(\rho(\nu^{j+m}_{\min})), \quad
     \text{for all }\nu^{j} \in \mathbf{R}_{i}
-\] 
+\]
 
 \noindent
 where $\mathbbm{1}$ is the indicator function, $\mathbf{R}_{i}$ is the list of

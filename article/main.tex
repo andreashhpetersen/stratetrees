@@ -1,98 +1,91 @@
-\documentclass[runningheads]{llncs}
+\documentclass [
+  letterpaper,
+  10 pt,
+  conference
+] {ieeeconf}
 
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
+\usepackage [T1]    {fontenc}
+\usepackage [utf8]  {inputenc}
+\usepackage [noend] {algpseudocode}
 
-\usepackage{hyperref}
-\usepackage{algorithm}
-\usepackage[noend]{algpseudocode}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amsfonts}
-\usepackage{bbm}
-\usepackage{nicefrac}
-\usepackage{graphicx}
-\usepackage{lipsum}
-\usepackage{todonotes}
-\usepackage{booktabs}
-\usepackage{multirow}
-\usepackage{caption}
-\usepackage[subrefformat=parens]{subcaption}
-\usepackage{appendix}
+\usepackage {
+  algorithm,
+  amsfonts,
+  amsmath,
+  amssymb,
+  bbm,
+  booktabs,
+  graphicx,
+  hyperref,
+  cleveref, % after hyperref
+  lipsum,
+  multirow,
+  nicefrac,
+  tikz,
+}
 
-% argmax and argmin
-\DeclareMathOperator*{\argmax}{argmax}
-\DeclareMathOperator*{\argmin}{argmin}
+\overrideIEEEmargins % Needed to meet printer requirements.
 
-% transpose
-\DeclareMathOperator*{\tran}{\mathsf{T}}
+\newcommand \todo [1] {\textcolor {orange} {#1}}
 
-% define theorems and definitions
-% \newtheorem{definition}{Definition}
-% \newtheorem{lemma}{Lemma}
+\DeclareMathOperator* \argmax {argmax}
+\DeclareMathOperator* \argmin {argmin}
+\DeclareMathOperator* \tran   {\mathsf T}
 
+\newtheorem {definition} {Definition}
+\newtheorem {lemma} {Lemma}
 
 \graphicspath{{./imgs/}}
 
-\usepackage{tikz}
-\usetikzlibrary{shapes.geometric}
-\tikzset{%
-    branch/.style={%
+\usetikzlibrary {shapes.geometric}
+
+\tikzset {%
+    branch/.style = {%
         rectangle,
         draw,
-        align=center
+        align = center
     },
-    leaf/.style={%
+    leaf/.style = {%
         circle,
         draw,
-        text width=8mm,
-        align=center,
+        text width = 8mm,
+        align = center,
     }
 }
 
-\title{%
-    Minimizing State Space Partitionings Using Decision Trees
+\title {Minimizing State Space Partitionings Using Decision Trees}
+
+\author {
+  \authorblockN {Andreas Holck Høeg-Petersen}
+  \authorblockA {Aalborg University\\ Denmark}
+  \and
+  \authorblockN {Kim Guldstrand Larsen}
+  \authorblockA {Aalborg University\\ Denmark}
+  \and
+  \authorblockN {Peter Gjøl Jensen}
+  \authorblockA {Aalborg University\\ Denmark}
+  \and
+  \authorblockN {Andrzej Wąsowski}
+  \authorblockA {IT University of Copenhagen\\ Denmark}
 }
-\author{%
-    Andreas Holck Høeg-Petersen\inst{1},
-    Kim Guldstrand Larsen\inst{1},
-    Peter Gjøl Jensen\inst{1}, \\
-    Andrzej Wąsowski\inst{2}
-}
 
-\authorrunning{A. H. Høeg-Petersen, et al.}
-
-\institute{%
-    Aalborg University, Denmark \and
-    IT University of Copenhagen, Denmark
-}
-
-
-\begin{document}
+\begin {document}
 
 \maketitle
 
-\input{abstract}
-
-\input{introduction}
-
-\input{preliminaries}
-
-\input{methods}
-
-\input{experiments}
+\input {abstract.tex}
+\input {introduction.tex}
+\input {preliminaries.tex}
+\input {methods.tex}
+\input {experiments.tex}
 
 \newpage
 
-\bibliography{references}
-\bibliographystyle{ieeetr}
-
-\clearpage
-\newpage
+\bibliography {references}
+\bibliographystyle {ieeetr}
 
 \appendix
-\appendixpage%
 
-\input{qTreeConversion}
+\input {qTreeConversion.tex}
 
-\end{document}
+\end {document}
