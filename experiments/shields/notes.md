@@ -32,7 +32,7 @@ The result was not a safe controller.
 - viper_shielded_RW.json - same as above but as in stratetrees format
 - shielded_rw_example.png - visualization of the shielded strategy partitioning
 
-- unshielded_RandomWalk-v0_ppo.zip - shielded PPO strategy
+- unshielded_RandomWalk-v0_ppo.zip - unshielded PPO strategy
 - viper_unshielded_RW.pk - the unshielded VIPER generated strategy (in sklearn format)
 - viper_unshielded_RW.json - same as above but as in stratetrees format
 - unshielded_rw_example.png - visualization of the unshielded strategy partitioning
