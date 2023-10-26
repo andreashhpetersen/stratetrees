@@ -309,8 +309,8 @@ class DecisionTree:
         with open(filepath, 'w') as f:
             json.dump(self.get_uppaal_meta(loc=loc), f, indent=4)
 
-    def export_to_c_code(self, out_fp='tree.c'):
-        s = 'int takeAction() {\n  '
+    def export_to_c_code(self, signature='takeAction()', out_fp='tree.c'):
+        s = 'int ' + signature + ' {\n '
         s += self.root.to_c_code(1)
         s += '\n}'
 
