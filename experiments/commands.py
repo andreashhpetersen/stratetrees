@@ -4,11 +4,21 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import gymnasium as gym
+import uppaal_gym
+
+from viper.viper import viper
+from viper.wrappers import ShieldOracleWrapper, SB3Wrapper
+
 from glob import glob
 from tqdm import tqdm
 
 from experiments.utils import run_single_experiment, run_uppaal, \
-    parse_uppaal_results, get_mean_and_std_matrix
+    parse_uppaal_results, get_mean_and_std_matrix, compile_shield, \
+    unpack_shield, train_uppaal_controller, strategy_is_safe
+
+from trees.advanced import minimize_tree
+from trees.loaders import SklearnLoader
 from trees.models import QTree, DecisionTree
 from trees.utils import convert_uppaal_samples
 
@@ -150,3 +160,86 @@ def run_experiments(model_dir, k=10, early_stopping=False):
     plt.ylabel('# leaves/regions')
 
     plt.savefig(f'{store_path("results")}maxparts_plot.png')
+
+
+def shield_experiment(model_dir):
+
+    print('load shield..\n')
+    shield_dir = model_dir + 'shields/'
+    shield_path = shield_dir + 'synthesized.zip'
+    shield = unpack_shield(shield_path)
+
+    variables = shield.variables
+    actions = np.arange(shield.n_actions)
+    env_id = shield.env_id
+    env_kwargs = shield.env_kwargs
+
+    print('build tree..\n')
+    tree = DecisionTree.from_grid(
+        shield.grid,
+        variables,
+        actions,
+        shield.granularity,
+        np.array(shield.bounds).T
+    )
+    print('minimize tree...\n')
+    ntree, (best_i, data) = minimize_tree(tree, max_iter=20)
+
+    # build action map (what shield action corresponds to which allowed
+    # policy actions?)
+    amap = [0]*len(shield.id_to_actionset)
+    for i, acts in shield.id_to_actionset.items():
+        amap[int(i)] = tuple(np.argwhere(acts).T[0])
+
+    # let viper take a shot at minimizing shield
+    print('run viper...\n')
+    wrapped = ShieldOracleWrapper(ntree, amap, shield.n_actions)
+    viper_pol = viper(wrapped, env_id, n_iter=5, env_kwargs=env_kwargs)
+
+    # convert viper policy to a tree
+    loader = SklearnLoader(viper_pol.tree, variables, actions)
+    viper_tree = DecisionTree(loader.root, loader.variables, loader.actions)
+
+    is_safe = strategy_is_safe(env_id, wrapped, env_kwargs=env_kwargs)
+    if is_safe:
+        print('MP shield is safe')
+    else:
+        print('MP shield is not safe')
+
+    viper_wrapped = ShieldOracleWrapper(viper_tree, amap, shield.n_actions)
+    is_safe = strategy_is_safe(env_id, viper_wrapped, env_kwargs=env_kwargs)
+    if is_safe:
+        print('VIPER shield is safe')
+    else:
+        print('VIPER shield is not safe')
+
+    # export shield to c and train a controller in UPPAAL
+    print('train in uppaal...\n')
+    params = ', '.join([f'double {v}' for v in ntree.variables])
+    c_path = shield_dir + 'shield.c'
+    ntree.export_to_c_code(signature=f'shield({params})', out_fp=c_path)
+    compile_shield(shield_dir, 'shield')
+    oracle_path = train_uppaal_controller(
+        model_dir, out_name='shielded_strategy.json'
+    )
+
+    # minimize strategy with MaxParts and VIPER, respectively
+    qtree = QTree(oracle_path)
+    tree = qtree.to_decision_tree()
+    viper_pol = viper(SB3Wrapper(qtree), env_id, n_iter=5, env_kwargs=env_kwargs)
+
+    loader = SklearnLoader(viper_pol.tree, variables, actions)
+    viper_tree = DecisionTree(loader.root, loader.variables, loader.actions)
+
+    mp_wrapped = SB3Wrapper(tree)
+    is_safe = strategy_is_safe(env_id, mp_wrapped, env_kwargs=env_kwargs)
+    if is_safe:
+        print('MP oracle is safe')
+    else:
+        print('MP oracle is not safe')
+
+    viper_wrapped = SB3Wrapper(viper_tree)
+    if strategy_is_safe(env_id, viper_wrapped, env_kwargs=env_kwargs):
+        print('VIPER oracle is safe')
+    else:
+        print('VIPER oracle is not safe')

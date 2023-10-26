@@ -2,6 +2,8 @@ import os
 import re
 import csv
 import json
+import shutil
+import tempfile
 import numpy as np
 
 from tqdm import tqdm
@@ -9,9 +11,15 @@ from glob import glob
 from copy import deepcopy
 from time import perf_counter
 
+import gymnasium as gym
+import uppaal_gym
+
 from trees.advanced import max_parts, leaves_to_tree, minimize_tree
+from trees.loaders import SklearnLoader
 from trees.models import QTree, DecisionTree
 from trees.utils import parse_from_sampling_log, performance
+from viper.viper import viper
+from viper.wrappers import ShieldOracleWrapper
 
 
 def dump_json(tree, fp):

@@ -1,12 +1,42 @@
 import os
 import re
+import json
+import shutil
+import pathlib
+import tempfile
 import subprocess
 import numpy as np
+
+import gymnasium as gym
+import uppaal_gym
 
 from trees.models import QTree
 from trees.advanced import max_parts, minimize_tree, leaves_to_tree
 from trees.utils import parse_from_sampling_log, performance, \
     convert_uppaal_samples
+
+
+class Shield:
+    def __init__(self, grid, meta):
+        self.grid = grid
+        self.variables = meta['variables']
+        self.env_kwargs = meta['env_kwargs']
+        self.bounds = meta['bounds']
+        self.granularity = meta['granularity']
+        self.n_actions = meta['n_actions']
+        self.id_to_actionset = meta['id_to_actionset']
+        self.env_id = meta['env_id']
+
+
+def unpack_shield(path):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.unpack_archive(path, tmpdirname)
+        with open(tmpdirname + '/meta.json', 'r') as f:
+            shield_meta = json.load(f)
+
+        grid = np.load(tmpdirname + '/grid.npy')
+
+    return Shield(grid, shield_meta)
 
 
 def get_mean_and_std_matrix(data):
@@ -100,6 +130,28 @@ def parse_uppaal_results(output):
             return [0., 0.]
 
 
+def train_uppaal_controller(model_dir, out_name='strategy.json'):
+    out_path = pathlib.Path(model_dir, out_name)
+
+    query_file = subprocess.run(
+        ( f'{model_dir}/make_training_query.sh', out_path ),
+        capture_output=True,
+        encoding='utf-8'
+    )
+
+    evaluation_args = (
+        os.environ['VERIFYTA_PATH'],
+        f'{model_dir}/shielded_model.xml',
+        query_file.stdout.strip('\n'),
+        '--seed',
+        str(np.random.randint(0, 10000)),
+        '-sWqy'
+    )
+    subprocess.run(evaluation_args, capture_output=True)
+
+    return out_path
+
+
 def run_uppaal(model_dir, strategy_name):
     eval_query_args = (
         f'{model_dir}/make_eval_query.sh',
@@ -126,3 +178,50 @@ def run_uppaal(model_dir, strategy_name):
     )
 
     return evaluation.stdout
+
+
+def compile_shield(path, name):
+    path = f'{path}/{name}'
+    # make object
+    args = (
+        'gcc',
+        '-c',
+        '-fPIC',
+        f'{path}.c',
+        '-o',
+        f'{path}.o'
+    )
+    subprocess.run(args)
+
+    # make shared object
+    args = (
+        'gcc',
+        '-shared',
+        '-o',
+        f'{path}.so',
+        f'{path}.o'
+    )
+    subprocess.run(args)
+
+
+def strategy_is_safe(env_id, strategy, n_trajectories=100, env_kwargs={}):
+    env = gym.make(env_id, **env_kwargs)
+
+    for iter in range(n_trajectories):
+        obs, _ = env.reset()
+        observations = [obs]
+        actions = []
+
+        terminated = False
+        while not terminated:
+            action, _ = strategy.predict(obs)
+            if isinstance(action, list):
+                action = action[0]
+            actions.append(action)
+            nobs, reward, terminated, _, _ = env.step(action)
+            observations.append(nobs)
+            if terminated and not env.unwrapped.is_safe(nobs):
+                return False
+            obs = nobs
+
+    return True
