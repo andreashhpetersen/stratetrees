@@ -140,7 +140,8 @@ class SklearnLoader:
             clf = self.load_classifier(clf)
 
         self.variables = variables or clf.feature_names_in_
-        self.actions = actions or clf.classes_
+        self.actions = list(actions) or clf.classes_
+
 
         self.children_left = clf.tree_.children_left
         self.children_right = clf.tree_.children_right
