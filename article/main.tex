@@ -1,90 +1,102 @@
-\documentclass[10pt,conference]{ieeeconf}
+\documentclass [
+  letterpaper,
+  10 pt,
+  conference
+] {ieeeconf}
 
-\usepackage{hyperref}
-\usepackage{algorithm}
-\usepackage[noend]{algpseudocode}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amsfonts}
-\usepackage{bbm}
-\usepackage{nicefrac}
-\usepackage{graphicx} 
-\usepackage{lipsum}
-\setlength{\marginparwidth }{2cm}
-\usepackage{todonotes}
-\usepackage{booktabs}
-\usepackage{multirow}
-\usepackage{subcaption} %subfigre
+\usepackage [T1]    {fontenc}
+\usepackage [utf8]  {inputenc}
+\usepackage [noend] {algpseudocode}
 
-% argmax and argmin
-\DeclareMathOperator*{\argmax}{argmax}
-\DeclareMathOperator*{\argmin}{argmin}
+\usepackage {%
+  algorithm,
+  amsfonts,
+  amsmath,
+  amssymb,
+  bbm,
+  booktabs,
+  graphicx,
+  hyperref,
+  cleveref, % after hyperref
+  lipsum,
+  multirow,
+  nicefrac,
+  tikz,
+  xspace,
+}
 
-% transpose
-\DeclareMathOperator*{\tran}{\mathsf{T}}
+\overrideIEEEmargins % Needed to meet printer requirements.
 
-% define theorems and definitions
-\newtheorem{definition}{Definition}
-\newtheorem{lemma}{Lemma}
+\newcommand \todo [1] {\textcolor {orange} {#1}}
+
+\DeclareMathOperator* \argmax {argmax}
+\DeclareMathOperator* \argmin {argmin}
+\DeclareMathOperator* \tran   {\mathsf T}
+
+\newtheorem {definition} {Definition}
+\newtheorem {lemma} {Lemma}
 
 \graphicspath{{./imgs/}}
 
-\usepackage{tikz} 
-\usetikzlibrary{shapes.geometric}
-\tikzset{%
-    branch/.style={%
+\usetikzlibrary {shapes.geometric}
+
+\tikzset {%
+    branch/.style = {%
         rectangle,
         draw,
-        align=center
+        align = center
     },
-    leaf/.style={%
+    leaf/.style = {%
         circle,
         draw,
-        text width=8mm,
-        align=center,
+        text width = 8 mm,
+        align = center,
     }
 }
 
-\title{%
-    Minimizing State Space Partitionings Using Decision Trees
+\newcommand \Reals
+  {\ensuremath {\mathbb R}\xspace}
+\newcommand \Powerset
+  {\mathcal P}
+
+\newcommand \SSpace
+  {\ensuremath {\mathcal S}\xspace}
+\newcommand \Partition
+  {\ensuremath {\mathcal A}\xspace}
+
+\title {Minimizing State Space Partitionings Using Decision Trees}
+
+\author {%
+  \authorblockN {Andreas Holck Høeg-Petersen}
+  \authorblockA {Aalborg University\\ Denmark}
+  \and
+  \authorblockN {Kim Guldstrand Larsen}
+  \authorblockA {Aalborg University\\ Denmark}
+  \and
+  \authorblockN {Peter Gjøl Jensen}
+  \authorblockA {Aalborg University\\ Denmark}
+  \and
+  \authorblockN {Andrzej Wąsowski}
+  \authorblockA {IT University of Copenhagen\\ Denmark}
 }
-\author{%
-    Andreas Holck Høeg-Petersen,
-    Kim Guldstrand Larsen,
-    Peter Gjøl Jensen, \\
-    Andrzej Wasowski
-}
 
-% \authorrunning{A. H. Høeg-Petersen, et al.}
-
-% \institute{%
-%     Aalborg University, Denmark \and
-%     IT University of Copenhagen, Denmark
-% }
-
-
-\begin{document}
+\begin {document}
 
 \maketitle
 
-\input{abstract}
-
-\input{introduction}
-
-\input{preliminaries}
-
-\input{methods}
-
-\input{experiments}
+\input {abstract.tex}
+\input {introduction.tex}
+\input {preliminaries.tex}
+\input {methods.tex}
+\input {experiments.tex}
 
 \newpage
 
-\bibliography{references}
-\bibliographystyle{ieeetr}
-
-\clearpage
-\newpage
+\bibliography {references}
+\bibliographystyle {ieeetr}
 
 \appendix
 
-\end{document}
+\input {qTreeConversion.tex}
+
+\end {document}

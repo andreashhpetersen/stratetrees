@@ -1,18 +1,41 @@
-\section{Preliminaries}%
-\label{sec:preliminaries}
+\section {Preliminaries}%
+\label {sec:preliminaries}
 
-We start by defining some relevant concepts.
+% \begin{definition}[Strategy]%
+%     A strategy $\sigma : S \to A$ over the state space $\mathcal{S}$ is a
+%     mapping from any state $s \in \mathcal{S}$ to an action $a \in Act$ where
+%     $Act$ is a finite set of allowed actions.
+% \end{definition}
 
-\begin{definition}[Partitionings]%
-\label{def:partitioning}
-    A partitioning $\mathcal{A}$ of the state space $\mathcal{S} \in
-    \mathbb{R}^K$ is a set of regions $\nu$ that divides $\mathcal{S}$ such that
-    $\bigcup_{\nu \in \mathcal{A}}\nu = \mathcal{S}$ and for any two regions
-    $\nu, \nu' \in \mathcal{A}$ where $\nu \neq \nu'$ it holds that $\nu \cap
-    \nu' = \emptyset$.
-\end{definition}
+% A strategy can be represented in several different ways. In
+% Q-learning~\cite{Sutton1998}, the approach is to estimate a function $Q : S, A
+% \to \mathbb{R}$ that maps a state-action pair $(s,a)$ to a real number, that is
+% an estimation of the expected cost of taking action $a$ in state
+% $s$.\footnote{The Q-value can also be the expected reward.} Choosing an action
+% in state $s$ under the strategy $\sigma$ is then given by $\sigma(s) =
+% \argmin_{a \in Act}Q(s,a)$.
 
-\noindent
+% For a continuous state space, the Q-function can either be estimated using
+% function approxmiation techniques or by discretization of the state space. In
+% the latter case, the state space is partitioned into a finite set of convex
+% regions, each defining a discrete state $S$ as a list of lower and upper bounds,
+% $S_i^{\min}, S_i^{\max}$, for each $i = 1,\ldots,K$. The Q-values can then be
+% estimated for the entire region $S$, and we say that $Q(s,a) = Q(S,a)$ for all
+% $s \in S$. This allows for a tabular representation of the Q-function, as in the
+% toy example in Table~\ref{tab:exStrategyQTable}.
+
+\begin {definition}%
+\label {def:partitioning}
+  A \emph {partitioning} \Partition of the state space \( \SSpace \subseteq
+  \Reals ^K \) is a set of non-overlapping subsets \( \Partition \subseteq
+  \Powerset (\SSpace) \) covering \SSpace, so \( \bigcup _{\nu \in \Partition}
+  \nu = \SSpace \) and whenever \( \nu, \nu' \in \Partition, \nu \neq \nu'  \)
+  then \( \nu \cap \nu' = \emptyset \).
+  \looseness -1
+\end {definition}
+
+\todo {do we assume that the state space \SSpace is rectangular?}
+
 For an \textit{axis aligned} partitioning, each region $\nu$ can be expressed in
 terms of two corner points, $s^{\min}, s^{\max} \in \mathcal{S}$, so that for
 each $s = (s_1, \ldots, s_K) \in \nu$ it holds that $s^{\min}_i < s_i \le
