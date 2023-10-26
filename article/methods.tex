@@ -19,7 +19,7 @@ training, we end up with a Q-table that maps states to action in a way that is
 shown in Figure~\ref{fig:complexExample2dVisual}. This same mapping can also be
 represented by a decision tree, as shown in Figure~\ref{fig:complexExampleTree}.
 
-\begin{figure}[ht]
+\begin{figure*}[ht]
     \begin{subfigure}[b]{.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{complexExample2dVisual}
@@ -47,7 +47,7 @@ represented by a decision tree, as shown in Figure~\ref{fig:complexExampleTree}.
         with fever regions/leaves.
     }%
     \label{fig:complexExample}
-\end{figure}
+\end{figure*}
 
 However, we can (in this small toy example) easily see that we do not need 9
 regions to represent this exact state-action mapping. For example, the two
@@ -129,7 +129,7 @@ problem, ie.\ the produced partitioning should respect $\mathcal{T}$ and only
 have non-overlapping regions. The third case is required in order to guarantee
 that in each iteration the algorithm on average will add \textit{at least} one
 region from the original partitioning to the new partitioning. To see this,
-consider \ldots\todo{Make an example to show}.
+consider \ldots\todo[inline]{Make an example to show}.
 
 
 How do we determine this expansion? Let $(p^{\min}, p^{\max})$ define region in
@@ -141,20 +141,6 @@ a violation. By definition, a valid value for $\Delta_p$ is when $\Delta_p =
 p^{\max} - p^{\min}$, since this would just produce the original region. We are
 therefore guaranteed to at least find this region. This gives rise to the
 following definition.
-
-% Let $p^{\min}$ be the result of popping the lexicographically smallest element
-% of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the
-% `lower left' corner in (or the origin of) a region $\nu = (s^{\min}, s^{\max})$
-% where $s^{\max}$ is the point we want to determine, so that $\nu$ is maximized
-% and has singular mapping in $\mathcal{T}$. By definition, $s^{\max} =
-% s^{p^{\max}}$ satifies the singular mapping requirement for $p^{\max} =
-% (p^{\min}_{1} + 1, \ldots, p^{\min}_{K} + 1)$, since no branch node in
-% $\mathcal{T}$ splits on a predicate $c$ where $\mathcal{T}_{i,p^{\min}_{i}} < c
-% < \mathcal{T}_{i,p^{\min}_{i} + 1}$ for any $i = 1, \ldots, K$. 
-
-% Finding a $p^{\max}$ that maximizes the region comes down to finding a vector
-% $\Delta_{p} \in \mathbb{Z}^{K}$ so that $p^{\max} = p^{\min} + \Delta_{p}$. The
-% definition of $\Delta_{p}$ is given below.
 
 \begin{definition}[The expansion vector $\Delta_p$]
     Given $p^{\min} \in \mathbb{Z}^{K}$, a decision tree $\mathcal{T}$ over a

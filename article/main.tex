@@ -1,4 +1,4 @@
-\documentclass[runningheads]{llncs}
+\documentclass[10pt,conference]{ieeeconf}
 
 \usepackage{hyperref}
 \usepackage{algorithm}
@@ -10,12 +10,11 @@
 \usepackage{nicefrac}
 \usepackage{graphicx} 
 \usepackage{lipsum}
+\setlength{\marginparwidth }{2cm}
 \usepackage{todonotes}
 \usepackage{booktabs}
 \usepackage{multirow}
-\usepackage{caption}
-\usepackage[subrefformat=parens]{subcaption}
-\usepackage{appendix}
+\usepackage{subcaption} %subfigre
 
 % argmax and argmin
 \DeclareMathOperator*{\argmax}{argmax}
@@ -25,9 +24,8 @@
 \DeclareMathOperator*{\tran}{\mathsf{T}}
 
 % define theorems and definitions
-% \newtheorem{definition}{Definition}
-% \newtheorem{lemma}{Lemma}
-
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
 
 \graphicspath{{./imgs/}}
 
@@ -51,18 +49,18 @@
     Minimizing State Space Partitionings Using Decision Trees
 }
 \author{%
-    Andreas Holck Høeg-Petersen\inst{1},
-    Kim Guldstrand Larsen\inst{1},
-    Peter Gjøl Jensen\inst{1}, \\
-    Andrzej Wasowsk\inst{2}
+    Andreas Holck Høeg-Petersen,
+    Kim Guldstrand Larsen,
+    Peter Gjøl Jensen, \\
+    Andrzej Wasowski
 }
 
-\authorrunning{A. H. Høeg-Petersen, et al.}
+% \authorrunning{A. H. Høeg-Petersen, et al.}
 
-\institute{%
-    Aalborg University, Denmark \and
-    IT University of Copenhagen, Denmark
-}
+% \institute{%
+%     Aalborg University, Denmark \and
+%     IT University of Copenhagen, Denmark
+% }
 
 
 \begin{document}
@@ -88,8 +86,5 @@
 \newpage
 
 \appendix
-\appendixpage%
-
-\input{qTreeConversion}
 
 \end{document}

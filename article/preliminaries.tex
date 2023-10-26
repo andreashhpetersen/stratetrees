@@ -3,29 +3,6 @@
 
 We start by defining some relevant concepts.
 
-% \begin{definition}[Strategy]%
-%     A strategy $\sigma : S \to A$ over the state space $\mathcal{S}$ is a
-%     mapping from any state $s \in \mathcal{S}$ to an action $a \in Act$ where
-%     $Act$ is a finite set of allowed actions. 
-% \end{definition}
-
-% A strategy can be represented in several different ways. In
-% Q-learning~\cite{Sutton1998}, the approach is to estimate a function $Q : S, A
-% \to \mathbb{R}$ that maps a state-action pair $(s,a)$ to a real number, that is
-% an estimation of the expected cost of taking action $a$ in state
-% $s$.\footnote{The Q-value can also be the expected reward.} Choosing an action
-% in state $s$ under the strategy $\sigma$ is then given by $\sigma(s) =
-% \argmin_{a \in Act}Q(s,a)$.
-
-% For a continuous state space, the Q-function can either be estimated using
-% function approxmiation techniques or by discretization of the state space. In
-% the latter case, the state space is partitioned into a finite set of convex
-% regions, each defining a discrete state $S$ as a list of lower and upper bounds,
-% $S_i^{\min}, S_i^{\max}$, for each $i = 1,\ldots,K$. The Q-values can then be
-% estimated for the entire region $S$, and we say that $Q(s,a) = Q(S,a)$ for all
-% $s \in S$. This allows for a tabular representation of the Q-function, as in the
-% toy example in Table~\ref{tab:exStrategyQTable}.
-
 \begin{definition}[Partitionings]%
 \label{def:partitioning}
     A partitioning $\mathcal{A}$ of the state space $\mathcal{S} \in
@@ -77,7 +54,7 @@ We denote the path
 $\lambda(\ell)$ and define it as an ordered list of tuples of the form
 $(\eta_j, b)$ where $\eta_j$ is the $j$th node on the path ($\eta_0$ will always
 be the root node) and $b$ is a binary value indicating wether the path continues
-with the left child $(b = 1)$ or right child $(b = 0)$.\todo{%
+with the left child $(b = 1)$ or right child $(b = 0)$.\todo[inline]{%
     Not sure if it makes sense or is necessary to state which value of $b$ means
     what. The reasoning for my choice is that $b = 1$ indicates `true' and it is
     when $\rho_{\eta_j}(s)$ is true, that we choose the left path.
@@ -101,7 +78,7 @@ each point is given by
         i_{\eta} = i,\>
         b = 0\>
     \})
-\end{align*}\todo{%
+\end{align*}\todo[inline]{%
     I struggled a lot with coming up with a good way of writing this definition.
     Do let me know if it works (and if it is even necessary to describe how a
     region is constructed from a leaf node).
