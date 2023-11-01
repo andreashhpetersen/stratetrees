@@ -111,11 +111,11 @@ contribution of this work.
 We define a partitioning of the (bounded) space $\mathcal{S} \in \mathbb{R}^K$
 as a set of rectangular regions $\mathcal{A}$ so that $\bigcup_{\nu \in
 \mathcal{A}} = \mathcal{S}$ and for every pair of regions $\nu,\nu' \in
-\mathcal{A}$ it holds that $\nu \cap \nu' = \emptyset$. A labelled partitioning is
-a tuple $(\mathcal{A}, Act, \sigma)$ where $\mathcal{A}$ is a partitioning,
-$Act$ is a set of labels (or actions) and $\sigma$ is a function $\sigma : \nu
-\rightarrow Act$ mapping any $\nu \in \mathcal{A}$ to a label $a \in Act$. We
-define a region $\nu$ as a tuple of $K$-dimensional points $(s^{\min},
+\mathcal{A}$ it holds that $\nu \cap \nu' = \emptyset$. A labelled partitioning
+is a tuple $(\mathcal{A}, Act, \sigma)$ where $\mathcal{A}$ is a partitioning,
+$Act$ is a set of labels (or actions) and $\sigma$ is a function $\sigma :
+\mathcal{A} \rightarrow Act$ mapping any $\nu \in \mathcal{A}$ to a label $a \in
+Act$. We define a region $\nu$ as a tuple of $K$-dimensional points $(s^{\min},
 s^{\max})$, where $s^{\min}$ gives the (non-inclusive) lower bounds of the
 region in each dimension and $s^{\max}$ gives the upper bounds. That is, $\nu =
 \{s \mid s \in \mathcal{S}, \, s^{\min}_{i} < s_{i} \leq s^{\max}_{i} \text{ for
@@ -217,7 +217,7 @@ regions and retains redundant information.
 Table~\ref{tab:results} shows the results of repeatedly applying the
 \textsc{MaxPartitions} algorithm on models of different types and
 dimensionality. Since \textsc{MaxPartitions} doesn't necessarily find a minimal
-partitioning, but only guarantees to not not increase the size of the input
+partitioning, but only guarantees to not increase the size of the input
 partitioning, we use the output of one run of \textsc{MaxPartitions} to
 construct a new tree and repeat the process, until the number of regions
 stabilize.
