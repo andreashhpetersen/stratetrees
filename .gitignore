@@ -15,6 +15,10 @@ random/*
 old_texts/*
 dist/*
 secrets.txt
+*shield.c
+*shield.o
+*shield.so
+*shielded_strategy.json
 
 # ignore experiment results
 constructed_*
