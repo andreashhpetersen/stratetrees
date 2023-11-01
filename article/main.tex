@@ -2,28 +2,34 @@
   letterpaper,
   10 pt,
   conference
-] {ieeeconf}
+] {IEEEconf}
 
 \usepackage [T1]    {fontenc}
 \usepackage [utf8]  {inputenc}
 \usepackage [noend] {algpseudocode}
+
+% needed to load amsthm (for Definitions)
+\let\proof\relax
+\let\endproof\relax
 
 \usepackage {%
   algorithm,
   amsfonts,
   amsmath,
   amssymb,
+  amsthm,
   bbm,
   booktabs,
+  subcaption,
   graphicx,
   hyperref,
-  cleveref, % after hyperref
   lipsum,
   multirow,
   nicefrac,
   tikz,
   xspace,
 }
+\usepackage[capitalize]{cleveref} % after hyperref
 
 \overrideIEEEmargins % Needed to meet printer requirements.
 
@@ -33,8 +39,9 @@
 \DeclareMathOperator* \argmin {argmin}
 \DeclareMathOperator* \tran   {\mathsf T}
 
-\newtheorem {definition} {Definition}
-\newtheorem {lemma} {Lemma}
+% \theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}{Lemma}
 
 \graphicspath{{./imgs/}}
 

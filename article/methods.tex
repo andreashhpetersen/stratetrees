@@ -16,25 +16,32 @@ interval $[0,9]$, and a set of actions $Act = \{ action1, action2 \}$. Before
 learning, we might decide to discretize both $x$ and $y$ into 3 distinct bins,
 giving us a partitioning of $\mathcal{S}$ with $3\times3 = 9$ regions. After
 training, we end up with a Q-table that maps states to action in a way that is
-shown in Figure~\ref{fig:complexExample2dVisual}. This same mapping can also be
-represented by a decision tree, as shown in Figure~\ref{fig:complexExampleTree}.
+shown in \cref{fig:simpleExamplePartitioning}. This same mapping can also be
+represented by a decision tree, as shown in \cref{fig:simpleExampleTree}.
 
 \begin{figure}[ht]
-  \includegraphics[width=.5 \textwidth]{complexExample2dVisual}%
-  \label{fig:complexExample2dVisual}
-  \includegraphics[width=.5 \textwidth]{complexExampleTree}%
-  \label{fig:complexExampleTree}
+    \centering
+    \begin{subfigure}{0.4\textwidth}
+        \includegraphics[width=\textwidth]{simpleExamplePartitioning}%
+        \caption{}%
+        \label{fig:simpleExamplePartitioning}
+    \end{subfigure}
+    \begin{subfigure}{0.4\textwidth}
+      \includegraphics[width=\textwidth]{simpleExampleTree}%
+      \caption{}%
+      \label{fig:simpleExampleTree}
+    \end{subfigure}
 
   \caption{%
     Two representations of a strategy mapping states to actions. In
-    \cref{fig:complexExample2dVisual} the strategy is represented as a
+    \cref{fig:simpleExamplePartitioning} the strategy is represented as a
     partitioning with colors representing the assigned action. In
-    \cref{fig:complexExampleTree} the strategy is given as a decision
+    \cref{fig:simpleExampleTree} the strategy is given as a decision
     tree, which also induces the partitioning. For this small example, it is
     obvious to see that an equivalent state-action mapping could be achieved
     with fever regions/leaves.
   }%
-  \label{fig:complexExample}
+  \label{fig:simpleExample}
 \end{figure}
 
 However, we can (in this small toy example) easily see that we do not need 9
@@ -88,7 +95,7 @@ to refer to an actual point in the state space of $\mathcal{T}$, ie.\ $s \in
 \mathcal{S}$, and we will write $p$ to refer to a vector of integers
 representing indicies of bounds in $\mathcal{T}$.
 
-The algorithm (given in pseudo-code in Algorithm~\ref{alg:MaxPartitions}) works
+The algorithm (given in pseudo-code in \cref{alg:MaxPartitions}) works
 by maintaining a pair $(p^{\min}, p^{\max}$), and iteratively incrementing
 $p^{\max}$ in one dimension at a time until a region $\nu = (s^{p^{\min}},
 s^{p^{\max}})$ cannot be expanded further. When this happens, the region is
@@ -144,16 +151,16 @@ following definition.
 % $\Delta_{p} \in \mathbb{Z}^{K}$ so that $p^{\max} = p^{\min} + \Delta_{p}$. The
 % definition of $\Delta_{p}$ is given below.
 
-\begin{definition}[The expansion vector $\Delta_p$]
+\begin{definition}[The expansion vector $\Delta_p$]\label{def:deltaP}
     Given $p^{\min} \in \mathbb{Z}^{K}$, a decision tree $\mathcal{T}$ over a
     $K$-dimensional space and a decision tree $\mathcal{T}_{track}$ of already
     found regions, $\Delta_{p} \in \mathbb{Z}^{K}$ is a vector such that for
     $p^{\max} = p^{\min} + \Delta_{p}$ the region $\nu =
     (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\max}}_{\mathcal{T}})$ does not violate
-    any of the expansion rules in Definition~\ref{def:expansionRules} and where
+    any of the expansion rules in \cref{def:expansionRules} and where
     for any other $\Delta'_p = (\Delta_{p_{1}}, \ldots, \Delta_{p_{i}} + 1,
     \ldots, \Delta_{p_{K}})$ this would not hold.
-\end{definition}\label{def:deltaP}
+\end{definition}
 
 \noindent A greedy approach to finding $\Delta_{p}$ starts with $\Delta_{p} =
 p^{\max} - p^{\min}$, for some (remainder of a) region $\nu =
@@ -176,7 +183,7 @@ care is required to ensure, that we can roll back this extra expansion if it did
 not work (or if we inadverdently broke any of the other rules in the process).
 
 When all dimensions have been
-exhausted, $\Delta_{p}$ adheres to Defintion~\ref{def:deltaP}.
+exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
 
 \begin{algorithm}[!ht]
     \caption{MaxPartitions}\label{alg:MaxPartitions}
@@ -220,13 +227,13 @@ exhausted, $\Delta_{p}$ adheres to Defintion~\ref{def:deltaP}.
                 \item[]
                 \If{%
                     $\nu'$ violates Rule 1 or 2
-                    (Definition~\ref{def:expansionRules})
+                    (\cref{def:expansionRules})
                 }
                     \State{$\Delta_{p_{d}} \gets \Delta_{p_{d}} - 1$}
                     \State{mark $d$ as exhausted}
 
                 \ElsIf{%
-                    $\nu'$ violates Rule 3 (Definition~\ref{def:expansionRules})
+                    $\nu'$ violates Rule 3 (\cref{def:expansionRules})
                 }
                     \State{attempt $healing$ in dimension $d$}
                 \EndIf%
