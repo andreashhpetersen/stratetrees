@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import json
 import shutil
 import pathlib
@@ -11,16 +12,17 @@ import gymnasium as gym
 import uppaal_gym
 
 from trees.models import QTree
+from trees.nodes import Node, Leaf
 from trees.advanced import max_parts, minimize_tree, leaves_to_tree
 from trees.utils import parse_from_sampling_log, performance, \
-    convert_uppaal_samples
+    convert_uppaal_samples, time_it
 
 
 class Shield:
     def __init__(self, grid, meta):
         self.grid = grid
         self.variables = meta['variables']
-        self.env_kwargs = meta['env_kwargs']
+        self.env_kwargs = meta.get('env_kwargs', {})
         self.bounds = meta['bounds']
         self.granularity = meta['granularity']
         self.n_actions = meta['n_actions']
@@ -204,10 +206,10 @@ def compile_shield(path, name):
     subprocess.run(args)
 
 
-def strategy_is_safe(env_id, strategy, n_trajectories=100, env_kwargs={}):
+def strategy_is_safe(env_id, strategy, n_episodes=100, env_kwargs={}):
     env = gym.make(env_id, **env_kwargs)
 
-    for iter in range(n_trajectories):
+    for episode in range(n_episodes):
         obs, _ = env.reset()
         observations = [obs]
         actions = []
@@ -225,3 +227,34 @@ def strategy_is_safe(env_id, strategy, n_trajectories=100, env_kwargs={}):
             obs = nobs
 
     return True
+
+
+def estimate_sizeof(node):
+    node_handler = lambda n: [n.var_id, n.bound, n.low, n.high]
+    leaf_handler = lambda l: [l.action]
+
+    handlers = { Node: node_handler, Leaf: leaf_handler }
+
+    seen = set()
+    default_size = sys.getsizeof(0)
+
+    def sizeof(o):
+        if id(o) in seen:
+            return 0
+        seen.add(id(o))
+        s = sys.getsizeof(o, default_size)
+
+        for typ, handler in handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(node)
+
+
+def time_predict(tree, bounds, n=100_000):
+    dims = len(bounds[0])
+    sample = np.random.uniform(*bounds, size=(n, dims))
+    _, tm = time_it(lambda t, xs: len([t.predict(s) for s in xs]), tree, sample)
+    return tm
