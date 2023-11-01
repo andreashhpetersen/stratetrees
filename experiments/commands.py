@@ -15,7 +15,8 @@ from tqdm import tqdm
 
 from experiments.utils import run_single_experiment, run_uppaal, \
     parse_uppaal_results, get_mean_and_std_matrix, compile_shield, \
-    unpack_shield, train_uppaal_controller, strategy_is_safe
+    unpack_shield, train_uppaal_controller, strategy_is_safe, \
+    estimate_sizeof, time_predict
 
 from trees.advanced import minimize_tree
 from trees.loaders import SklearnLoader
@@ -164,6 +165,8 @@ def run_experiments(model_dir, k=10, early_stopping=False):
 
 def shield_experiment(model_dir):
 
+    results = []
+
     print('load shield..\n')
     shield_dir = model_dir + 'shields/'
     shield_path = shield_dir + 'synthesized.zip'
@@ -173,6 +176,28 @@ def shield_experiment(model_dir):
     actions = np.arange(shield.n_actions)
     env_id = shield.env_id
     env_kwargs = shield.env_kwargs
+
+    meta_data = dict(
+        env_id=env_id,
+        variables=variables,
+        n_actions=shield.n_actions,
+        env_kwargs=env_kwargs,
+        granularity=shield.granularity,
+        dimensions=shield.grid.shape,
+        columns=[
+            'shield_org_n_leaves', 'shield_org_sizeof', 'shield_org_predict_time',
+            'shield_mp_n_leaves', 'shield_mp_sizeof',
+            'shield_mp_predict_time', 'shield_mp_safe',
+            'shield_viper_n_leaves', 'shield_viper_sizeof',
+            'shield_viper_predict_time', 'shield_viper_safe',
+
+            'strat_org_n_leaves', 'strat_org_sizeof', 'strat_org_predict_time',
+            'strat_mp_n_leaves', 'strat_mp_sizeof',
+            'strat_mp_predict_time', 'strat_mp_safe',
+            'strat_viper_n_leaves', 'strat_viper_sizeof',
+            'strat_viper_predict_time', 'strat_viper_safe'
+        ]
+    )
 
     print('build tree..\n')
     tree = DecisionTree.from_grid(
@@ -200,18 +225,31 @@ def shield_experiment(model_dir):
     loader = SklearnLoader(viper_pol.tree, variables, actions)
     viper_tree = DecisionTree(loader.root, loader.variables, loader.actions)
 
-    is_safe = strategy_is_safe(env_id, wrapped, env_kwargs=env_kwargs)
-    if is_safe:
-        print('MP shield is safe')
-    else:
-        print('MP shield is not safe')
+
+    # CHECK SAFETY OF MINIMIZED SHIELDS
+    mp_is_safe = strategy_is_safe(env_id, wrapped, env_kwargs=env_kwargs)
+    print(f'MP shield is{" not " if not mp_is_safe else " "}safe')
 
     viper_wrapped = ShieldOracleWrapper(viper_tree, amap, shield.n_actions)
-    is_safe = strategy_is_safe(env_id, viper_wrapped, env_kwargs=env_kwargs)
-    if is_safe:
-        print('VIPER shield is safe')
-    else:
-        print('VIPER shield is not safe')
+    viper_is_safe = strategy_is_safe(env_id, viper_wrapped, env_kwargs=env_kwargs)
+    print(f'VIPER shield is{" not " if not viper_is_safe else " "}safe')
+
+
+    # ADD TO RESULTS
+    results.append(tree.n_leaves)
+    results.append(estimate_sizeof(tree.root))
+    results.append(time_predict(tree, shield.bounds))
+
+    results.append(ntree.n_leaves)
+    results.append(estimate_sizeof(ntree.root))
+    results.append(time_predict(ntree, shield.bounds))
+    results.append(int(mp_is_safe))
+
+    results.append(viper_tree.n_leaves)
+    results.append(estimate_sizeof(viper_tree.root))
+    results.append(time_predict(viper_tree, shield.bounds))
+    results.append(int(viper_is_safe))
+
 
     # export shield to c and train a controller in UPPAAL
     print('train in uppaal...\n')
@@ -226,20 +264,34 @@ def shield_experiment(model_dir):
     # minimize strategy with MaxParts and VIPER, respectively
     qtree = QTree(oracle_path)
     tree = qtree.to_decision_tree()
-    viper_pol = viper(SB3Wrapper(qtree), env_id, n_iter=5, env_kwargs=env_kwargs)
+    ntree, (best_i, data) = minimize_tree(tree, max_iter=20, verbose=False)
 
+    viper_pol = viper(SB3Wrapper(qtree), env_id, n_iter=5, env_kwargs=env_kwargs)
     loader = SklearnLoader(viper_pol.tree, variables, actions)
     viper_tree = DecisionTree(loader.root, loader.variables, loader.actions)
 
-    mp_wrapped = SB3Wrapper(tree)
-    is_safe = strategy_is_safe(env_id, mp_wrapped, env_kwargs=env_kwargs)
-    if is_safe:
-        print('MP oracle is safe')
-    else:
-        print('MP oracle is not safe')
 
-    viper_wrapped = SB3Wrapper(viper_tree)
-    if strategy_is_safe(env_id, viper_wrapped, env_kwargs=env_kwargs):
-        print('VIPER oracle is safe')
-    else:
-        print('VIPER oracle is not safe')
+    # CHECK SAFETY OF STRATEGIES
+    mp_is_safe = strategy_is_safe(env_id, SB3Wrapper(ntree), env_kwargs=env_kwargs)
+    print(f'MP controller is{" not " if not mp_is_safe else " "}safe')
+
+    viper_is_safe = strategy_is_safe(env_id, SB3Wrapper(viper_tree), env_kwargs=env_kwargs)
+    print(f'VIPER controller is{" not " if not viper_is_safe else " "}safe')
+
+
+    # ADD TO RESULTS
+    results.append(tree.n_leaves)
+    results.append(estimate_sizeof(tree.root))
+    results.append(time_predict(tree, shield.bounds))
+
+    results.append(ntree.n_leaves)
+    results.append(estimate_sizeof(ntree.root))
+    results.append(time_predict(ntree, shield.bounds))
+    results.append(int(mp_is_safe))
+
+    results.append(viper_tree.n_leaves)
+    results.append(estimate_sizeof(viper_tree.root))
+    results.append(time_predict(viper_tree, shield.bounds))
+    results.append(int(viper_is_safe))
+
+    return meta_data, results
