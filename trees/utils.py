@@ -349,8 +349,8 @@ def time_it(alg, *args, **kwargs):
     tic = time.perf_counter()
     out = alg(*args, *kwargs)
     toc = time.perf_counter()
-    print(f'finished in {toc - tic:0.4f} seconds')
-    return out
+    # print(f'finished in {toc - tic:0.4f} seconds')
+    return out, toc - tic
 
 
 def in_box(b, s, inclusive=True):
