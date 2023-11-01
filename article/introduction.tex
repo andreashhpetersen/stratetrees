@@ -1,16 +1,27 @@
 \section {Introduction}%
 \label {sec:introduction}
 
-Motivate for discrete reinforcement learning ... (list tools that produce policies that are similar)
+\noindent
+\emph {Safe and explainable reinforcement learning} prefers discrete policies over continuous neural network policies.  Discrete representations of agent policies, especially in the form of decision trees, are easier to comprehend than neural networks, and easier to verify thanks to their strict structuring. Unfortunately, reinforcement learning of discrete policies for complex problems is known to be hard.  A classic approach is to use a discrete learning tool, for instance Uppaal Stratego\,\cite {DBLP:conf/tacas/DavidJLMT15} following q-learning~\cite {TODO}. Unfortunately, this may produce policies that, even though discrete, remain too large and too complex to explain.  Another approach is to learn in the continuous space  with deep learning \cite {TODO} and then apply further discretization\,\cite {DBLP:conf/nips/BastaniPS18}. This however makes maintaining safety difficult. In this paper, we look at the problem of decreasing the size of the policies expressed as decision trees to overcome these challenges.
+\looseness -1
 
-However, discrete reinforcement learning suffers from some issues with the policies. Even if it succeeds, the constructed policies might be too large for humans to interpret. This challenges their explainability (even if we can verify them) ...
+A standard architectural setup for safe reinforcement learning is to enforce a \emph {safety shield} around the extracted policy at runtime~\cite{What-is-the-oldest-shield-paper}. A safety shield is a liberal, often highly non-deterministic, control policy that disallows unsafe actions. The agent in a safe training setup follows regular learning of the controller, except whenever it would choose an unsafe action the shield is used to detect and prevent it.  If the learning setup needs to be explainable both the controller and the shield need to be small and explainable, as building the safety case requires both.
 
-In this paper we look at the problem of decreasing the size of the policies expressed as decision trees ...
+The state of the art solution for obtaining small policies is implemented in the Viper method~\cite {DBLP:conf/nips/BastaniPS18}.  Viper first trains a continuous policy as a neural network and then uses imitation learning to extract a small discrete policy, a decision tree. Viper's imitation learning algorithm can, in principle, be used to extract decision trees from any oracle, not just a neural network.  Unfortunately, as a sampling-based algorithm it does not guarantee behavioral equivalence with the input oracle. This is why an additional manual verification step for the safety of the output policy is required in the original paper\,\cite {DBLP:conf/nips/BastaniPS18}. Thus Viper is a good tool for minimizing controllers (maintaining similar performance), but not shields (as it would loose safety).
 
-Our contributions include: ...
+DtControl 2.0 is an algorithm by Ashok and colleagues that aims at minimization of decision tree policies while maintaining safety \cite{dtControl,dtControl2}.  DtControl is highly aggressive, and when applied to shields used in reinforcement learning it prevents many high quality policies, drastically reducing the effectiveness of learning.  This makes it unsuitable for minimizing shields automatically, as under such strong shields reinforcement learning is not effective.
 
-The experiments show that: ...
+In between Viper and dtControl, the users are stuck either loosing safety or performance. The \textsc {MaxPartitions} algorithm presented in this paper aims to address this need, offering a lossless, equivalence-preserving, minimization method for discrete policies, like shields, which preserves safety, but being less aggressive does not reduce performance of the input shield. Our contributions include:
+%
+\begin {itemize}
 
-The paper proceeds as follows. ...
+\item A definition of the \textsc {MaxPartitions} algorithm along with correctness and performance analysis.
 
-\lipsum[3-4]
+\item An implementation of \textsc {MaxPartitions} in an experimental setup involving Uppaal Stratego (as the policy learning tool) with Viper and dTControl as baseline policy minimization tools.
+
+\item An experimental evaluation showing that MaxPartitions + Viper is a good combination for producing smaller safe policies, while Viper by itself is not safe and dtControl by itself is sub-optimal.
+
+\end {itemize}
+
+\noindent
+The paper proceeds as follows. \ldots \textcolor {orange} {\lipsum [4]}
