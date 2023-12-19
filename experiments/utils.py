@@ -206,27 +206,45 @@ def compile_shield(path, name):
     subprocess.run(args)
 
 
-def strategy_is_safe(env_id, strategy, n_episodes=100, env_kwargs={}):
+def strategy_is_safe(env_id, strategy, n_episodes=100, env_kwargs={}, inspect=False):
     env = gym.make(env_id, **env_kwargs)
 
     for episode in range(n_episodes):
         obs, _ = env.reset()
         observations = [obs]
         actions = []
+        rewards = [-1]
+        # shield_actions = [-1]
 
-        terminated = False
-        while not terminated:
+        i = 0
+        terminated, trunc = False, False
+        while not (terminated or trunc):
+            # shield_act = strategy.shield.predict(obs)
             action, _ = strategy.predict(obs)
             if isinstance(action, list):
                 action = action[0]
+            # shield_actions.append(shield_act)
             actions.append(action)
-            nobs, reward, terminated, _, _ = env.step(action)
+            nobs, reward, terminated, trunc, _ = env.step(action)
+            rewards.append(reward)
             observations.append(nobs)
             if terminated and not env.unwrapped.is_safe(nobs):
-                return False
+                observations = np.array(observations)
+                actions.append(99)
+                actions = np.array([actions]).T
+                # shield_actions = np.array([shield_actions]).T
+                # info = np.hstack((observations, actions, shield_actions))
+                info = np.hstack((observations, actions))
+                rewards = np.array(rewards)
+                if inspect:
+                    import ipdb; ipdb.set_trace()
+                    return False, info
+                else:
+                    return False
             obs = nobs
+            i += 1
 
-    return True
+    return (True, []) if inspect else True
 
 
 def estimate_sizeof(node):
