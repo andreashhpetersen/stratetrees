@@ -13,6 +13,7 @@ from copy import deepcopy
 from itertools import product
 from collections import defaultdict
 from matplotlib.patches import Rectangle
+from matplotlib.collections import PatchCollection
 
 from trees.nodes import Node, Leaf, State
 from trees.smc2py import parse_engine_output
@@ -149,6 +150,7 @@ def draw_partitioning(
     bounds_data = []
 
     actions = []
+    patches = []
     for l in leaves:
         s = l.state
         actions.append(l.action)
@@ -168,16 +170,16 @@ def draw_partitioning(
         width = x_end - x_start
         height = y_end - y_start
         c = cmap[l.action]
-        ax.add_patch(
+        patches.append(
             Rectangle(
                 (x_start, y_start), width, height, color=c, ec='black', lw=lw,
                 zorder=0
             )
         )
 
+    ax.add_collection(PatchCollection(patches, match_original=True))
     for args, kwargs in bounds_data:
         ax.plot(*args, **kwargs)
-
 
     proxies = []
     if isinstance(labels, dict):
