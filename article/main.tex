@@ -1,8 +1,14 @@
 \documentclass [
-  letterpaper,
   10 pt,
-  conference
-] {IEEEconf}
+  twocolumn,
+  letterpaper
+] {article}
+
+\usepackage[review]{cvpr}
+
+\def\cvprPaperID{42}  % THIS MUST BE UPDATED!!
+\def\confName{CVPR}
+\def\confYear{2024}
 
 \usepackage [T1]    {fontenc}
 \usepackage [utf8]  {inputenc}
@@ -31,7 +37,7 @@
 }
 \usepackage[capitalize]{cleveref} % after hyperref
 
-\overrideIEEEmargins % Needed to meet printer requirements.
+% \overrideIEEEmargins % Needed to meet printer requirements.
 
 \newcommand \todo [1] {\textcolor {orange} {#1}}
 
@@ -102,8 +108,8 @@
 \bibliography {references}
 \bibliographystyle {ieeetr}
 
-\appendix
+% \appendix
 
-\input {qTreeConversion.tex}
+% \input {qTreeConversion.tex}
 
 \end {document}
