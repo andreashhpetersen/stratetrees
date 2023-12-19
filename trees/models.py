@@ -367,7 +367,13 @@ class DecisionTree:
 
     @classmethod
     def from_sklearn(cls, src, variables=None, actions=None):
-        root, variables, actions = SklearnLoader.load(src, variables, actions)
+        if isinstance(src, str):
+            root, variables, actions = SklearnLoader.load(src, variables, actions)
+        else:
+            loader = SklearnLoader(src, variables, actions)
+            root = loader.root
+            variables = loader.variables
+            actions = loader.actions
         return DecisionTree(root, variables, actions)
 
     @classmethod
