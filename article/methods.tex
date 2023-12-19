@@ -110,11 +110,11 @@ $\nu'$:
     $\mathcal{A}_{T}$. Then $\nu'$ is valid if it adheres to the following rules:
 
     \begin{enumerate}
-        \item $\nu'$ does not have singular mapping in $\mathcal{T}$
-        \item $\nu'$ intersects with one or more regions already in
+        \item $\nu'$ must have singular mapping in $\mathcal{T}$
+        \item $\nu'$ must not intersects with any region already in
             $\mathcal{T}_{track}$
-        \item $\nu'$ intersects with a region $\nu_{o}$ in the original
-            partitioning, such that the disjunction $\nu' \cap \nu_{o}$ cannot be
+        \item $\nu'$ cannot intersect with a region $\nu_{o}$ in the original
+            partitioning, such that the difference $\nu_{o} - \nu'$ cannot be
             described by a single region of the form $(s^{\min}, s^{\min})$
     \end{enumerate}
 \end{definition}
@@ -236,6 +236,15 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
                     $\nu'$ violates Rule 3 (\cref{def:expansionRules})
                 }
                     \State{attempt $healing$ in dimension $d$}
+
+                    \State{find the smallest expansion value in dimension $d$,
+                        such that either no rules are violated or Rule 1 or 2 is
+                        violated. In the first case, use this expansion value
+                        and continue, in the latter case revert to the last
+                        legal expansion value and mark dimension $d$ as
+                        exhausted.
+                    }
+                        
                 \EndIf%
 
             \EndWhile%
@@ -262,17 +271,63 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
 
 
 
-\subsection{Analyzing the algorithm}%
-\label{sub:maxPartsAnalysis}
-
-In the following we provide an upper bound of the running time of
-\textsc{MaxPartitions} and a proof of correctness.
-
-\subsubsection{Running time}%
-\label{sec:runningTime}
-
-\subsubsection{Proof of correctness}%
+\subsection{Proof of correctness}%
 \label{sec:proofCorrectness}
+
+Let $\mathcal{B}$ be the output of running \textsc{MaxPartitions} with a
+decision tree $\mathcal{T}$ and its induced partitioning
+$\mathcal{A}_{\mathcal{T}}$ as input. We want to prove the following properties
+of the algorithm:
+
+\paragraph{$\mathcal{B}$ is a partitioning in accordance
+with~\cref{def:partitioning}} For this, it is required that for any two regions
+$\nu_{i}, \nu_{j} \in \mathcal{B}$ the intersection of $\nu_{i}$ and $\nu_{j}$
+must be the empty set and that the union of all regions must consitute the
+entire state space. We can see that this must hold because of our use of the
+intermediate decision tree $\mathcal{T}_{track}$. Firstly, this is used to honor
+the second expansion rule in~\cref{def:expansionRules} which forbids an
+expansion that would cause two regions to intersect. Secondly, the algorithm
+proceeds excactly for as long as there are unexplored regions in
+$\mathcal{T}_{track}$. Since any starting region will either be a region from
+$\mathcal{A}_{\mathcal{T}}$ or the remainder of one (because of the third
+expansion rule), each iteration will add to $\mathcal{T}_{track}$ a region that
+decreases the remainding regions to be explored by at least one, thus
+guaranteeing convergence. Therefore, $\mathcal{B}$ will be a partitioning in
+accordance with the definition.
+
+\paragraph{$\mathcal{B}$ respects $\mathcal{T}$} The first expansion rule
+forbids an expansion that would create a region witout singular mapping in
+$\mathcal{T}$. By definition, if all regions in $\mathcal{B}$ as singular
+mapping in $\mathcal{T}$ then $\mathcal{B}$ respects $\mathcal{T}$. Since any
+starting region is a subset of a region in $\mathcal{A}_{\mathcal{T}}$, which by
+definition respects $\mathcal{T}$, neither an expanded region nor a region
+returned `as-is' can violate the singular mapping requirement. Therefore,
+$\mathcal{B}$ must respect $\mathcal{T}$.\todo{Do we need to prove it with
+    relation to our method for finding the expansion vector, ie.\ how we
+incrementally do the expansion?}
+
+\paragraph{$|\mathcal{B}| \leq |\mathcal{A}_{\mathcal{T}}|$} At each iteration,
+the algorithm starts with a region $\nu$ that is a subset of a region in
+$\nu_{o} \in \mathcal{A}_{\mathcal{T}}$. The algorithm attempts to expand the region and
+when that is no longer possible, it is added to the output partitioning
+$\mathcal{B}$. For $\mathcal{B}$ to be larger than $\mathcal{A}_{\mathcal{T}}$
+would therefore require, that at least two starting regions $\nu_{i},
+\nu_{j}$ in separate iterations of the algorithm are disjoint subsets of the
+same region in $\mathcal{A}_{\mathcal{T}}$. When the algorithm starts, this
+cannot be the case, since any starting region will be identical to a region from
+the input partitioning. Now, the third expansion rule prohibits an expansion, if
+for some region $\nu_{i} \in \mathcal{A}_{\mathcal{T}}$ the expanded region
+$\nu'$ would cause $\nu_{i} - \nu'$ to be non-convex, ie.\ not representable on
+the form $(s^{\min}, s^{\max})$. This means, that whenever a region $\nu$ is
+selected as a starting region, either $\nu$ will be identical to a region in
+$\nu_{o} \in \mathcal{A}_{\mathcal{T}}$ or it will be the only remainding subset
+of $\nu_{o}$ not covered by any of the expanded regions already in
+$\mathcal{B}$. Therefore, under no circumstances can there be added more regions
+to $\mathcal{B}$ than the number of regions in $\mathcal{A}_{\mathcal{T}}$ and
+as such we can guarantee that $|\mathcal{B}| \leq |\mathcal{A}_{\mathcal{T}}|$.
+
+\subsection{Complexity}%
+\label{sec:complexity}
 
 \subsection{From regions to decision tree}%
 \label{sub:regionsToDT}

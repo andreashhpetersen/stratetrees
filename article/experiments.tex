@@ -6,22 +6,55 @@
 \begin{table*}[!ht]
     \centering
     \caption{%
-        Comparing \textsc{MaxPartitions} and \textsc{VIPER} for pure shields and
-        shielded oracles.
-    }\label{tab:results}
-    \begin{tabular}{lcccccc}
+        Comparing \textsc{MaxPartitions} and \textsc{VIPER} for minimizing
+        shields. The column `Unsafe runs' indicate wether a violation of the
+        model-specific safety requirement were violated at least once during
+        1000 simulations in a purposefully antagonistic environment.
+    }\label{tab:shieldResults}
+    \begin{tabular}{lrcrcrc}
         \toprule
-        \multirow{2}*{Model} & \multicolumn{3}{c}{Pure shield} &
-        \multicolumn{3}{c}{Shielded oracle}  \\
-                             & Input & \textsc{MaxPartitions} & \textsc{VIPER}
-                             & Input & \textsc{MaxPartitions} & \textsc{VIPER}
-                             \\
+        \multirow{2}*{Model} & & & \multicolumn{2}{c}{\textsc{MaxPartitions}} &
+        \multicolumn{2}{c}{\textsc{VIPER}}  \\
+                             & Input size & Dimensions & Leaves & Unsafe runs &
+                             Leaves & Unsafe runs \\
         \midrule
-        Bouncing ball        & xxx & xxx & xxx & xxx & xxx & xxx \\
-        Random walk          & xxx & xxx & xxx & xxx & xxx & xxx \\
-        Cartpole             & xxx & xxx & xxx & xxx & xxx & xxx \\
-        Cruise               & xxx & xxx & xxx & xxx & xxx & xxx \\
-        DCDC boost control   & xxx & xxx & xxx & xxx & xxx & xxx \\
+        Random walk            &    57,600 & 2 &     44 & \textbf{No} &    39 & \textbf{No} \\
+        Cruise                 & 1,340,000 & 3 & 11,643 & \textbf{No} &    54 & Yes \\
+        Oil pump               & 1,777,468 & 4 &    291 & \textbf{No} &   101 & Yes \\
+        Bouncing ball          & 2,800,000 & 2 &  3,803 & \textbf{No} &    22 & Yes \\
+        DCDC boost converter   & 6,994,242 & 3 &  7,600 & \textbf{No} & 1,392 & Yes \\
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+
+\begin{table*}[!ht]
+    \centering
+    \caption{%
+        Comparing \textsc{MaxPartitions} and \textsc{VIPER} for minimizing
+        controllers.
+    }\label{tab:controllerResults}
+    \begin{tabular}{lrcrcrc}
+        \toprule
+        \multirow{2}*{Model} & & & \multicolumn{2}{c}{\textsc{MaxPartitions}} &
+        \multicolumn{2}{c}{\textsc{VIPER}}  \\
+                             & Input size & Dimensions & Leaves & Mean reward &
+                             Leaves & Mean reward \\
+        \midrule
+        Random walk            &    
+               75 & 2 &    25 &  -18.2 (+/-  0.98) &  12 &   -18.9 (+/-  1.44) \\
+
+        Cruise                 &
+            3,175 & 3 & 1,120 & -722.8 (+/- 426.8) &  70 & -340.52 (+/- 432.5) \\
+
+        Oil pump               &
+              --- & 4 &   --- &                --- & --- &                 --- \\
+
+        Bouncing ball          &
+            3,609 & 2 &   184 &  -36.3 (+/-  3.2) &  31 &    -36.3 (+/- 2.8) \\
+
+        DCDC boost converter   &
+            5,225 & 3 &   681 &   -3.9 (+/-  1.5) &  60 &     -3.9 (+/-  1.7) \\
         \bottomrule
     \end{tabular}
 \end{table*}
