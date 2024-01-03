@@ -124,18 +124,57 @@ problem, ie.\ the produced partitioning should respect $\mathcal{T}$ and only
 have non-overlapping regions. The third case is required in order to guarantee
 that in each iteration the algorithm on average will add \textit{at least} one
 region from the original partitioning to the new partitioning. To see this,
-consider \ldots\todo[inline]{Make an example to show}.
+consider the visualization in~\cref{fig:expRules3}. The candidate expansion
+`cuts' the rightmost region (given by $(3,0)$ and $(4,4)$) in two such that the
+remainder would have to be represented by \textit{two} regions --- one given
+by $((3,0), (4,2))$ and one given by $((3,3), (4,4))$.
+
+\begin{figure*}[ht]
+    \centering
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{rules_org}%
+        \caption{}%
+        \label{fig:expRulesOrg}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+      \includegraphics[width=\textwidth]{rule1}%
+      \caption{}%
+      \label{fig:expRules1}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+      \includegraphics[width=\textwidth]{rule2}%
+      \caption{}%
+      \label{fig:expRules2}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+      \includegraphics[width=\textwidth]{rule3}%
+      \caption{}%
+      \label{fig:expRules3}
+    \end{subfigure}
+
+  \caption{%
+      A visual example of the 3 expansion rules. Striped regions indicate that
+      the algorithm has covered this part in a previous iteration, whereas the
+      shaded region with a dashed border is a candidate expanded
+      region.~\cref{fig:expRulesOrg} shows a potential input partitioning.
+      In~\cref{fig:expRules1} the expansion is illegal according to Rule 1,
+      since the expanded region contains two different actions
+      (colors).~\cref{fig:expRules2} violates Rule 2, since the expanded region
+      overlaps with a striped area.~\cref{fig:expRules3} shows a representation
+      of the 3rd rule, as the expansion would `cut' the rightmost region in two.
+  }%
+  \label{fig:simpleExample}
+\end{figure*}
 
 
-How do we determine this expansion? Let $(p^{\min}, p^{\max})$ define region in
-the original partitioning (or potentially the remains of a region previously cut
-in two). We then want to find a $\Delta_p \in \mathbb{Z}^K$ such that
-$(p^{\min}, p^{\min} + \Delta_p)$ defines a region that follows the three
-expansion rules and such that incrementing in any one dimension would result in
-a violation. By definition, a valid value for $\Delta_p$ is when $\Delta_p =
-p^{\max} - p^{\min}$, since this would just produce the original region. We are
-therefore guaranteed to at least find this region. This gives rise to the
-following definition.
+How do we determine this expansion? Let $(p^{\min}, p^{\max})$ define (the
+remainder of) a region in the original partitioning. We then want to find a
+$\Delta_p \in \mathbb{Z}^K$ such that $(p^{\min}, p^{\min} + \Delta_p)$ defines
+a region that follows the three expansion rules and such that incrementing in
+any one dimension would result in a violation. By definition, a valid value for
+$\Delta_p$ is when $\Delta_p = p^{\max} - p^{\min}$, since this would just
+produce the original region. We are therefore guaranteed to at least find this
+region. This gives rise to the following definition.
 
 % Let $p^{\min}$ be the result of popping the lexicographically smallest element
 % of $\mathcal{P}$ (line 4). We can then define $s^{\min} = s^{p^{\min}}$ as the
@@ -200,11 +239,17 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
 
             \State{%
                 $(p^{\min}, p^{\max}) \gets$
-                select region bounds of unexplored region
+                select from unexplored regions
             }
 
             \State{%
                 $\Delta_p \gets p^{\max} - p^{\min}$
+            }
+            \State{%
+                $\Delta'_p \gets \Delta_p$
+            }
+            \State{%
+                \textit{healing} $\gets false$
             }
 
             \item[]
@@ -212,16 +257,21 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
                 not all dimensions have been exhausted
             }
 
-                \State{%
-                    $d \gets$ randomly select unexhausted dimension
-                }
-                \State{%
-                    $\Delta_{p_{d}} \gets \Delta_{p_{d}} + 1$
-                }
+                \If{not \textit{healing}}
+                    \State{%
+                        $d \gets$ select unexhausted dimension
+                    }
+                    \State{%
+                        $\Delta'_{p} \gets \Delta_{p} + \mathbf{\hat{e}}_d$
+                    }
+                    % \State{%
+                    %     $\Delta_{p_{d}} \gets \Delta_{p_{d}} + 1$
+                    % }
+                \EndIf%
 
                 \State{%
                     $\nu' \gets (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\min} +
-                    \Delta_p}_{\mathcal{T}})$
+                    \Delta'_p}_{\mathcal{T}})$
                 }
 
                 \item[]
@@ -229,36 +279,59 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
                     $\nu'$ violates Rule 1 or 2
                     (\cref{def:expansionRules})
                 }
-                    \State{$\Delta_{p_{d}} \gets \Delta_{p_{d}} - 1$}
+                    \State{%
+                        $\Delta'_{p_{d}} \gets
+                        \Delta'_{p_{d}} - \mathbf{\hat{e}}_{d}$
+                    }
                     \State{mark $d$ as exhausted}
+                    \State{$healing \gets false$}
+                \item[]
 
                 \ElsIf{%
                     $\nu'$ violates Rule 3 (\cref{def:expansionRules})
                 }
-                    \State{attempt $healing$ in dimension $d$}
-
-                    \State{find the smallest expansion value in dimension $d$,
-                        such that either no rules are violated or Rule 1 or 2 is
-                        violated. In the first case, use this expansion value
-                        and continue, in the latter case revert to the last
-                        legal expansion value and mark dimension $d$ as
-                        exhausted.
+                    \State{%
+                        $b \gets $ largest bound in $d$ among broken regions
                     }
+                    \If{$\Delta'_{p_{d}} < b$}
+                        \State{$healing \gets true$}
+                        \State{%
+                            $\Delta'_{p_{d}} \gets b$ 
+                        }
+                    \Else%
+                        \State{$healing \gets false$}
+                        \State{mark $d$ as exhausted}
+                    \EndIf%
+
+                    % \State{attempt $healing$ in dimension $d$}
+
+                    % \State{find the smallest expansion value in dimension $d$,
+                    %     such that either no rules are violated or Rule 1 or 2 is
+                    %     violated. In the first case, use this expansion value
+                    %     and continue, in the latter case revert to the last
+                    %     legal expansion value and mark dimension $d$ as
+                    %     exhausted.
+                    % }
                         
+                \Else
+                    \State{$healing \gets false$}
+                    \State{%
+                        $\Delta_p \gets \Delta'_p$
+                    }
                 \EndIf%
 
             \EndWhile%
 
             \item[]
             \State{%
-                $\nu' \gets (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\min} +
+                $\nu \gets (s^{p^{\min}}_{\mathcal{T}}, s^{p^{\min} +
                 \Delta_p}_{\mathcal{T}})$
             }
             \State{%
-                \Call{Put}{$\mathcal{T}_{track},\, \nu'$}
+                \Call{Put}{$\mathcal{T}_{track},\, \nu$}
             }
             \State{%
-                $\mathcal{R} \gets \mathcal{R} \cup \{\nu'\}$
+                $\mathcal{R} \gets \mathcal{R} \cup \{\nu\}$
             }
 
         \EndWhile%
@@ -274,6 +347,7 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
 \subsection{Proof of correctness}%
 \label{sec:proofCorrectness}
 
+\noindent
 Let $\mathcal{B}$ be the output of running \textsc{MaxPartitions} with a
 decision tree $\mathcal{T}$ and its induced partitioning
 $\mathcal{A}_{\mathcal{T}}$ as input. We want to prove the following properties
@@ -326,8 +400,8 @@ $\mathcal{B}$. Therefore, under no circumstances can there be added more regions
 to $\mathcal{B}$ than the number of regions in $\mathcal{A}_{\mathcal{T}}$ and
 as such we can guarantee that $|\mathcal{B}| \leq |\mathcal{A}_{\mathcal{T}}|$.
 
-\subsection{Complexity}%
-\label{sec:complexity}
+% \subsection{Complexity}%
+% \label{sec:complexity}
 
 \subsection{From regions to decision tree}%
 \label{sub:regionsToDT}
@@ -341,74 +415,99 @@ require the existence of enough `clean splits' (ie.\ predicates on some variable
 that perfectly divides the regions into two sets with an empty intersection) to
 arrange the entire set of regions.
 
-Therefore, we suggest a brute-force algorithm that tries to separate the regions
-as cleanly as possible. Let $\mathbf{R}$ be a list of regions and let $a_{\nu}$
-be the action associated with the region $\nu = (s^{\min}, s^{\min})$. In the
-following, we refer to $s^{\min}$ and $s^{\max}$ of a region $\nu$ by
-$\nu_{\min}$ and $\nu_{\max}$ respectively, and to the value of a specific
-dimension $i$ in one such boundary point as $\nu_{\min, i}$ or $\nu_{\max,i}$.
+For classical decision tree construction algorithms, such as CART~\cite{?},
+ID3~\cite{?} and C4.5~\cite{?}, the input is data points that need to be
+properly arranged by creating branches according to some splitting criteria
+(typically the gini index or entropy). In our case, the data is already arranged
+in regions specifying only one label (action) per region, and we want these
+regions to be preserved as well as possible as leaves in the tree. We therefore
+suggest the following method for choosing a splitting criteria.
 
-We iteratively create a branch node that splits $\mathbf{R}$ into two,
-$\mathbf{R}_{low}$ and $\mathbf{R}_{high}$, based on a predicate function
-$\rho(x) = x_i \le c$ with $c \in \mathbb{R}$ so that $\mathbf{R}_{low} = \{ \nu
-\in \mathbf{R} \mid \rho(\nu_{\min}) \text{~is True} \}$ and $\mathbf{R}_{high}
-= \{ \nu \in \mathbf{R} \mid \rho(\nu_{\max}) \text{~is False} \}$. When the
-list only contains a single element $\nu$, we create a leaf node with action
-$a_{\nu}$ and return.
+Let $\mathbf{R}$ be a list of regions. For notational purposes, we will in the
+following refer to $s^{\min}$ and $s^{\max}$ of a region $\nu$ by $\nu_{\min}$
+and $\nu_{\max}$ respectively, and to the value of a specific dimension $i$ in
+one such boundary point as $\nu_{\min, i}$ or $\nu_{\max,i}$.  Given a list of
+regions $\mathbf{R}$, our goal is to find a predicate function $\rho(x) = x_{i}
+\leq c$ with $c \in \mathbb{R}$ that, according to some heuristic, splits
+$\mathbf{R}$ into two subsets $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ such
+that $\mathbf{R}_{low} = \{ \nu \in \mathbf{R} \mid \rho(\nu_{\min}) = false \}$
+and $\mathbf{R}_{high} = \{ \nu \in \mathbf{R} \mid \rho(\nu_{\max}) = true \}$.
+Additionally, we require that $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ are
+disjoint, meaning that if for some region $\nu$ it holds that $\rho(\nu_{\min})
+= true$ and $\rho(\nu_{\max}) = false$, then $\nu$ must be split so we get two
+new regions $\nu', \nu''$ where $\nu' \in \mathbf{R}_{low}$ and $\nu'' \in
+\mathbf{R}_{high}$. While $\mathbf{R}$ is greater than one, we create a branch
+node from the obtained predicate function and recursively repeat the procedure
+for $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$. If $\mathbf{R}$ only contains
+one region, we create a leaf node and stop the recursion.
 
-The question is how to determine $\rho(x)$, more specifically which dimension
-$i$ to predicate on and at which value $c$. Ideally, we want to split
-$\mathbf{R}$ in two equally sized subsets and in a way that no single region
-would have to occur in both, ie.\ we would like $\mathbf{R}_{low} \cap
-\mathbf{R}_{high} = \emptyset$. For this we define an impurity measure
-$I(\mathbf{R}_{low},\mathbf{R}_{high})$ that penalises the difference in size
-between $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ and the size of the
-intersection between the two. Let $abs(a)$ be the absolute value of $a$ and let
-$|b|$ denote the size of a set $b$, then
+% We iteratively create a branch node that splits $\mathbf{R}$ into two,
+% $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$, based on a predicate function
+% $\rho(x) = x_i \le c$ with $c \in \mathbb{R}$ so that $\mathbf{R}_{low} = \{ \nu
+% \in \mathbf{R} \mid \rho(\nu_{\min}) \text{~is True} \}$ and $\mathbf{R}_{high}
+% = \{ \nu \in \mathbf{R} \mid \rho(\nu_{\max}) \text{~is False} \}$. When the
+% list only contains a single element $\nu$, we create a leaf node with action
+% $a_{\nu}$ and return.
+
+We define a heuristic for choosing $\rho$ that balances trying to create a
+balanced tree with trying to maintain the structure of the input regions.
+Ideally, we want to split $\mathbf{R}$ in two equally sized subsets and in a way
+that no region would have to be split, ie.\ we would like
+$|\mathbf{R}_{low}| + |\mathbf{R}_{high}| = |\mathbf{R}|$. For this we define an
+impurity measure $I(\mathbf{R},\rho)$ that penalises the
+difference in size between $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ and the
+number of regions split. Let $abs(a)$ be the absolute value of
+$a$ and let $s = abs(|\mathbf{R}| - (|\mathbf{R}_{low}| + |\mathbf{R}_{high}|))$
+be the number of split regions, then
 
 \[
-    I(\mathbf{R}_{low}, \mathbf{R}_{high})  = abs(|\mathbf{R}_{low}| -
-    |\mathbf{R}_{high}|) + |\mathbf{R}_{low} \cap \mathbf{R}_{high}|
+    I(\mathbf{R}, \rho)  = abs(|\mathbf{R}_{low}| -
+    |\mathbf{R}_{high}|) + s
 \]
 
-
-Our brute-force way of finding the predicate that minimizes $I$ is to iterate
-over the dimensions in $\mathcal{S}$ and for each dimension $i$ we sort the
-regions according to their upper bound. Let $\mathbf{R}_i = \{ \nu^1, \nu^2,
-\ldots, \nu^n \}$ be the list sorted according to the $i$ th dimension so that
-for all $\nu^j, \nu^{j+1} \in \mathbf{R}_{i}$ it holds that $\nu^{j}_{\max,i} \le
-\nu^{j+1}_{\max,i}$. If we then let $\rho(x) = x_i \le c$ with $c =
-\nu^{j}_{\max,i}$ we have $|\mathbf{R}_{low}| = j$ and |$\mathbf{R}_{high}| = n
-- j$. For determining the size of $\mathbf{R}_{low} \cap \mathbf{R}_{high}$ we
+To calculate this impurity, we can sort the list of regions according to the
+dimension in which we want to try and split the list. Let $\mathbf{R}_i = \{
+\nu^1, \nu^2, \ldots, \nu^n \}$ be the list sorted according to the $i$th
+dimension so that for all $\nu^j, \nu^{j+1} \in \mathbf{R}_{i}$ it holds that
+$\nu^{j}_{\max,i} \le \nu^{j+1}_{\max,i}$. If we then let $\rho(x) = x_i \le c$
+with $c = \nu^{j}_{\max,i}$ we have $|\mathbf{R}_{low}| = j$ and
+|$\mathbf{R}_{high}| = n - j$. For determining the number of split regions, we
 simply need to count the number of regions $\nu^{j+m}$ for $m = 1, 2, \ldots,
-n-j$ whose lower bound is less than our predicate bound $c$, since these regions
-will appear both in $\mathbf{R}_{low}$ (because then, by definition, $\rho(x) = x_i
-\le c$ will be true for $x_i = \nu^{j+m}_{\min,i}$ and $c = \nu^{j}_{\max,i}$)
-and in $\mathbf{R}_{high}$ (because our sorting ensures that for all
-$\nu^{j},\nu^{j+m}$ it holds that $\nu^{j}_{\max,i} \le \nu^{j+m}_{\max,i}$).
+n-j$ whose lower bound is less than our predicate bound $c$.
+
+% , since for these regions
+% will appear both in $\mathbf{R}_{low}$ and in $\mathbf{R}_{high}$ (because our
+% sorting ensures that for all $\nu^{j},\nu^{j+m}$ it holds that $\nu^{j}_{\max,i}
+% \le \nu^{j+m}_{\max,i}$).
 
 Now we can write our impurity measure in terms of these quantities:
 
 \[
-    I(\mathbf{R}_{low}, \mathbf{R}_{high}) = abs(j - (n - j)) +
-    \sum^{n}_{m=1} \mathbbm{1}(\rho(\nu^{j+m}_{\min})), \quad
-    \text{for all }\nu^{j} \in \mathbf{R}_{i}
+    I(\mathbf{R}_{i}, \rho)
+    % I(\mathbf{R}_{low}, \mathbf{R}_{high})
+    = abs(j - (n - j)) +
+    \sum^{n}_{m=1} \mathbbm{1}(\rho(\nu^{j+m}_{\min}))
 \]
 
+% \noindent
+% where $\mathbbm{1}$ is the indicator function, $j = |\mathbf{R}_{low}|$, $n =
+% |\mathbf{R}_{low}| + |\mathbf{R}_{high}|$ and $\rho$ is the predicate function
+% that has been used to split $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ and which
+% takes the form $\rho(x) = x_{i} \leq c$ with $c = \nu^{j}_{\max, i}$. 
+
 \noindent
-where $\mathbbm{1}$ is the indicator function, $\mathbf{R}_{i}$ is the list of
-regions sorted according to upper bounds in dimension $i$ and $\mathbf{R}_{low}$ and
-$\mathbf{R}_{high}$ are the subsets resulting from splitting on the predicate
-function $\rho(x) = x_i \le c$ with $c = \nu^{j}_{\max,i}$ so that
-$\mathbf{R}_{low} \subsetneq \mathbf{R}$, $\mathbf{R}_{high} \subsetneq
-\mathbf{R}$ and $\mathbf{R} \supseteq \mathbf{R}_{low} \cup \mathbf{R}_{high}$.
+where $\mathbbm{1}$ is the indicator function, $\rho$ is a predicate function
+of the form $\rho(x) = x_{i} \leq c$ with $c = \nu^{j}_{\max, i}$,
+$\mathbf{R}_{i}$ is the set of regions to be split sorted in non-decreasing
+order according to $\nu_{\max,i}$ for all $\nu \in \mathbf{R}_{i}$, $n$ is the
+number of regions in $\mathbf{R}_{i}$ and $j$ is the largest index such that
+$\rho(\nu^{j}_{\max})$ evaluates to true.
 
 Finding the best split, ie.\ the one that minimizes the impurity, is a $O(Kn^2)$
-operation, as it requires a nested loop through all the regions for each
-of the $K $dimensions (the nested loop being the final summation term over $m =
-1, 2, \ldots, n - j$ for all $j = 1, 2, \ldots, n - 1$). In this work, we have
-not attempted to find a faster implementation as we found that the size of
-$\mathbf{R}$ obtained by using our \textsc{MaxPartitions} algorithm did not
-cause performance issues.
+operation, as it requires checking all $K \by n$ possible splitting criterias
+and evaluating the impurity function for each of them in time propertional to
+$n$. In this work, we have not attempted to find a faster implementation as we
+found that the size of the output partitioning from \textsc{MaxPartitions} did
+not cause performance issues.
 
 
