@@ -139,6 +139,7 @@ def draw_graph(
 
 def draw_partitioning(
     leaves, x_var, y_var, xlim, ylim, cmap,
+    xticks=None, yticks=None, extra_patches=None,
     labels={}, dpi=100, lw=0, bounds=False, show=False,
     grid=False, out_fp='./tmp.svg'
 ):
@@ -177,16 +178,50 @@ def draw_partitioning(
             )
         )
 
-    ax.add_collection(PatchCollection(patches, match_original=True))
-    for args, kwargs in bounds_data:
-        ax.plot(*args, **kwargs)
+    # patches.append(Rectangle((0,0), 2, 2, fill=None, hatch='//'))
+
+    # rule 1
+    # patches.extend([
+    #     Rectangle((0,2), 2, 2, color='white', alpha=.5, lw=0),
+    #     Rectangle((0,2), 2, 2, fill=None, edgecolor='black', lw=2, linestyle='dashed'),
+    # ])
+
+    # rule 2
+    # patches.extend([
+    #     Rectangle((0,2), 3, 1, color=cmap[0], lw=0),
+    #     Rectangle((0,2), 3, 1, fill=None, hatch='\\\\'),
+
+    #     Rectangle((0,3), 2, 1, color=cmap[1], lw=0),
+    #     Rectangle((0,3), 2, 1, fill=None, hatch='//'),
+
+    #     Rectangle((2,0), 1, 3, color='white', alpha=.5, lw=0),
+    #     Rectangle((2,0), 1, 3, fill=None, edgecolor='black', lw=2, linestyle='dashed'),
+    # ])
+
+    # rule 3
+    # patches.extend([
+    #     # Rectangle((0,2), 4, 1, color=cmap[0], lw=0),
+    #     Rectangle((0,2), 4, 1, color='white', alpha=.5, lw=0),
+    #     Rectangle((0,2), 4, 1, fill=None, edgecolor='black', lw=2, linestyle='dashed'),
+    # ])
+
+    if extra_patches is not None:
+        patches.extended(extra_patches)
+        for p in patches:
+            ax.add_patch(p)
+    else:
+        ax.add_collection(PatchCollection(patches, match_original=True))
+        for args, kwargs in bounds_data:
+            ax.plot(*args, **kwargs)
 
     proxies = []
-    if isinstance(labels, dict):
+    if isinstance(labels, dict) and len(labels) > 0:
         for k, v in labels.items():
             proxies.append(mpatches.Patch(label=v, color=cmap[k]))
+        plt.legend(handles=proxies)
 
-    plt.legend(handles=proxies)
+    plt.xticks(xticks)
+    plt.yticks(yticks)
 
     plt.xlim(xlim)
     plt.ylim(ylim)
