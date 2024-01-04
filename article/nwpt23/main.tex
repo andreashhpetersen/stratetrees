@@ -198,8 +198,9 @@ breaking expansion happened) as exhausted.
 Finally, we keep track of what areas of the state space have been covered by new
 regions using a separate decision tree. Whenever the outer loop starts a new
 iteration, we ask this \textit{tracking} tree for an uncovered region until the
-entire state space is covered. The algorithm then returns a labelled partitioning,
-that is guaranteed to have no more regions than the original partitioning.
+entire state space is covered. The algorithm then returns a labelled
+partitioning, that --- while not guaranteeing minimality --- is guaranteed to
+have no more regions than the original partitioning.
 
 \paragraph{Experiments} We conduct experiments on two types of cases: in the
 first case, the input partitioning has a grid-like or tabular structure (like in
@@ -238,8 +239,9 @@ the input partitionings have been large.
         \toprule
         Type & Model & State dimensions & Original size & New size & Iterations \\
         \midrule
-        \multirow{2}*{Shield} & Bouncing ball & 2 & 700,000 & 1,352 & 3 \\
+        \multirow{3}*{Shield} & Bouncing ball & 2 & 700,000 & 1,352 & 3 \\
                               & Random walk & 2 & 57,600 & 35 & 1 \\
+                              & Cruise control & 3 & 1,344,000 & 11,860 & 3 \\
         \midrule
         \multirow{5}*{Strategy} & Bouncing ball & 2 & 81,747 & 696 & 4 \\
                                 & Cartpole & 4 & 76,993 & 3,898 & 10 \\
