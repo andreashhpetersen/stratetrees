@@ -1,0 +1,2337 @@
+{
+    "variables": [
+        "t",
+        "v",
+        "p",
+        "l"
+    ],
+    "actions": [
+        0,
+        1
+    ],
+    "root": {
+        "var": "t",
+        "bound": 9.100000000000001,
+        "low": {
+            "var": "t",
+            "bound": 7.8999999999999995,
+            "low": {
+                "var": "t",
+                "bound": 7.300000000000001,
+                "low": {
+                    "var": "t",
+                    "bound": 6.9,
+                    "low": {
+                        "var": "t",
+                        "bound": 6.6,
+                        "low": {
+                            "var": "t",
+                            "bound": 6.4,
+                            "low": {
+                                "var": "t",
+                                "bound": 6.3,
+                                "low": {
+                                    "var": "t",
+                                    "bound": 6.2,
+                                    "low": {
+                                        "var": "v",
+                                        "bound": 4.999999999999999,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "p",
+                                            "bound": 1.0,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 4.999999999999999,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "p",
+                                            "bound": 1.0,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "v",
+                                                "bound": 5.1,
+                                                "low": {
+                                                    "action": 0,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.0,
+                                                    "low": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "var": "l",
+                                                        "bound": 0.1,
+                                                        "low": {
+                                                            "action": 1,
+                                                            "cost": 0
+                                                        },
+                                                        "high": {
+                                                            "action": 2,
+                                                            "cost": 0
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "v",
+                                    "bound": 5.199999999999999,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "v",
+                                "bound": 5.5,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 6.5,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 5.6,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "v",
+                            "bound": 5.8999999999999995,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 6.800000000000001,
+                                "low": {
+                                    "var": "t",
+                                    "bound": 6.700000000000001,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 6.0,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "v",
+                                    "bound": 6.3,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "v",
+                        "bound": 6.3999999999999995,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 7.1000000000000005,
+                            "low": {
+                                "var": "t",
+                                "bound": 7.000000000000001,
+                                "low": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 6.699999999999999,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "v",
+                                "bound": 6.799999999999999,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 7.200000000000001,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 7.1,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "v",
+                    "bound": 7.199999999999999,
+                    "low": {
+                        "action": 0,
+                        "cost": 0
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 7.7,
+                        "low": {
+                            "var": "t",
+                            "bound": 7.5,
+                            "low": {
+                                "var": "t",
+                                "bound": 7.4,
+                                "low": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 7.499999999999999,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "v",
+                                "bound": 7.6,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 7.6,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 7.9,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "v",
+                            "bound": 8.0,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 7.8,
+                                "low": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 8.3,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "v",
+                "bound": 7.499999999999999,
+                "low": {
+                    "var": "v",
+                    "bound": 6.3999999999999995,
+                    "low": {
+                        "action": 0,
+                        "cost": 0
+                    },
+                    "high": {
+                        "var": "v",
+                        "bound": 7.199999999999999,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "p",
+                            "bound": 1.0,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 9.000000000000002,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "v",
+                                    "bound": 7.3999999999999995,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "t",
+                    "bound": 8.600000000000001,
+                    "low": {
+                        "var": "v",
+                        "bound": 8.1,
+                        "low": {
+                            "var": "v",
+                            "bound": 8.0,
+                            "low": {
+                                "var": "v",
+                                "bound": 7.9,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "t",
+                                        "bound": 8.5,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 8.4,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 8.2,
+                            "low": {
+                                "var": "v",
+                                "bound": 8.4,
+                                "low": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 8.3,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "t",
+                                            "bound": 8.1,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "l",
+                                "bound": 0.1,
+                                "low": {
+                                    "var": "t",
+                                    "bound": 8.5,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "t",
+                                            "bound": 8.3,
+                                            "low": {
+                                                "var": "v",
+                                                "bound": 8.200000000000001,
+                                                "low": {
+                                                    "action": 0,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.0,
+                                                    "low": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 1,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 8.3,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 8.200000000000001,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 2,
+                                            "cost": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 8.900000000000002,
+                        "low": {
+                            "var": "t",
+                            "bound": 8.8,
+                            "low": {
+                                "var": "t",
+                                "bound": 8.700000000000001,
+                                "low": {
+                                    "var": "v",
+                                    "bound": 7.799999999999999,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "v",
+                                    "bound": 7.699999999999999,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "v",
+                                    "bound": 7.6,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "l",
+                            "bound": 0.1,
+                            "low": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "l",
+                                    "bound": 0.0,
+                                    "low": {
+                                        "action": 2,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 1,
+                                        "cost": 0
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "action": 2,
+                                    "cost": 0
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "high": {
+            "var": "t",
+            "bound": 10.8,
+            "low": {
+                "var": "v",
+                "bound": 6.6,
+                "low": {
+                    "var": "v",
+                    "bound": 6.3,
+                    "low": {
+                        "var": "v",
+                        "bound": 6.0,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "v",
+                            "bound": 6.199999999999999,
+                            "low": {
+                                "var": "t",
+                                "bound": 10.6,
+                                "low": {
+                                    "var": "t",
+                                    "bound": 10.5,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 6.1,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 10.4,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 10.3,
+                        "low": {
+                            "var": "v",
+                            "bound": 6.499999999999999,
+                            "low": {
+                                "var": "t",
+                                "bound": 10.1,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 6.3999999999999995,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 10.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "p",
+                            "bound": 1.0,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "l",
+                                "bound": 0.0,
+                                "low": {
+                                    "action": 2,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "l",
+                                    "bound": 0.1,
+                                    "low": {
+                                        "action": 1,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 2,
+                                        "cost": 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "t",
+                    "bound": 9.4,
+                    "low": {
+                        "var": "v",
+                        "bound": 7.199999999999999,
+                        "low": {
+                            "var": "v",
+                            "bound": 7.1,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 9.3,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "l",
+                            "bound": 0.1,
+                            "low": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 9.200000000000001,
+                                    "low": {
+                                        "var": "v",
+                                        "bound": 7.3,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 1,
+                                                "cost": 0
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 1,
+                                            "cost": 0
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "t",
+                                "bound": 9.200000000000001,
+                                "low": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 7.3,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 2,
+                                            "cost": 0
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 2,
+                                        "cost": 0
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "t",
+                        "bound": 9.9,
+                        "low": {
+                            "var": "v",
+                            "bound": 6.8999999999999995,
+                            "low": {
+                                "var": "t",
+                                "bound": 9.8,
+                                "low": {
+                                    "var": "v",
+                                    "bound": 6.799999999999999,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "t",
+                                            "bound": 9.600000000000001,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.1,
+                                                    "low": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 6.699999999999999,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "l",
+                                "bound": 0.1,
+                                "low": {
+                                    "var": "v",
+                                    "bound": 6.999999999999999,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "t",
+                                            "bound": 9.500000000000002,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.0,
+                                                "low": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 1,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 9.8,
+                                    "low": {
+                                        "var": "v",
+                                        "bound": 6.999999999999999,
+                                        "low": {
+                                            "var": "p",
+                                            "bound": 1.0,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "t",
+                                                "bound": 9.500000000000002,
+                                                "low": {
+                                                    "action": 0,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        },
+                                        "high": {
+                                            "var": "p",
+                                            "bound": 1.0,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 2,
+                                            "cost": 0
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 10.3,
+                            "low": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "l",
+                                    "bound": 0.0,
+                                    "low": {
+                                        "action": 2,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.1,
+                                        "low": {
+                                            "action": 1,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 2,
+                                            "cost": 0
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "l",
+                                    "bound": 0.0,
+                                    "low": {
+                                        "action": 2,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.1,
+                                        "low": {
+                                            "action": 1,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 2,
+                                            "cost": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "high": {
+                "var": "t",
+                "bound": 11.400000000000002,
+                "low": {
+                    "var": "t",
+                    "bound": 11.100000000000001,
+                    "low": {
+                        "var": "v",
+                        "bound": 5.6,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 11.0,
+                            "low": {
+                                "var": "t",
+                                "bound": 10.9,
+                                "low": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 5.8999999999999995,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "v",
+                                        "bound": 5.8,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "l",
+                                                "bound": 0.1,
+                                                "low": {
+                                                    "action": 1,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "action": 2,
+                                                    "cost": 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "v",
+                                    "bound": 5.7,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "v",
+                        "bound": 5.5,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 11.3,
+                            "low": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "v",
+                                    "bound": 5.6,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "l",
+                                    "bound": 0.0,
+                                    "low": {
+                                        "action": 2,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.1,
+                                        "low": {
+                                            "action": 1,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 2,
+                                            "cost": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "high": {
+                    "var": "t",
+                    "bound": 11.8,
+                    "low": {
+                        "var": "v",
+                        "bound": 5.199999999999999,
+                        "low": {
+                            "action": 0,
+                            "cost": 0
+                        },
+                        "high": {
+                            "var": "t",
+                            "bound": 11.600000000000001,
+                            "low": {
+                                "var": "l",
+                                "bound": 0.1,
+                                "low": {
+                                    "var": "v",
+                                    "bound": 5.4,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "t",
+                                            "bound": 11.500000000000002,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "var": "v",
+                                                "bound": 5.299999999999999,
+                                                "low": {
+                                                    "action": 0,
+                                                    "cost": 0
+                                                },
+                                                "high": {
+                                                    "var": "l",
+                                                    "bound": 0.0,
+                                                    "low": {
+                                                        "action": 2,
+                                                        "cost": 0
+                                                    },
+                                                    "high": {
+                                                        "action": 1,
+                                                        "cost": 0
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.0,
+                                            "low": {
+                                                "action": 2,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 1,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 11.500000000000002,
+                                    "low": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 5.4,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    },
+                                    "high": {
+                                        "var": "p",
+                                        "bound": 1.0,
+                                        "low": {
+                                            "action": 0,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "v",
+                                            "bound": 5.299999999999999,
+                                            "low": {
+                                                "action": 0,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "high": {
+                                "var": "l",
+                                "bound": 0.0,
+                                "low": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 2,
+                                        "cost": 0
+                                    }
+                                },
+                                "high": {
+                                    "var": "p",
+                                    "bound": 1.0,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.1,
+                                        "low": {
+                                            "action": 1,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "action": 2,
+                                            "cost": 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "high": {
+                        "var": "v",
+                        "bound": 5.1,
+                        "low": {
+                            "var": "v",
+                            "bound": 4.999999999999999,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "p",
+                                "bound": 1.0,
+                                "low": {
+                                    "action": 0,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "t",
+                                    "bound": 11.9,
+                                    "low": {
+                                        "action": 0,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "var": "l",
+                                        "bound": 0.0,
+                                        "low": {
+                                            "action": 2,
+                                            "cost": 0
+                                        },
+                                        "high": {
+                                            "var": "l",
+                                            "bound": 0.1,
+                                            "low": {
+                                                "action": 1,
+                                                "cost": 0
+                                            },
+                                            "high": {
+                                                "action": 2,
+                                                "cost": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "high": {
+                            "var": "p",
+                            "bound": 1.0,
+                            "low": {
+                                "action": 0,
+                                "cost": 0
+                            },
+                            "high": {
+                                "var": "l",
+                                "bound": 0.0,
+                                "low": {
+                                    "action": 2,
+                                    "cost": 0
+                                },
+                                "high": {
+                                    "var": "l",
+                                    "bound": 0.1,
+                                    "low": {
+                                        "action": 1,
+                                        "cost": 0
+                                    },
+                                    "high": {
+                                        "action": 2,
+                                        "cost": 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "meta": {}
+}
