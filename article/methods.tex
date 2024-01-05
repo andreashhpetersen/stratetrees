@@ -16,10 +16,10 @@ interval $[0,9]$, and a set of actions $Act = \{ action1, action2 \}$. Before
 learning, we might decide to discretize both $x$ and $y$ into 3 distinct bins,
 giving us a partitioning of $\mathcal{S}$ with $3\times3 = 9$ regions. After
 training, we end up with a Q-table that maps states to action in a way that is
-shown in \cref{fig:simpleExamplePartitioning}. This same mapping can also be
+shown in~\cref{fig:simpleExamplePartitioning}. This same mapping can also be
 represented by a decision tree, as shown in \cref{fig:simpleExampleTree}.
 
-\begin{figure}[ht]
+\begin{figure}[!ht]
     \centering
     \begin{subfigure}{0.4\textwidth}
         \includegraphics[width=\textwidth]{simpleExamplePartitioning}%
@@ -89,7 +89,7 @@ Exploiting this notation, let $p$ be a $K$-dimensional vector of integers, such
 that $p_i \leq |\mathcal{T}_i| + 1$ for all $i = 1,\ldots,K$, then we can define
 a point at an intersection of bounds in $\mathcal{T}$ as $s^{p}_{\mathcal{T}} =
 (\mathcal{T}_{1,p_1}, \mathcal{T}_{2,p_2}, \ldots, \mathcal{T}_{K,p_K})$. To
-avoid cluttering the notation, will for the most part omit the subscript
+avoid cluttering the notation, we will for the most part omit the subscript
 $\mathcal{T}$ on $s^{p}_{\mathcal{T}}$. To make things clear, we will write $s$
 to refer to an actual point in the state space of $\mathcal{T}$, ie.\ $s \in
 \mathcal{S}$, and we will write $p$ to refer to a vector of integers
@@ -163,7 +163,7 @@ by $((3,0), (4,2))$ and one given by $((3,3), (4,4))$.
       overlaps with a striped area.~\cref{fig:expRules3} shows a representation
       of the 3rd rule, as the expansion would `cut' the rightmost region in two.
   }%
-  \label{fig:simpleExample}
+  \label{fig:expansionRules}
 \end{figure*}
 
 
@@ -449,6 +449,31 @@ one region, we create a leaf node and stop the recursion.
 % list only contains a single element $\nu$, we create a leaf node with action
 % $a_{\nu}$ and return.
 
+% this figure belongs to the section on "Repeated application", but it shows up
+% weird if I put it there
+\begin{figure*}[ht]
+    \centering
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\textwidth]{iterMpBB}%
+        \caption{Bouncing Ball}%
+        \label{fig:iterativeMaxpartsBB}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\textwidth]{iterMpCP}%
+        \caption{Cartpole}%
+        \label{fig:iterativeMaxpartsCP}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \includegraphics[width=\textwidth]{iterMpTL}%
+        \caption{Traffic Light}%
+        \label{fig:iterativeMaxpartsTL}
+    \end{subfigure}
+    \caption{%
+        Progression of repeated application of \textsc{MaxPartitions} on
+        different models. Each graph starts after 1 minimization step.
+    }\label{fig:iterativeMaxparts}
+\end{figure*}
+
 We define a heuristic for choosing $\rho$ that balances trying to create a
 balanced tree with trying to maintain the structure of the input regions.
 Ideally, we want to split $\mathbf{R}$ in two equally sized subsets and in a way
@@ -504,10 +529,46 @@ number of regions in $\mathbf{R}_{i}$ and $j$ is the largest index such that
 $\rho(\nu^{j}_{\max})$ evaluates to true.
 
 Finding the best split, ie.\ the one that minimizes the impurity, is a $O(Kn^2)$
-operation, as it requires checking all $K \by n$ possible splitting criterias
+operation, as it requires checking all $K \times n$ possible splitting criterias
 and evaluating the impurity function for each of them in time propertional to
 $n$. In this work, we have not attempted to find a faster implementation as we
 found that the size of the output partitioning from \textsc{MaxPartitions} did
 not cause performance issues.
 
+\subsection{Iterative application}%
+\label{sub:iterativeApp}
 
+Since \textsc{MaxPartitions} cannot guarantee optimal minimization but selects
+its expansion dimensions non-deterministically, we can achieve better
+minimization by repeated application of the algorithm. The pipeline is as
+follows:
+
+\begin{center}
+    \begin{tikzpicture}[every node/.style={scale=0.8}]
+        \node (input)                       {$\mathcal{T}$};
+        \node (output)  [below=of input]    {$\mathcal{B}$};
+        \node (tree)    [below=of output]   {$\mathcal{T}'$};
+
+        \draw [arrow] (input)  -- node[anchor=west] {minimize with \textsc{MaxPartitions}} (output);
+        \draw [arrow] (output) -- node[anchor=west] {convert partitioning to new tree} (tree);
+        \draw [arrow] (tree)   to [bend left=45] node[anchor=east] {use tree as new input} (input);
+    \end{tikzpicture}
+\end{center}
+
+We repeat this process untill no improvements in seen in (the size of) neither
+the output partitioning nor the new tree. We show experimentally that the major
+minimization is achieved in the first step, and that the size of the
+output typically stabilizes in less than 10 iterations. Because the most
+significant reduction is achieved in the first application, the following
+repetitions are fairly inexpensive in terms of running time.
+
+Figure~\cref{fig:iterativeMaxparts} shows the progression over several
+iterations for three different examples. Note that the precise size of both the
+number of regions in the output partitioning and the size of the constructed
+tree continues to fluctuate, since the non-deterministic choices in the
+algorithm prevents convergence to a fixed point.
+
+\section{VIPER}%
+\label{sec:viper}
+
+\textcolor {orange} {\lipsum[2]}

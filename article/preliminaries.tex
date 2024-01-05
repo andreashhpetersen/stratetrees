@@ -26,15 +26,16 @@
 
 \begin {definition}%
 \label {def:partitioning}
-  A \emph {partitioning} \Partition of the state space \( \SSpace \subseteq
-  \Reals ^K \) is a set of non-overlapping subsets \( \Partition \subseteq
-  \Powerset (\SSpace) \) covering \SSpace, so \( \bigcup _{\nu \in \Partition}
-  \nu = \SSpace \) and whenever \( \nu, \nu' \in \Partition, \nu \neq \nu'  \)
+  A \emph {partitioning} $\mathcal{A}$ of the state space $\mathcal{S} \subseteq
+  \mathbb{R}^K$ is a set of non-overlapping subsets $\mathcal{A} \subseteq
+  \mathcal{P}(\mathcal{S})$ covering $\mathcal{S}$, so \( \bigcup _{\nu \in
+  \mathcal{A}}
+  \nu = \mathcal{S} \) and whenever \( \nu, \nu' \in \mathcal{A}, \nu \neq \nu'  \)
   then \( \nu \cap \nu' = \emptyset \).
   \looseness -1
 \end {definition}
 
-\todo {do we assume that the state space \SSpace is rectangular?}
+% \todo {do we assume that the state space \SSpace is rectangular?}
 
 For an \textit{axis aligned} partitioning, each region $\nu$ can be expressed in
 terms of two corner points, $s^{\min}, s^{\max} \in \mathcal{S}$, so that for
@@ -73,53 +74,53 @@ s^{\max})$, $[\delta]_{\nu} = \mathcal{T}(\nu)$ is the set of all decisions that
 can be obtained evaluating configurations of $\nu$, ie. $\mathcal{T}(\nu) = \{
 \mathcal{T}(s) \mid s \in \nu \}$.
 
-We denote the path
-$\lambda(\ell)$ and define it as an ordered list of tuples of the form
-$(\eta_j, b)$ where $\eta_j$ is the $j$th node on the path ($\eta_0$ will always
-be the root node) and $b$ is a binary value indicating wether the path continues
-with the left child $(b = 1)$ or right child $(b = 0)$.\todo[inline]{%
-    Not sure if it makes sense or is necessary to state which value of $b$ means
-    what. The reasoning for my choice is that $b = 1$ indicates `true' and it is
-    when $\rho_{\eta_j}(s)$ is true, that we choose the left path.
-}
-The path can then be said to define a region where the corner points $s^{\min}$
-and $s^{\max}$ are given by compiling the bounds on each dimension $i =
-1,\ldots,K$ given by the predicate function $\rho_{\eta_j} = i_{\eta_j} \leq
-c_{\eta_j}$ for each $\eta_j \in \lambda(\ell)$ into points. The coordinates for
-each point is given by
+% We denote the path
+% $\lambda(\ell)$ and define it as an ordered list of tuples of the form
+% $(\eta_j, b)$ where $\eta_j$ is the $j$th node on the path ($\eta_0$ will always
+% be the root node) and $b$ is a binary value indicating wether the path continues
+% with the left child $(b = 1)$ or right child $(b = 0)$.\todo{%
+%     Not sure if it makes sense or is necessary to state which value of $b$ means
+%     what. The reasoning for my choice is that $b = 1$ indicates `true' and it is
+%     when $\rho_{\eta_j}(s)$ is true, that we choose the left path.
+% }
+% The path can then be said to define a region where the corner points $s^{\min}$
+% and $s^{\max}$ are given by compiling the bounds on each dimension $i =
+% 1,\ldots,K$ given by the predicate function $\rho_{\eta_j} = i_{\eta_j} \leq
+% c_{\eta_j}$ for each $\eta_j \in \lambda(\ell)$ into points. The coordinates for
+% each point is given by
 
-\begin{align*}
-    s^{\min}_i&= \max(\{\>
-        c_{\eta}\> |\>
-        (\eta, b) \in \lambda(\ell),\>
-        i_{\eta} = i, \>
-        b = 1\>
-    \}) \\
-    s^{\max}_i&= \min(\{\>
-        c_{\eta}\> |\>
-        (\eta, b) \in \lambda(\ell),\>
-        i_{\eta} = i,\>
-        b = 0\>
-    \})
-\end{align*}\todo[inline]{%
-    I struggled a lot with coming up with a good way of writing this definition.
-    Do let me know if it works (and if it is even necessary to describe how a
-    region is constructed from a leaf node).
-}
+% \begin{align*}
+%     s^{\min}_i&= \max(\{\>
+%         c_{\eta}\> |\>
+%         (\eta, b) \in \lambda(\ell),\>
+%         i_{\eta} = i, \>
+%         b = 1\>
+%     \}) \\
+%     s^{\max}_i&= \min(\{\>
+%         c_{\eta}\> |\>
+%         (\eta, b) \in \lambda(\ell),\>
+%         i_{\eta} = i,\>
+%         b = 0\>
+%     \})
+% \end{align*}\todo{%
+%     I struggled a lot with coming up with a good way of writing this definition.
+%     Do let me know if it works (and if it is even necessary to describe how a
+%     region is constructed from a leaf node).
+% }
 
 
-\noindent
-for all $i = 1,\ldots,K$. We write $\nu_{\ell}$ to denote the region associated
-with the leaf node $\ell$.
+% \noindent
+% for all $i = 1,\ldots,K$. We write $\nu_{\ell}$ to denote the region associated
+% with the leaf node $\ell$.
 
 The set of regions obtained from all the leaf nodes of a decision tree
 constitutes a complete partitioning of a state space $\mathcal{S}$ in accordance
-with Definition\ref{def:partitioning}. We thus say that $\mathcal{T}$ induces a partitioning
-$\mathcal{A}_{\mathcal{T}} = \{ \nu_{\ell} \mid \ell \in \mathcal{L} \}$. For
-any region $\nu$ and a decision tree $\mathcal{T}$ we say, that $\nu$ has
-\textit{singular mapping} in $\mathcal{T}$ if for all $p \in \nu$,
-$\mathcal{T}(p) = \delta$ for some $\delta \in \mathcal{D}$. Naturally, all
-regions in $\mathcal{A}_{\mathcal{T}}$ has singular mapping in $\mathcal{T}$.
-For any partitioning $\mathcal{B}$ of the same state space, we say $\mathcal{B}$
-\textit{respects} $\mathcal{T}$ if and only if every region $\nu \in
-\mathcal{B}$ has singular mapping in $\mathcal{T}$.
+with Definition\ref{def:partitioning}. We thus say that $\mathcal{T}$ induces a
+partitioning $\mathcal{A}_{\mathcal{T}} = \{ \nu_{\ell} \mid \ell \in
+\mathcal{L} \}$. For any region $\nu$ and a decision tree $\mathcal{T}$ we say,
+that $\nu$ has \textit{singular mapping} in $\mathcal{T}$ if for all $p \in
+\nu$, $\mathcal{T}(p) = \delta$ for some $\delta \in \mathcal{D}$. Naturally,
+all regions in $\mathcal{A}_{\mathcal{T}}$ has singular mapping in
+$\mathcal{T}$.  For any partitioning $\mathcal{B}$ of the same state space, we
+say $\mathcal{B}$ \textit{respects} $\mathcal{T}$ if and only if every region
+$\nu \in \mathcal{B}$ has singular mapping in $\mathcal{T}$.

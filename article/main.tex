@@ -1,99 +1,84 @@
-\documentclass [
-  10 pt,
-  twocolumn,
-  letterpaper
-] {article}
+\documentclass{article}
+\pdfpagewidth=8.5in
+\pdfpageheight=11in
 
-\usepackage[review]{cvpr}
+% The file ijcai24.sty is a copy from ijcai22.sty
+% The file ijcai22.sty is NOT the same as previous years'
+\usepackage{ijcai24}
 
-\def\cvprPaperID{42}  % THIS MUST BE UPDATED!!
-\def\confName{CVPR}
-\def\confYear{2024}
 
-\usepackage [T1]    {fontenc}
-\usepackage [utf8]  {inputenc}
+% Use the postscript times font!
+\usepackage{times}
+\usepackage{soul}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+% \usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage[switch]{lineno}
+
+\usepackage{tikz}
+\usepackage{lipsum}
+\usepackage{subcaption}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{bbm}
+\usepackage{multirow}
+\usepackage[capitalize]{cleveref} % after hyperref
 \usepackage [noend] {algpseudocode}
+\usepackage [T1]    {fontenc}
+
+% Comment out this line in the camera-ready submission
+\linenumbers
+
+\urlstyle{same}
+
 
 % needed to load amsthm (for Definitions)
 \let\proof\relax
 \let\endproof\relax
 
-\usepackage {%
-  algorithm,
-  amsfonts,
-  amsmath,
-  amssymb,
-  amsthm,
-  bbm,
-  booktabs,
-  subcaption,
-  graphicx,
-  hyperref,
-  lipsum,
-  multirow,
-  nicefrac,
-  tikz,
-  xspace,
-}
-\usepackage[capitalize]{cleveref} % after hyperref
-
-% \overrideIEEEmargins % Needed to meet printer requirements.
-
 \newcommand \todo [1] {\textcolor {orange} {#1}}
 
 \DeclareMathOperator* \argmax {argmax}
 \DeclareMathOperator* \argmin {argmin}
-\DeclareMathOperator* \tran   {\mathsf T}
 
 % \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section]
-\newtheorem{lemma}{Lemma}
 
 \graphicspath{{./imgs/}}
 
-\usetikzlibrary {shapes.geometric}
+\usetikzlibrary {shapes.geometric, positioning, arrows}
 
 \tikzset {%
-    branch/.style = {%
-        rectangle,
-        draw,
-        align = center
-    },
-    leaf/.style = {%
-        circle,
-        draw,
-        text width = 8 mm,
-        align = center,
+    arrow/.style = {%
+        thick,
+        ->,
+        >=stealth
     }
 }
 
-\newcommand \Reals
-  {\ensuremath {\mathbb R}\xspace}
-\newcommand \Powerset
-  {\mathcal P}
-
-\newcommand \SSpace
-  {\ensuremath {\mathcal S}\xspace}
-\newcommand \Partition
-  {\ensuremath {\mathcal A}\xspace}
-
 \title {Minimizing State Space Partitions Using Decision Trees}
 
-\author {%
-  \authorblockN {Andreas Holck Høeg-Petersen}
-  \authorblockA {Aalborg University\\ Denmark}
-  \and
-  \authorblockN {Kim Guldstrand Larsen}
-  \authorblockA {Aalborg University\\ Denmark}
-  \and
-  \authorblockN {Peter Gjøl Jensen}
-  \authorblockA {Aalborg University\\ Denmark}
-  \and
-  \authorblockN {Andrzej Wąsowski}
-  \authorblockA {IT University of Copenhagen\\ Denmark}
+\author{%
+    Andreas Holck Høeg-Petersen$^1$
+    \and
+    Kim Guldstrand Larsen$^2$\and
+    Peter Gjøl Jensen$^{3}$\And
+    Andrzej Wąsowski$^4$\\
+    \affiliations
+    $^{1,2,3}$ Aalborg University, Denmark\\
+    $^4$ It University of Copenhagen, Denmark\\
+    \emails
+    \{ahhp, kgl, pgj\}@cs.aau.dk,
+    wasowski@itu.dk
 }
 
-\begin {document}
+\begin{document}
 
 \maketitle
 
@@ -106,7 +91,7 @@
 \newpage
 
 \bibliography {references}
-\bibliographystyle {ieeetr}
+\bibliographystyle {named}
 
 % \appendix
 
