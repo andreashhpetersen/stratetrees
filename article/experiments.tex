@@ -1,16 +1,14 @@
 \section{Experiments}%
 \label{sec:experiments}
 
-\textcolor {orange} {\lipsum[1]}
+We evaluate the effectiveness of \textsc{MaxPartitions} on two different kinds
+of partitionings described in~\cref{sec:preliminaries}, namely safety shields
+and controllers. For shields, we are interested in preserving the safety
+guarantees of the input shield, while for controllers we are interested in
+retaining performance as measured in mean reward.
 
 \begin{table*}[!ht]
     \centering
-    \caption{%
-        Comparing \textsc{MaxPartitions} and \textsc{VIPER} for minimizing
-        shields. The column `Unsafe runs' indicate wether a violation of the
-        model-specific safety requirement were violated at least once during
-        1000 simulations in a purposefully antagonistic environment.
-    }\label{tab:shieldResults}
     \begin{tabular}{lrcrcrc}
         \toprule
         \multirow{2}*{Model} & & & \multicolumn{2}{c}{\textsc{MaxPartitions}} &
@@ -25,15 +23,53 @@
         DCDC boost converter   & 6,994,242 & 3 &  7,600 & \textbf{No} & 1,392 & Yes \\
         \bottomrule
     \end{tabular}
-\end{table*}
-
-
-\begin{table*}[!ht]
-    \centering
     \caption{%
         Comparing \textsc{MaxPartitions} and \textsc{VIPER} for minimizing
-        controllers.
-    }\label{tab:controllerResults}
+        shields. The column `Unsafe runs' indicate wether a violation of the
+        model-specific safety requirement were violated at least once during
+        1000 simulations in a purposefully antagonistic environment.
+    }\label{tab:shieldResults}
+\end{table*}
+
+In our experimental setup, we consider 5 different Reinforcement Learning
+problems. For each of them, two versions of their environments are implemented,
+one in \textsc{UPPAAL Stratego} which we use to learn near-optimal control
+strategies, and one in \textsc{Gymnasium}~\cite{towersGymnasium2023} which we
+use for synthesizing safety shields. Further, since we want to compare
+\textsc{MaxPartitions} with \textsc{VIPER}, we train our \textsc{VIPER} models
+in the \textsc{Gymnasium} environments using the \textsc{UPPAAL Stratego}
+policies as oracles. For finding minimal safety shields with \textsc{VIPER}, we
+provide the synthesized shield as a non-deterministic controller and evaluate
+wether the resulting \textsc{VIPER} controller maintains the safety properties.
+
+\cref{tab:shieldResults} shows the results for minimizing shields. Both
+\textsc{MaxPartitions} and \textsc{VIPER} achieve substantial reductions
+compared to the original input. However, for all but one example, the
+\textsc{VIPER} minimized shield encounters one or more unsafe runs through 1000
+simulations of the environment. The shields minimized with
+\textsc{MaxPartitions} does not, which is expected since \textsc{MaxPartitions}
+preserves an equivalent mapping to that of the input shield, which is designed
+to be safe. The largest reduction that still retains safety is achieved by
+\textsc{MaxPartitions} for the {\tt Oil pump} example, where the minimized
+shield has a size that is only 0.01\% of the original.
+
+When we turn our attention to control strategies
+in~\cref{tab:controllerResults}, we also see large reductions for both
+\textsc{MaxPartitions} and \textsc{VIPER}, though once again with a clear
+advantage in \textsc{VIPER}. Both models retain the same performance, which is
+not surprising since \textsc{MaxPartitions} preserve the behavior of the
+original strategy and \textsc{VIPER} is specifically designed to adopt the
+important dynamics of an oracle strategy. The difference in size can be
+explained by this specific nature of the two methods: whereas
+\textsc{MaxPartitions} deliberately produces an equivalent state-action mapping
+to that of the input strategy, \textsc{VIPER} discards `irrelevant' parts of the
+strategy that do not appear during the execution of the environment or where the
+choice of action is not relevant. This allows \textsc{VIPER} to prune many more
+decisions than \textsc{MaxPartitions}, resulting in a smaller output
+partitioning.
+
+\begin{table*}[!hb]
+    \centering
     \begin{tabular}{lrcrcrc}
         \toprule
         \multirow{2}*{Model} & & & \multicolumn{2}{c}{\textsc{MaxPartitions}} &
@@ -57,4 +93,46 @@
             5,225 & 3 &   681 &   -3.9 (+/-  1.5) &  60 &     -3.9 (+/-  1.7) \\
         \bottomrule
     \end{tabular}
+    \caption{%
+        Comparing \textsc{MaxPartitions} and \textsc{VIPER} for minimizing
+        controllers.
+    }\label{tab:controllerResults}
+\end{table*}
+
+These results encourages a combination of the two methods, when dealing with
+safety critical systems: using \textsc{MaxPartitions} for minimizing a safety
+shield and imposing it on a near-optimal controller minimized with
+\textsc{VIPER}. In~\cref{tab:combinedResults} we show that with this
+combination, we are able to obtain safe and near-optimal controllers, that have
+been minimized from much larger originals, when we use a combination of these
+methods.
+
+\begin{table*}[!ht]
+    \centering
+    \begin{tabular}{lrcrcrc}
+        \toprule
+        \multirow{2}*{Model} & & & \multicolumn{2}{c}{\textsc{MaxPartitions}} &
+        \multicolumn{2}{c}{\textsc{VIPER}}  \\
+                             & Input size & Dimensions & Leaves & Mean reward &
+                             Leaves & Mean reward \\
+        \midrule
+        Random walk            &    
+               75 & 2 &    25 &  -18.2 (+/-  0.98) &  12 &   -18.9 (+/-  1.44) \\
+
+        Cruise                 &
+            3,175 & 3 & 1,120 & -722.8 (+/- 426.8) &  70 & -340.52 (+/- 432.5) \\
+
+        Oil pump               &
+              --- & 4 &   --- &                --- & --- &                 --- \\
+
+        Bouncing ball          &
+            3,609 & 2 &   184 &  -36.3 (+/-  3.2) &  31 &    -36.3 (+/- 2.8) \\
+
+        DCDC boost converter   &
+            5,225 & 3 &   681 &   -3.9 (+/-  1.5) &  60 &     -3.9 (+/-  1.7) \\
+        \bottomrule
+    \end{tabular}
+    \caption{%
+        Combining \textsc{MaxPartitions} and \textsc{VIPER}.
+    }\label{tab:combinedResults}
 \end{table*}

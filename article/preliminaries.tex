@@ -124,3 +124,35 @@ all regions in $\mathcal{A}_{\mathcal{T}}$ has singular mapping in
 $\mathcal{T}$.  For any partitioning $\mathcal{B}$ of the same state space, we
 say $\mathcal{B}$ \textit{respects} $\mathcal{T}$ if and only if every region
 $\nu \in \mathcal{B}$ has singular mapping in $\mathcal{T}$.
+
+\paragraph{Partitionings in Reinforcement Learning} In this work, we consider
+two examples of partitionings that occur in Reinforcement Learning, namely when
+synthesizing permissive safety shields and when learning near-optimal control
+strategies with classical (non-deep) Q-learning techniques.
+
+Safety shields are designed to disallow actions that can lead to violations of
+safety requirements (such as flooding a pond or crashing a car). A permissive
+shield imposes as few restrictions as possible. One method for generating
+shields is proposed by~\cite{brorholtShieldedReinforcementLearning2023}. This
+methods uses a very fine-grained partitioning of a state space to estimate a
+reachability function, that can compute the set of states that are reachable
+from any some state $s$ when perfoming some action $a$. Given \textit{a priori}
+knowledge of what states are considered `unsafe' (ie.\ violates given safety
+requirements), the reachability function allows for tracing all state-action
+pairs that can potentially lead to an unsafe state. For capturing the dynamics
+at an appropriate level, however, a very fine-grained partitioning scheme is
+required.
+
+In Q-learning for optimal control, the learning algorithm estimates an
+action-value function, that maps state-action pairs to a Q-value, that
+represents the expected cumulative reward of taking a specific action in a
+specific state. In \textsc{UPPAAL Stratego}~\cite{Manfred2019} these are learnt
+via an \textit{online partitoining refinement scheme} which partitions the state
+space during learning according to the expected reward of an action. The
+representation of the strategies is then a set of decision trees, one for each
+possible action, with Q-values in the leaves. This set of trees can be merged
+into a single decision tree, where the leaves contain the optimal action in that
+state, effectively representing the Q-function. However, due to the online
+partitioning and the merge operation, the resulting partitioning retains a lot
+of redundancy, that we are interested in purging with our algorithm.
+

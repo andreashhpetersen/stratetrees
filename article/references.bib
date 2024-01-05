@@ -9,30 +9,28 @@
   isbn = {978-3-319-02443-1}
 }
 
+@misc{brorholtShieldedReinforcementLearning2023,
+  title = {Shielded {{Reinforcement Learning}} for {{Hybrid Systems}}},
+  author = {Brorholt, Asger Horn and Jensen, Peter Gj{\o}l and Larsen, Kim Guldstrand and Lorber, Florian and Schilling, Christian},
+  year = {2023},
+  month = aug,
+  number = {arXiv:2308.14424},
+  eprint = {2308.14424},
+  primaryclass = {cs, eess},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.2308.14424},
+  urldate = {2023-09-20},
+  abstract = {Safe and optimal controller synthesis for switched-controlled hybrid systems, which combine differential equations and discrete changes of the system's state, is known to be intricately hard. Reinforcement learning has been leveraged to construct near-optimal controllers, but their behavior is not guaranteed to be safe, even when it is encouraged by reward engineering. One way of imposing safety to a learned controller is to use a shield, which is correct by design. However, obtaining a shield for non-linear and hybrid environments is itself intractable. In this paper, we propose the construction of a shield using the so-called barbaric method, where an approximate finite representation of an underlying partition-based two-player safety game is extracted via systematically picked samples of the true transition function. While hard safety guarantees are out of reach, we experimentally demonstrate strong statistical safety guarantees with a prototype implementation and UPPAAL STRATEGO. Furthermore, we study the impact of the synthesized shield when applied as either a pre-shield (applied before learning a controller) or a post-shield (only applied after learning a controller). We experimentally demonstrate superiority of the pre-shielding approach. We apply our technique on a range of case studies, including two industrial examples, and further study post-optimization of the post-shielding approach.},
+  archiveprefix = {arxiv},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Logic in Computer Science,Computer Science - Machine Learning,Electrical Engineering and Systems Science - Systems and Control},
+  file = {/home/andreashhp/Zotero/storage/ZQX8WBFW/brorholtShieldedReinforcementLearning2023 - Preprint - Shielded Reinforcement Learning for Hybrid Systems.pdf;/home/andreashhp/Zotero/storage/RZG75ZGG/2308.html}
+}
 
-@inproceedings{DBLP:conf/tacas/DavidJLMT15,
-  author       = {Alexandre David and
-                  Peter Gj{\o}l Jensen and
-                  Kim Guldstrand Larsen and
-                  Marius Mikucionis and
-                  Jakob Haahr Taankvist},
-  editor       = {Christel Baier and
-                  Cesare Tinelli},
-  title        = {Uppaal Stratego},
-  booktitle    = {Tools and Algorithms for the Construction and Analysis of Systems
-                  - 21st International Conference, {TACAS} 2015, Held as Part of the
-                  European Joint Conferences on Theory and Practice of Software, {ETAPS}
-                  2015, London, UK, April 11-18, 2015. Proceedings},
-  series       = {Lecture Notes in Computer Science},
-  volume       = {9035},
-  pages        = {206--211},
-  publisher    = {Springer},
-  year         = {2015},
-  url          = {https://doi.org/10.1007/978-3-662-46681-0\_16},
-  doi          = {10.1007/978-3-662-46681-0\_16},
-  timestamp    = {Sat, 30 Sep 2023 09:57:43 +0200},
-  biburl       = {https://dblp.org/rec/conf/tacas/DavidJLMT15.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
+@inproceedings{David2015UppaalS,
+  title = {Uppaal Stratego},
+  booktitle = {{{TACAS}}},
+  author = {David, Alexandre and Jensen, Peter Gj{\o}l and Larsen, Kim G. and Mikucionis, Marius and Taankvist, Jakob Haahr},
+  year = {2015}
 }
 
 @inproceedings{dtControl,
@@ -51,44 +49,16 @@
 }
 
 @inproceedings{dtControl2,
-  author       = {Pranav Ashok and
-                  Mathias Jackermeier and
-                  Jan Kret{\'{\i}}nsk{\'{y}} and
-                  Christoph Weinhuber and
-                  Maximilian Weininger and
-                  Mayank Yadav},
-  editor       = {Jan Friso Groote and
-                  Kim Guldstrand Larsen},
-  title        = {dtControl 2.0: Explainable Strategy Representation via Decision Tree
-                  Learning Steered by Experts},
-  booktitle    = {Tools and Algorithms for the Construction and Analysis of Systems
-                  - 27th International Conference, {TACAS} 2021, Held as Part of the
-                  European Joint Conferences on Theory and Practice of Software, {ETAPS}
-                  2021, Luxembourg City, Luxembourg, March 27 - April 1, 2021, Proceedings,
-                  Part {II}},
-  series       = {Lecture Notes in Computer Science},
-  volume       = {12652},
-  pages        = {326--345},
-  publisher    = {Springer},
-  year         = {2021},
-  url          = {https://doi.org/10.1007/978-3-030-72013-1\_17},
-  doi          = {10.1007/978-3-030-72013-1\_17},
-  timestamp    = {Sat, 30 Sep 2023 09:57:43 +0200},
-  biburl       = {https://dblp.org/rec/conf/tacas/AshokJKWWY21.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
-}
-
-@article{HYAFIL197615,
-  title = {Constructing Optimal Binary Decision Trees Is {{NP-complete}}},
-  author = {Hyafil, Laurent and Rivest, Ronald L.},
-  year = {1976},
-  journal = {Information Processing Letters},
-  volume = {5},
-  number = {1},
-  pages = {15--17},
-  issn = {0020-0190},
-  doi = {10.1016/0020-0190(76)90095-8},
-  keywords = {Binary decision trees,computational complexity,NP-complete}
+  title = {{{dtControl}} 2.0: {{Explainable}} Strategy Representation via Decision Tree Learning Steered by Experts},
+  booktitle = {Tools and Algorithms for the Construction and Analysis of Systems},
+  author = {Ashok, Pranav and Jackermeier, Mathias and K{\v r}et{\'i}nsk{\'y}, Jan and Weinhuber, Christoph and Weininger, Maximilian and Yadav, Mayank},
+  editor = {Groote, Jan Friso and Larsen, Kim Guldstrand},
+  year = {2021},
+  pages = {326--345},
+  publisher = {{Springer International Publishing}},
+  address = {{Cham}},
+  abstract = {Recent advances have shown how decision trees are apt data structures for concisely representing strategies (or controllers) satisfying various objectives. Moreover, they also make the strategy more explainable. The recent tool dtControl had provided pipelines with tools supporting strategy synthesis for hybrid systems, such as SCOTS and Uppaal Stratego. We present dtControl 2.0, a new version with several fundamentally novel features. Most importantly, the user can now provide domain knowledge to be exploited in the decision tree learning process and can also interactively steer the process based on the dynamically provided information. To this end, we also provide a graphical user interface. It allows for inspection and re-computation of parts of the result, suggesting as well as receiving advice on predicates, and visual simulation of the decision-making process. Besides, we interface model checkers of probabilistic systems, namely STORM and PRISM and provide dedicated support for categorical enumeration-type state variables. Consequently, the controllers are more explainable and smaller.},
+  isbn = {978-3-030-72013-1}
 }
 
 @article{m.t.l.b.IntroductionProbabilityTheory1951,
@@ -103,6 +73,7 @@
   pages = {316--318},
   issn = {0020-269X, 0020-269X},
   doi = {10.1017/S0020269X00004679},
+  urldate = {2022-12-05},
   langid = {english}
 }
 
@@ -123,7 +94,7 @@
   title = {Reinforcement Learning: {{An}} Introduction},
   author = {Sutton, Richard S. and Barto, Andrew G.},
   year = {2018},
-  edition = {Second},
+  edition = {2},
   publisher = {{The MIT Press}},
   added-at = {2019-07-13T10:11:53.000+0200},
   biburl = {https://www.bibsonomy.org/bibtex/2f46601cf8b13d39d1378af0d79438b12/lanteunis},
@@ -132,24 +103,13 @@
   timestamp = {2019-07-13T10:11:53.000+0200}
 }
 
-@inproceedings{DBLP:conf/nips/BastaniPS18,
-  author       = {Osbert Bastani and
-                  Yewen Pu and
-                  Armando Solar{-}Lezama},
-  editor       = {Samy Bengio and
-                  Hanna M. Wallach and
-                  Hugo Larochelle and
-                  Kristen Grauman and
-                  Nicol{\`{o}} Cesa{-}Bianchi and
-                  Roman Garnett},
-  title        = {Verifiable Reinforcement Learning via Policy Extraction},
-  booktitle    = {Advances in Neural Information Processing Systems 31: Annual Conference
-                  on Neural Information Processing Systems 2018, NeurIPS 2018, December
-                  3-8, 2018, Montr{\'{e}}al, Canada},
-  pages        = {2499--2509},
-  year         = {2018},
-  url          = {https://proceedings.neurips.cc/paper/2018/hash/e6d8545daa42d5ced125a4bf747b3688-Abstract.html},
-  timestamp    = {Mon, 16 May 2022 15:41:51 +0200},
-  biburl       = {https://dblp.org/rec/conf/nips/BastaniPS18.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
+@misc{towersGymnasium2023,
+  title = {Gymnasium},
+  author = {Towers, Mark and Terry, Jordan K. and Kwiatkowski, Ariel and Balis, John U. and de Cola, Gianluca and Deleu, Tristan and Goul{\~a}o, Manuel and Kallinteris, Andreas and KG, Arjun and Krimmel, Markus and {Perez-Vicente}, Rodrigo and Pierr{\'e}, Andrea and Schulhoff, Sander and Tai, Jun Jet and Shen, Andrew Tan Jin and Younis, Omar G.},
+  year = {2023},
+  month = mar,
+  publisher = {{Zenodo}},
+  doi = {10.5281/zenodo.8127026},
+  urldate = {2023-07-08},
+  abstract = {An API standard for single-agent reinforcement learning environments, with popular reference environments and related utilities (formerly Gym)}
 }

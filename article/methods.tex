@@ -572,3 +572,11 @@ algorithm prevents convergence to a fixed point.
 \label{sec:viper}
 
 \textcolor {orange} {\lipsum[2]}
+
+It should be noted, that the output of minimizing a shield with
+\textsc{VIPER} is a deterministic controller, that for all states prescribes
+excactly one action, rather than --- as permissive shields do --- a set of
+allowed actions from which a specific action is then chosen at random. Since the
+shield oracle, however, will never select an unsafe action, \textsc{VIPER}
+should learn not to prescribe unsafe actions.
+
