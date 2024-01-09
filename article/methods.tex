@@ -1,25 +1,8 @@
 \section{MaxPartitions algorithm}%
 \label{sec:maxParts}
 
-Since state space discretization for Reinforcement Learning is usually done
-\textit{before} any learning takes place, it tends to be conservative. For this
-reason, discretization is likely to create adjacent discrete states that are
-mapped to the same optimal action. The question we would then like to answer is
-this: if $\mathcal{T}$ is a decision tree representing a trained strategy and
-$\mathcal{A}_{\mathcal{T}}$ is its induced partitioning, can we find another
-partitioning $\mathcal{B}$ which is smaller than $\mathcal{A}_{\mathcal{T}}$ but
-still respects $\mathcal{T}$?
+\begin {figure} [t!]
 
-As an example, consider a case where we have a state space $\mathcal{S} \in
-\mathbb{R}^2$ over variables $x$ and $y$, both of which are defined in the
-interval $[0,9]$, and a set of actions $Act = \{ action1, action2 \}$. Before
-learning, we might decide to discretize both $x$ and $y$ into 3 distinct bins,
-giving us a partitioning of $\mathcal{S}$ with $3\times3 = 9$ regions. After
-training, we end up with a Q-table that maps states to action in a way that is
-shown in~\cref{fig:simpleExamplePartitioning}. This same mapping can also be
-represented by a decision tree, as shown in \cref{fig:simpleExampleTree}.
-
-\begin{figure}[!ht]
     \centering
     \begin{subfigure}{0.4\textwidth}
         \includegraphics[width=\textwidth]{simpleExamplePartitioning}%
@@ -42,7 +25,30 @@ represented by a decision tree, as shown in \cref{fig:simpleExampleTree}.
     with fever regions/leaves.
   }%
   \label{fig:simpleExample}
-\end{figure}
+
+\end {figure}
+
+Since state space discretization for Reinforcement Learning is usually done
+\textit{before} any learning takes place, it tends to be conservative. For this
+reason, discretization is likely to create adjacent discrete states that are
+mapped to the same optimal action. The question we would then like to answer is
+this: if $\mathcal{T}$ is a decision tree representing a trained strategy and
+$\mathcal{A}_{\mathcal{T}}$ is its induced partitioning, can we find another
+partitioning $\mathcal{B}$ which is smaller than $\mathcal{A}_{\mathcal{T}}$ but
+still respects $\mathcal{T}$?
+
+\begin {example}
+Consider a case where we have a state space $\mathcal{S} \in
+\mathbb{R}^2$ over variables $x$ and $y$, both of which are defined in the
+interval $[0,9]$, and a set of actions $Act = \{ action1, action2 \}$. Before
+learning, we might decide to discretize both $x$ and $y$ into 3 distinct bins,
+giving us a partitioning of $\mathcal{S}$ with $3\times3 = 9$ regions. After
+training, we end up with a Q-table that maps states to action in a way that is
+shown in~\cref{fig:simpleExamplePartitioning}. This same mapping can also be
+represented by a decision tree, as shown in \cref{fig:simpleExampleTree}.
+\end {example}
+
+
 
 However, we can (in this small toy example) easily see that we do not need 9
 regions to represent this exact state-action mapping. For example, the two
@@ -296,7 +302,7 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
                     \If{$\Delta'_{p_{d}} < b$}
                         \State{$healing \gets true$}
                         \State{%
-                            $\Delta'_{p_{d}} \gets b$ 
+                            $\Delta'_{p_{d}} \gets b$
                         }
                     \Else%
                         \State{$healing \gets false$}
@@ -312,7 +318,7 @@ exhausted, $\Delta_{p}$ adheres to \cref{def:deltaP}.
                     %     legal expansion value and mark dimension $d$ as
                     %     exhausted.
                     % }
-                        
+
                 \Else
                     \State{$healing \gets false$}
                     \State{%
@@ -518,7 +524,7 @@ Now we can write our impurity measure in terms of these quantities:
 % where $\mathbbm{1}$ is the indicator function, $j = |\mathbf{R}_{low}|$, $n =
 % |\mathbf{R}_{low}| + |\mathbf{R}_{high}|$ and $\rho$ is the predicate function
 % that has been used to split $\mathbf{R}_{low}$ and $\mathbf{R}_{high}$ and which
-% takes the form $\rho(x) = x_{i} \leq c$ with $c = \nu^{j}_{\max, i}$. 
+% takes the form $\rho(x) = x_{i} \leq c$ with $c = \nu^{j}_{\max, i}$.
 
 \noindent
 where $\mathbbm{1}$ is the indicator function, $\rho$ is a predicate function
