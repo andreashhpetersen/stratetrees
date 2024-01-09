@@ -38,6 +38,7 @@ partitioning $\mathcal{B}$ which is smaller than $\mathcal{A}_{\mathcal{T}}$ but
 still respects $\mathcal{T}$?
 
 \begin {example}
+
 Consider a case where we have a state space $\mathcal{S} \in
 \mathbb{R}^2$ over variables $x$ and $y$, both of which are defined in the
 interval $[0,9]$, and a set of actions $Act = \{ action1, action2 \}$. Before
@@ -46,17 +47,17 @@ giving us a partitioning of $\mathcal{S}$ with $3\times3 = 9$ regions. After
 training, we end up with a Q-table that maps states to action in a way that is
 shown in~\cref{fig:simpleExamplePartitioning}. This same mapping can also be
 represented by a decision tree, as shown in \cref{fig:simpleExampleTree}.
+
+
+Notice however that we do not need nine regions to represent this exact
+state-action mapping. For example, the two regions given by $((3,0),(6,3))$ and
+$((6,0),(9,3))$, respectively, both assign  \textnormal {action2} as the
+optimal action, but this mapping would still be preserved if we replaced those
+two regions with a larger one $((3,0),(9,3))$.  With a few more similar
+observation we can represent the same state-action mapping with a partitioning
+consisting of only five regions.
+
 \end {example}
-
-
-
-However, we can (in this small toy example) easily see that we do not need 9
-regions to represent this exact state-action mapping. For example, the two
-regions given by $((3,0),(6,3))$ and $((6,0),(9,3))$, respectively, both assign
-$action2$ as the optimal action, but this mapping would still be preserved if we
-replaced those two regions with a larger one $((3,0),(9,3))$. After a little bit
-of inspection, we can actually see here that we could represent the same
-state-action mapping with a partitioning consisting of only 5 regions.
 
 This example showcases how discretization techniques can easily end up with
 redundancy in the partitioning. This can be very difficult to anticipate before
