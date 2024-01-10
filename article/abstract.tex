@@ -1,17 +1,18 @@
 \begin{abstract}
-    State space partitionings occur in Reinforcement Learning when a continuous
-    state space is tackled by techniques requiring a finite set of states, such
-    as classical Q-learning or particular methods for synthesizing safety
-    shields. Such partitionings often become overwhelmingly large if they are to
-    capture an appropriate amount of detail to solve the problem, which is a
-    detriment to both explainability, verifiability and memory consumption when
-    deployed to smaller embedded devices. In this work, we propose a novel and
-    loss-less minimization algorithm called MaxPartitions, that represents
-    partitionings as decision trees and perform minimization while preserving an
-    equivalent state-action mapping. We show that MaxPartitions is able to
-    produce substantial size reductions on both controller strategies and safety
-    shields on a number of problems known from control theory, and we compare
-    with VIPER, the state-of-the-art algorithm for producing small decision
-    trees for RL strategies, to show, that the loss-less nature of MaxPartitions
-    makes it preferable when safety is a requirement.
+    Partitioning of state spaces is used in Reinforcement Learning when a
+    continuous state space has to be explored by a as classical discrete
+    Q-learning algorithm or by methods for synthesis of safety shields. Such
+    state space partitionings can easily become overwhelmingly large if they
+    are to capture an appropriate amount of detail to solve the problem.
+    Unfortunately, a large size is a detriment to both explainability,
+    verifiability and space and time efficiency of learning. In this work, we
+    propose MaxPartitions, a novel and lossless minimization algorithm.
+    MaxPartitions represents partitionings as decision trees and performs
+    minimization while preserving an equivalent state-action mapping. We show
+    that MaxPartitions is able to produce substantial size reductions on both
+    controller strategies and safety shields on a number of problems known from
+    control theory. We compare MaxPartitions with VIPER, the state-of-the-art
+    algorithm for producing small decision trees for reinforcement learning
+    strategies, to show, that the loss-less nature of MaxPartitions makes it
+    preferable when safety is a requirement.
 \end{abstract}
