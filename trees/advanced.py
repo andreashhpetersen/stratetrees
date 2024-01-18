@@ -6,6 +6,8 @@ import heapq
 import random
 import numpy as np
 
+from matplotlib.patches import Rectangle
+
 from copy import deepcopy
 from decimal import *
 from time import perf_counter
@@ -13,7 +15,7 @@ from collections import defaultdict
 from trees.models import Node, Leaf, State, DecisionTree, MpTree
 from trees.utils import has_overlap, cut_overlaps, in_box, in_list, make_state,\
     make_leaf, breaks_box, plot_voxels, leaves_to_state_constraints, \
-    draw_graph, performance
+    draw_graph, performance, draw_partitioning
 
 
 class SearchHeuristics:
@@ -185,17 +187,21 @@ def max_parts(tree, seed=None, return_info=False, \
     if seed is not None:
         np.random.seed(seed)
 
+    org_tree = tree
     tree = MpTree(tree)
     K = tree.n_features
 
     partitions = tree.partitions()
     lmap, bounds, n_bounds = init_bounds(partitions, K)
 
-    if animate and len(draw_dims) == 0:
-        draw_dims = np.arange(K)
+    if animate:
+        patches = []
 
-    if animate and max_v is None:
-        max_v = int(bounds[np.arange(K), n_bounds - 1].max() + 1)
+        if len(draw_dims) == 0:
+            draw_dims = np.arange(K)
+
+        if max_v is None:
+            max_v = int(bounds[np.arange(K), n_bounds - 1].max() + 1)
 
     # used to gather track sizes (if return_info=True)
     ts = []
@@ -297,14 +303,32 @@ def max_parts(tree, seed=None, return_info=False, \
             ts.append(track.n_leaves)
 
         if animate:
-            bs = leaves_to_state_constraints(regions)[:,draw_dims,:]
-            acts = [l.action for l in regions]
+            if len(tree.variables) == 2:
+                xymin, xymax = reg[:,0], reg[:,1]
+                xymin[xymin == -np.inf] = 0
+                xymax[xymax == np.inf] = max_v
 
-            if isinstance(mstate, State):
-                bs = np.vstack((bs, [mstate.constraints]))
-                acts.append(2)
+                w, h = xymax[0] - xymin[0], xymax[1] - xymin[1],
+                hatch = '\\\\' if action == 0 else '//'
+                color = '#ffffb3' if action == 0 else '#bebada'
+                patches.append(Rectangle(xymin, w, h, color=color, lw=0))
+                patches.append(Rectangle(xymin, w, h, fill=None, hatch=hatch))
+                draw_partitioning(
+                    org_tree.leaves(), 'x', 'y', [0,4], [0,4],
+                    cmap=['#ffffb3', '#bebada'], extra_patches=patches,
+                    labels=None, show=True, lw=0.4,
+                    xticks=[0,1,2,3,4], yticks=[0,1,2,3,4], out_fp='iterative.png'
+                )
 
-            plot_voxels(bs, acts, max_v=max_v)
+            if len(tree.variables) == 3:
+                bs = leaves_to_state_constraints(regions)[:,draw_dims,:]
+                acts = [l.action for l in regions]
+
+                if isinstance(mstate, State):
+                    bs = np.vstack((bs, [mstate.constraints]))
+                    acts.append(2)
+
+                plot_voxels(bs, acts, max_v=max_v)
 
     if return_info:
         info = { 'track_sizes': np.array(ts) }

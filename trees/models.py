@@ -197,6 +197,8 @@ class DecisionTree:
     def n_leaves(self):
         if self.root is None:
             return 0
+        elif self.root.is_leaf:
+            return 1
 
         return self.root.n_leaves
 
@@ -224,6 +226,10 @@ class DecisionTree:
         """
         l = self.root.get(state)
         return l.action
+
+    def path_to(self, state):
+        path = self.root.path_to(state, [])
+        return path
 
     def count_visits(self, data: list[ArrayLike]) -> None:
         """
@@ -414,12 +420,12 @@ class DecisionTree:
         return tree
 
     @classmethod
-    def from_grid(cls, grid, variables, actions, intervals, bounds):
-        root = DecisionTree._from_grid(grid, intervals, bounds, State(variables))
+    def from_grid(cls, grid, variables, actions, intervals, bounds, bvars=[]):
+        root = DecisionTree._from_grid(grid, intervals, bounds, State(variables), bvars=bvars)
         return DecisionTree(root, variables, actions)
 
     @classmethod
-    def _from_grid(cls, grid, intervals, bounds, state):
+    def _from_grid(cls, grid, intervals, bounds, state, bvars=[]):
         cut_dim = np.argmax(grid.shape)
 
         cut_idx = grid.shape[cut_dim] // 2
@@ -427,17 +433,20 @@ class DecisionTree:
         if cut_idx == 0:
             return Leaf(grid.item(), state=state)
 
-        blow, bhigh = bounds[cut_dim]
-        smin, smax = state.min_max(cut_dim, min_limit=blow, max_limit=bhigh)
+        if cut_dim in bvars:
+            cut_val = 0.5
+        else:
+            blow, bhigh = bounds[cut_dim]
+            smin, smax = state.min_max(cut_dim, min_limit=blow, max_limit=bhigh)
+            cut_val = smin + cut_idx * intervals[cut_dim]
 
-        cut_val = smin + cut_idx * intervals[cut_dim]
         low_state, high_state = state.split(cut_dim, cut_val)
 
         low_grid = np.take(grid, np.arange(cut_idx), axis=cut_dim)
         high_grid = np.take(grid, np.arange(cut_idx, grid.shape[cut_dim]), axis=cut_dim)
 
-        low_node = DecisionTree._from_grid(low_grid, intervals, bounds, low_state)
-        high_node = DecisionTree._from_grid(high_grid, intervals, bounds, high_state)
+        low_node = DecisionTree._from_grid(low_grid, intervals, bounds, low_state, bvars=bvars)
+        high_node = DecisionTree._from_grid(high_grid, intervals, bounds, high_state, bvars=bvars)
 
         node = Node(cut_dim, cut_dim, cut_val, low_node, high_node, state=state)
         return node

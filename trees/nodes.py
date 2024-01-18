@@ -194,6 +194,21 @@ class Node:
         else:
             return self.high.get(state)
 
+    def path_to(self, state, path):
+        if state[self.var_id] <= self.bound:
+            child = self.low
+            n = 'l'
+        else:
+            child = self.high
+            n = 'h'
+
+        path.append((self.var_id, self.bound, n))
+        if child.is_leaf:
+            path.append(('end', child.action))
+            return path
+        else:
+            return child.path_to(state, path)
+
     def get_leaves(self):
         """
         return a list of all leaves of this tree

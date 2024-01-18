@@ -4,12 +4,13 @@ import time
 import pydot
 import operator
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 import matplotlib.animation as animation
 
-from copy import deepcopy
+from copy import copy, deepcopy
 from itertools import product
 from collections import defaultdict
 from matplotlib.patches import Rectangle
@@ -140,13 +141,15 @@ def draw_graph(
 def draw_partitioning(
     leaves, x_var, y_var, xlim, ylim, cmap,
     xticks=None, yticks=None, extra_patches=None,
-    labels={}, dpi=100, lw=0, bounds=False, show=False,
+    labels={}, dpi=600, lw=0, bounds=False, show=False,
     grid=False, out_fp='./tmp.svg'
 ):
     min_x, max_x = xlim
     min_y, max_y = ylim
 
-    fig, ax = plt.subplots(figsize=(8,6))
+    matplotlib.rc('xtick', labelsize=14)
+    matplotlib.rc('ytick', labelsize=14)
+    fig, ax = plt.subplots(figsize=(5,4), dpi=dpi)
 
     bounds_data = []
 
@@ -206,9 +209,11 @@ def draw_partitioning(
     # ])
 
     if extra_patches is not None:
-        patches.extended(extra_patches)
+        patches.extend(extra_patches)
         for p in patches:
-            ax.add_patch(p)
+            cp = copy(p)
+            ax.add_patch(cp)
+
     else:
         ax.add_collection(PatchCollection(patches, match_original=True))
         for args, kwargs in bounds_data:
@@ -218,7 +223,7 @@ def draw_partitioning(
     if isinstance(labels, dict) and len(labels) > 0:
         for k, v in labels.items():
             proxies.append(mpatches.Patch(label=v, color=cmap[k]))
-        plt.legend(handles=proxies)
+        plt.legend(handles=proxies, fontsize=12)
 
     plt.xticks(xticks)
     plt.yticks(yticks)
@@ -226,8 +231,8 @@ def draw_partitioning(
     plt.xlim(xlim)
     plt.ylim(ylim)
 
-    plt.xlabel(x_var)
-    plt.ylabel(y_var)
+    plt.xlabel(x_var, fontsize=16)
+    plt.ylabel(y_var, fontsize=16)
 
     if grid:
         plt.grid(None)
@@ -238,9 +243,9 @@ def draw_partitioning(
         plt.show()
 
     if out_fp is not None:
-        plt.savefig(out_fp, dpi=dpi)
+        plt.savefig(out_fp, dpi=600)
 
-    plt.close()
+    plt.close('all')
 
 
 def plot_voxels(bs, actions, points=[], max_v=10, animate=False):
