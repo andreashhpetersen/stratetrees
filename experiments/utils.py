@@ -8,6 +8,7 @@ import tempfile
 import subprocess
 import numpy as np
 
+import matplotlib.pyplot as plt
 import gymnasium as gym
 import uppaal_gym
 
@@ -28,6 +29,7 @@ class Shield:
         self.n_actions = meta['n_actions']
         self.id_to_actionset = meta['id_to_actionset']
         self.env_id = meta['env_id']
+        self.bvars = meta['bvars']
 
 
 def unpack_shield(path):
@@ -209,10 +211,12 @@ def compile_shield(path, name):
 def strategy_is_safe(env_id, strategy, n_episodes=100, env_kwargs={}, inspect=False):
     env = gym.make(env_id, **env_kwargs)
 
+    deaths = 0
     for episode in range(n_episodes):
         obs, _ = env.reset()
         observations = [obs]
         actions = []
+        # shield_acts = []
         rewards = [-1]
         # shield_actions = [-1]
 
@@ -220,31 +224,88 @@ def strategy_is_safe(env_id, strategy, n_episodes=100, env_kwargs={}, inspect=Fa
         terminated, trunc = False, False
         while not (terminated or trunc):
             # shield_act = strategy.shield.predict(obs)
+            # if shield_act != 2:
+            #     action = 1
+            # else:
+            #     action = 0
             action, _ = strategy.predict(obs)
             if isinstance(action, list):
                 action = action[0]
-            # shield_actions.append(shield_act)
+            # shield_acts.append(shield_act)
             actions.append(action)
             nobs, reward, terminated, trunc, _ = env.step(action)
             rewards.append(reward)
             observations.append(nobs)
-            if terminated and not env.unwrapped.is_safe(nobs):
-                observations = np.array(observations)
-                actions.append(99)
-                actions = np.array([actions]).T
-                # shield_actions = np.array([shield_actions]).T
-                # info = np.hstack((observations, actions, shield_actions))
-                info = np.hstack((observations, actions))
+            if terminated or trunc: #and not env.unwrapped.is_safe(nobs):
+                # observations = np.array(observations)
+                # shield_acts.append(99)
+                # actions.append(99)
+                # actions = np.array([actions]).T
+                # shield_acts = np.array([shield_acts]).T
+                # info = np.hstack((observations, actions, shield_acts))
+                # info = np.hstack((observations, actions))
                 rewards = np.array(rewards)
+                if not env.unwrapped.is_safe(nobs):
+                    deaths += 1
+
                 if inspect:
                     import ipdb; ipdb.set_trace()
-                    return False, info
-                else:
-                    return False
+                #     return False, info
+                # else:
+                #     return False
             obs = nobs
             i += 1
 
-    return (True, []) if inspect else True
+    # return (True, []) if inspect else True
+    return deaths
+
+
+def confidence(sample, z=1.96):
+    return z * (sample.std() / np.sqrt(len(sample)))
+
+
+def my_evaluate_policy(policy, env, n_eval_episodes=100, inspect=False):
+    all_rews = []
+    all_obs = []
+    all_deaths = []
+    for episode in range(n_eval_episodes):
+        obs, _ = env.reset()
+        ep_rews, ep_obs, ep_deaths = [], [obs], 0
+
+        terminated, trunc = False, False
+        while not (terminated or trunc):
+            action, _ = policy.predict(obs)
+            if isinstance(action, list):
+                action = action[0]
+            nobs, reward, terminated, trunc, _ = env.step(action)
+            ep_rews.append(reward)
+            ep_obs.append(nobs)
+            obs = nobs
+
+            # if not env.unwrapped.is_safe(obs):
+            if terminated and len(ep_obs) < 400:
+                ep_deaths += 1
+                env.unwrapped.p = 8 + np.random.uniform(0,2)
+                env.unwrapped.v = 0
+                # env.unwrapped.x1 = 0.35
+                # env.unwrapped.v = 15.0
+                terminated = False
+                if inspect:
+                    import ipdb; ipdb.set_trace()
+
+        all_rews.append(np.sum(ep_rews))
+        all_obs.append(np.vstack(ep_obs))
+        all_deaths.append(ep_deaths)
+
+    rews = np.array(all_rews)
+    obs = all_obs
+    deaths = np.array(all_deaths)
+    info = {
+        'observations': obs,
+        'deaths': deaths ,
+        'rewards': rews
+    }
+    return rews.mean(), confidence(rews), info
 
 
 def estimate_sizeof(node):
