@@ -1,7 +1,7 @@
 import pathlib
 import unittest
 
-import trees.tests as test_module
+import stratetrees.tests as test_module
 from stratetrees.advanced import minimize_tree
 from stratetrees.models import QTree, DecisionTree
 from stratetrees.tests.test_max_parts import TestMaxParts
