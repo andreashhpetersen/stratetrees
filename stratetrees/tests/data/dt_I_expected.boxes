@@ -1,0 +1,9 @@
+A B
+x y z
+0 -inf -inf -inf 4 inf inf
+1 4 -inf -inf inf 1 2
+1 4 -inf 2 5 inf 4
+0 4 -inf 4 inf inf inf
+0 4 1 -inf inf inf 2
+1 5 -inf 2 inf inf 3
+0 5 -inf 3 inf inf 4

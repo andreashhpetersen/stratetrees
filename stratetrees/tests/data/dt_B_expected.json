@@ -1,0 +1,25 @@
+{
+    "variables": ["x","y"],
+    "actions": ["A","B"],
+    "root": {
+        "var": "y",
+        "bound": 5,
+        "low": {
+            "var": "x",
+            "bound": 5,
+            "low": { "action": 0 },
+            "high": {
+                "var": "y",
+                "bound": 2,
+                "low": {
+                    "var": "x",
+                    "bound": 7,
+                    "low": { "action": 0 },
+                    "high": { "action": 1 }
+                },
+                "high": { "action": 1 }
+            }
+        },
+        "high": { "action": 1 }
+    }
+}

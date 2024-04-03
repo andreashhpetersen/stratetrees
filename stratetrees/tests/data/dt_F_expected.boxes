@@ -1,0 +1,13 @@
+A B C D
+x y
+1 -inf -inf 2 2
+0 -inf 2 3 4
+1 -inf 4 2 inf
+2 2 -inf inf 1
+0 2 1 7 2
+3 2 4 4 5
+2 2 5 inf inf
+0 3 2 7 3
+0 3 3 inf 4
+0 4 4 inf 5
+1 7 1 inf 3
