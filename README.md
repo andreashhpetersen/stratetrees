@@ -40,7 +40,7 @@ A repeated application of `max_parts` can probably improve the reduction even fu
 ```python
 from stratetrees.advanced import minimize_tree
 
-min_tree = minimize_tree(dtree, max_iter=10, verbose=True)
+min_tree, _ = minimize_tree(dtree, max_iter=10, verbose=True)
 ```
 
 In all cases, a `DecisionTree` is returned. It exposes several methods and attributes, but most notably `tree.predict(state)` which returns the optimal action (according to the strategy) in `state`. Other attributes are `tree.size`, `tree.n_leaves`, `tree.variables` and `tree.actions`. A tree can be saved as a `json`-file via the call `tree.save_as("my_dt_strategy.json")` or exported back to a format readable by UPPAAL with `tree.export_to_uppaal("my_minimized_uppaal_strategy.json")` (given it was originally created from a UPPAAL file.
