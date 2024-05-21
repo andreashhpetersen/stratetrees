@@ -167,19 +167,21 @@ def run_experiments(model_dir, k=10, early_stopping=False):
     plt.savefig(f'{store_path("results")}maxparts_plot.png')
 
 
-def viper_exp(env_id, oracle, variables, actions, env_kwargs):
-    policy = viper(oracle, env_id, n_iter=10, env_kwargs=env_kwargs)
+def make_viper(env_id, oracle, variables, actions, env_kwargs, verbose=1):
+    """
+    Set `verbose=2' to get VIPER status info
+    """
+
+    if verbose:
+        print('generating VIPER policy...')
+    policy = viper(
+        oracle, env_id, n_iter=10, env_kwargs=env_kwargs, verbose=verbose > 1
+    )
+    import ipdb; ipdb.set_trace()
     loader = SklearnLoader(policy.tree, variables, actions)
     tree = DecisionTree(loader.root, loader.variables, loader.actions)
 
-    # viper_wrapped = ShieldOracleWrapper(viper_tree, amap, shield.n_actions)
-    perf, conf, info = my_evaluate_policy(
-        SB3Wrapper(tree),
-        gym.make(env_id, **env_kwargs),
-        n_eval_episodes=1000,
-    )
-
-    return tree, (perf, conf), info
+    return tree
 
 
 def make_wrapped_shield(sdata, store_path, try_load=False):
@@ -189,6 +191,7 @@ def make_wrapped_shield(sdata, store_path, try_load=False):
         except FileNotFoundError:
             pass
     else:
+        print('build tree from shield...')
         tree = DecisionTree.from_grid(
             sdata.grid,
             sdata.variables,
@@ -198,7 +201,7 @@ def make_wrapped_shield(sdata, store_path, try_load=False):
             bvars=sdata.bvars
         )
 
-        print('minimize tree...\n')
+        print('minimize tree...')
         shield, (data, best_i) = minimize_tree(tree, max_iter=20)
         shield.save_as(store_path)
 
@@ -211,54 +214,65 @@ def make_wrapped_shield(sdata, store_path, try_load=False):
     return ShieldOracleWrapper(shield, amap, sdata.n_actions)
 
 
-def shield_experiment(model_dir):
+def shield_experiment(model_dir, env_kwargs={}, callback=None, verbose=False):
     results = []
 
-    print('load shield..\n')
+    # load shield
     sdata = unpack_shield(model_dir + 'shields/synthesized.zip')
 
-    variables, actions = sdata.variables, np.arange(sdata.n_actions)
-    env_id, env_kwargs = sdata.env_id, sdata.env_kwargs
-    org_size = np.product(sdata.grid.shape)
+    # construct shield
+    wrapped_shield = make_wrapped_shield(
+        sdata, model_dir + 'shields/mp_shield.json', try_load=True
+    )
+    import ipdb; ipdb.set_trace()
 
-    print('build tree..\n')
-    store_path = model_dir + 'shields/mp_shield.json'
-    wrapped_shield = make_wrapped_shield(sdata, store_path, try_load=True)
+    # construct viper shield
+    viper_tree = make_viper(
+        sdata.env_id, wrapped_shield, sdata.variables,
+        np.arange(sdata.n_actions), env_kwargs, verbose=verbose
+    )
+    import ipdb; ipdb.set_trace()
 
-    print('run viper...\n')
-    viper_tree, _, info = viper_exp(
-        env_id, wrapped_shield, variables, actions, {}
+    # evaluate viper
+    _, _, v_info = my_evaluate_policy(
+        SB3Wrapper(viper_tree),
+        gym.make(sdata.env_id, **env_kwargs),
+        n_eval_episodes=1000,
+        callback=callback
     )
 
-    mp_deaths = strategy_is_safe(env_id, wrapped_shield, env_kwargs=env_kwargs)
-    mp_is_safe = mp_deaths == 0
+    # evaluate maxpartitions
+    _, _, mp_info = my_evaluate_policy(
+        wrapped_shield,
+        gym.make(sdata.env_id, **env_kwargs),
+        callback=callback
+    )
 
-    if (info['deaths'] > 0).sum() == 0:
-        import ipdb; ipdb.set_trace()
-
-    print('\nepisode deaths: ', (info['deaths'] > 0).sum(), '\n')
-
-    print(f'MP shield is{" not " if not mp_is_safe else " "}safe')
-    print(f'VIPER shield is{" not " if not info["deaths"].sum() == 0 else " "}safe')
-
-    # ADD TO RESULTS
+    # store results
     results = [
-        org_size,
-        wrapped_shield.shield.n_leaves,
-        mp_is_safe,
-        mp_deaths,
-        viper_tree.n_leaves,
-        info['deaths'].sum() == 0,
-        info['deaths'].sum(),
+        np.product(sdata.grid.shape),       # org size
+        wrapped_shield.shield.n_leaves,     # maxparts size
+        mp_info['deaths'].sum() == 0,       # maxparts safe?
+        (mp_info['deaths'] > 0).sum(),      # maxparts unsafe runs
+        mp_info['deaths'].sum(),            # maxparts deaths
+        viper_tree.n_leaves,                # viper size
+        v_info['deaths'].sum() == 0,        # viper safe?
+        (v_info['deaths'] > 0).sum(),       # viper unsafe runs
+        v_info['deaths'].sum(),             # viper deaths
 
     ]
     return results, wrapped_shield, sdata
 
 
-def cont_exp(wrapped_shield, model_dir, sdata):
+def cont_exp(
+    wrapped_shield, model_dir, sdata, strat_name,
+    env_kwargs={}, callback=None, verbose=False
+):
+
+    # shield as tree
     stree = wrapped_shield.shield
 
-    strat_name = 'shielded_strategy.json'
+    # get path to oracle strategy from UPPAAL
     if pathlib.Path(model_dir + strat_name).is_file():
         oracle_path = model_dir + strat_name
     else:
@@ -271,264 +285,77 @@ def cont_exp(wrapped_shield, model_dir, sdata):
             model_dir, out_name=strat_name
         )
 
+    # convert UPPAAL oracle to decision tree
     qtree = QTree(oracle_path)
     tree = qtree.to_decision_tree()
+
+    # minimize with maxpartitions
     ntree, (data, best_i) = minimize_tree(tree, max_iter=20, verbose=False)
 
-    v_tree, (v_perf, v_conf), v_info = viper_exp(
-        sdata.env_id,
-        SB3Wrapper(qtree),
-        stree.variables,
-        stree.actions,
-        {}
+    # minimize with VIPER
+    v_tree = make_viper(
+        sdata.env_id, SB3Wrapper(qtree),
+        stree.variables, stree.actions, env_kwargs, verbose=verbose
     )
+
+    # evaluate VIPER
+    v_perf, v_conf, v_info = my_evaluate_policy(
+        SB3Wrapper(v_tree),
+        gym.make(sdata.env_id, **env_kwargs),
+        n_eval_episodes=1000,
+        callback=callback
+    )
+
+    # evaluate maxpartitions
     mp_perf, mp_conf, mp_info = my_evaluate_policy(
         SB3Wrapper(ntree),
         gym.make(sdata.env_id),
+        callback=callback
     )
 
-    mp_deaths = mp_info['deaths'].sum()
-    mp_safe = mp_deaths == 0
-
-    v_deaths = v_info['deaths'].sum()
-    v_safe = v_deaths == 0
-
+    # store results
     results = [
-        tree.n_leaves,
+        tree.n_leaves,                  # size of oracle
 
-        ntree.n_leaves,
-        mp_perf,
-        mp_conf,
-        mp_safe,
-        mp_deaths,
+        ntree.n_leaves,                 # maxparts size
+        (mp_info['deaths'] > 0).sum(),  # maxparts unsafe runs
+        mp_info['deaths'].sum(),        # maxparts violations
+        mp_perf,                        # maxparts performance
+        mp_conf,                        # maxparts confidence
 
-        v_tree.n_leaves,
-        v_perf,
-        v_conf,
-        v_safe,
-        v_deaths
+        v_tree.n_leaves,                # viper size
+        (v_info['deaths'] > 0).sum(),   # viper unsafe runs
+        v_info['deaths'].sum(),         # viper violations
+        v_perf,                         # viper performance
+        v_conf,                         # viper confidence
     ]
 
     return results, v_tree
 
 
 def combined_exp(strategy, wrapped_shield, sdata):
+
+    # combine strategy and shield
     shielded_strat = ShieldedTree(
-        strategy,
-        wrapped_shield.shield,
-        wrapped_shield.act_map
+        strategy, wrapped_shield.shield, wrapped_shield.act_map
     )
 
+    # evaluate on antagonistic environment
     evil_perf, evil_conf, evil_info = my_evaluate_policy(
-        SB3Wrapper(shielded_strat),
-        gym.make(sdata.env_id, unlucky=True),
-        inspect=True
+        SB3Wrapper(shielded_strat), gym.make(sdata.env_id, unlucky=True),
     )
-    print(f'evil corrections: {shielded_strat.corrections}')
 
+    # store corrections and reset
+    evil_corrections = shielded_strat.corrections
+    shielded_strat.corrections = 0
+
+    # evaluate on normal environment
     norm_perf, norm_conf, norm_info = my_evaluate_policy(
-        SB3Wrapper(shielded_strat),
-        gym.make(sdata.env_id)
+        SB3Wrapper(shielded_strat), gym.make(sdata.env_id)
     )
-    print(f'norm corrections: {shielded_strat.corrections}')
-
-    evil_deaths = evil_info['deaths'].sum()
-    evil_safe = evil_deaths == 0
-
-    norm_deaths = norm_info['deaths'].sum()
-    norm_safe = norm_deaths == 0
+    norm_corrections = shielded_strat.corrections
 
     return [
-        evil_perf, evil_conf, evil_deaths, evil_safe,
-        norm_perf, norm_conf, norm_deaths, norm_safe
+        evil_perf, evil_conf, evil_corrections, evil_info['deaths'].sum(),
+        norm_perf, norm_conf, norm_corrections, norm_info['deaths'].sum(),
     ]
-
-
-def controller_experiment(model_dir):
-    results = []
-
-    print('load shield..\n')
-    shield_dir = model_dir + 'shields/'
-    shield = unpack_shield(shield_dir + 'synthesized.zip')
-
-    variables = shield.variables
-    actions = np.arange(shield.n_actions)
-    env_id = shield.env_id
-    env_kwargs = shield.env_kwargs
-
-    print('load shield tree..\n')
-    stree = DecisionTree.load_from_file(shield_dir + 'mp_shield.json')
-
-    # build action map (what shield action corresponds to which allowed
-    # policy actions?)
-    amap = [0]*len(shield.id_to_actionset)
-    for i, acts in shield.id_to_actionset.items():
-        amap[int(i)] = tuple(np.argwhere(acts).T[0])
-
-    strat_name = 'new_strategy.json'
-    if pathlib.Path(model_dir + strat_name).is_file():
-        oracle_path = model_dir + strat_name
-    else:
-        # export shield to c and train a controller in UPPAAL
-        print('train in uppaal...\n')
-        params = ', '.join([f'double {v}' for v in stree.variables])
-        c_path = shield_dir + 'shield.c'
-        stree.export_to_c_code(signature=f'shield({params})', out_fp=c_path)
-        compile_shield(shield_dir, 'shield')
-        oracle_path = train_uppaal_controller(
-            model_dir, out_name=strat_name
-        )
-
-    print('minimize with MaxPartitions...\n')
-    # minimize strategy with MaxParts and VIPER, respectively
-    qtree = QTree(oracle_path)
-    tree = qtree.to_decision_tree()
-    ntree, (data, best_i) = minimize_tree(tree, max_iter=20, verbose=False)
-
-    print('minimize with VIPER..\n')
-    # viper_pol = viper(SB3Wrapper(qtree), env_id, n_iter=10, env_kwargs=env_kwargs)
-    viper_pol = viper(SB3Wrapper(qtree), env_id, n_iter=3)
-    loader = SklearnLoader(viper_pol.tree, variables, actions)
-    viper_tree = DecisionTree(loader.root, loader.variables, loader.actions)
-
-    # CHECK SAFETY OF STRATEGIES
-    # mp_deaths = strategy_is_safe(env_id, SB3Wrapper(ntree), env_kwargs=env_kwargs)
-    # mp_deaths = strategy_is_safe(env_id, SB3Wrapper(ntree), inspect=None, env_kwargs=env_kwargs)
-    # mp_is_safe = mp_deaths == 0
-
-    # viper_deaths = strategy_is_safe(env_id, SB3Wrapper(viper_tree), env_kwargs=env_kwargs)
-    # viper_deaths = strategy_is_safe(env_id, SB3Wrapper(viper_tree), env_kwargs=env_kwargs)
-    # viper_is_safe = viper_deaths == 0
-
-    mp_perf, mp_std, mp_info = my_evaluate_policy(SB3Wrapper(ntree), gym.make(env_id), 500)
-    viper_perf, viper_std, viper_info = my_evaluate_policy(SB3Wrapper(viper_tree), gym.make(env_id), 500)
-
-    mp_deaths = mp_info['deaths'].sum()
-    viper_deaths = viper_info['deaths'].sum()
-    mp_is_safe = mp_deaths == 0
-    viper_is_safe = viper_deaths == 0
-
-    print(f'MP controller is{" not " if not mp_is_safe else " "}safe')
-    print(f'VIPER controller is{" not " if not viper_is_safe else " "}safe')
-
-    # ADD TO RESULTS
-    results.append(tree.n_leaves)
-    results.append(ntree.n_leaves)
-    results.append(int(mp_is_safe))
-    results.append(mp_deaths)
-    results.append(mp_perf)
-    results.append(mp_std)
-
-    results.append(viper_tree.n_leaves)
-    results.append(int(viper_is_safe))
-    results.append(viper_deaths)
-    results.append(viper_perf)
-    results.append(viper_std)
-
-    return results
-
-
-def old_shield_experiment(model_dir):
-
-    results = []
-
-    print('load shield..\n')
-    shield_dir = model_dir + 'shields/'
-    shield_path = shield_dir + 'synthesized.zip'
-    shield = unpack_shield(shield_path)
-
-    variables = shield.variables
-    actions = np.arange(shield.n_actions)
-    env_id = shield.env_id
-    env_kwargs = shield.env_kwargs
-    bvars = shield.bvars
-
-    meta_data = dict(
-        env_id=env_id,
-        variables=variables,
-        n_actions=shield.n_actions,
-        env_kwargs=env_kwargs,
-        granularity=shield.granularity,
-        dimensions=shield.grid.shape,
-        columns=[
-            'shield_org_n_leaves',
-            # 'shield_org_sizeof', 'shield_org_predict_time',
-            'shield_mp_n_leaves',
-            # 'shield_mp_iterations', 'shield_mp_sizeof', 'shield_mp_predict_time',
-            'shield_mp_safe', 'shield_mp_deaths',
-
-            'shield_viper_n_leaves',
-            # 'shield_viper_sizeof', 'shield_viper_predict_time',
-            'shield_viper_safe', 'shield_viper_deaths'
-
-            # 'strat_org_n_leaves', 'strat_org_sizeof', 'strat_org_predict_time',
-            # 'strat_mp_n_leaves', 'strat_mp_sizeof',
-            # 'strat_mp_predict_time', 'strat_mp_safe',
-            # 'strat_viper_n_leaves', 'strat_viper_sizeof',
-            # 'strat_viper_predict_time', 'strat_viper_safe'
-        ]
-    )
-
-    print('build tree..\n')
-    tree = DecisionTree.from_grid(
-        shield.grid,
-        variables,
-        actions,
-        shield.granularity,
-        np.array(shield.bounds).T
-    )
-    print('minimize tree...\n')
-    ntree, (data, best_i) = minimize_tree(tree, max_iter=20)
-    ntree.save_as(shield_dir + '/mp_shield.json')
-
-    # build action map (what shield action corresponds to which allowed
-    # policy actions?)
-    amap = [0]*len(shield.id_to_actionset)
-    for i, acts in shield.id_to_actionset.items():
-        amap[int(i)] = tuple(np.argwhere(acts).T[0])
-
-    # let viper take a shot at minimizing shield
-    print('run viper...\n')
-    wrapped = ShieldOracleWrapper(ntree, amap, shield.n_actions)
-    viper_pol = viper(wrapped, env_id, n_iter=50, env_kwargs=env_kwargs)
-
-    # convert viper policy to a tree
-    loader = SklearnLoader(viper_pol.tree, variables, actions)
-    viper_tree = DecisionTree(loader.root, loader.variables, loader.actions)
-
-
-    # CHECK SAFETY OF MINIMIZED SHIELDS
-    mp_deaths = strategy_is_safe(env_id, wrapped, env_kwargs=env_kwargs)
-    mp_is_safe = mp_deaths == 0
-    print(f'MP shield is{" not " if not mp_is_safe else " "}safe')
-
-    viper_wrapped = ShieldOracleWrapper(viper_tree, amap, shield.n_actions)
-    viper_deaths = strategy_is_safe(
-        env_id,
-        viper_wrapped,
-        n_episodes=1000,
-        env_kwargs=env_kwargs
-    )
-    viper_is_safe = viper_deaths == 0
-    print(f'VIPER shield is{" not " if not viper_is_safe else " "}safe')
-
-
-    # ADD TO RESULTS
-    results.append(tree.n_leaves)
-    # results.append(estimate_sizeof(tree.root))
-    # results.append(time_predict(tree, shield.bounds))
-
-    results.append(ntree.n_leaves)
-    # results.append(best_i + 1)
-    # results.append(estimate_sizeof(ntree.root))
-    # results.append(time_predict(ntree, shield.bounds))
-    results.append(int(mp_is_safe))
-    results.append(mp_deaths)
-
-    results.append(viper_tree.n_leaves)
-    # results.append(estimate_sizeof(viper_tree.root))
-    # results.append(time_predict(viper_tree, shield.bounds))
-    results.append(int(viper_is_safe))
-    results.append(viper_deaths)
-
-    return meta_data, results
