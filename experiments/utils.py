@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import gymnasium as gym
 import uppaal_gym
 
-from trees.models import QTree
+from trees.models import QTree, DecisionTree
 from trees.nodes import Node, Leaf
 from trees.advanced import max_parts, minimize_tree, leaves_to_tree
 from trees.utils import parse_from_sampling_log, performance, \
@@ -21,15 +21,62 @@ from trees.utils import parse_from_sampling_log, performance, \
 
 class Shield:
     def __init__(self, grid, meta):
+        self.tree = None  # call self.make_tree() to set this
+
         self.grid = grid
         self.variables = meta['variables']
         self.env_kwargs = meta.get('env_kwargs', {})
-        self.bounds = meta['bounds']
+        self.bounds = np.array(meta['bounds'])
         self.granularity = meta['granularity']
         self.n_actions = meta['n_actions']
         self.id_to_actionset = meta['id_to_actionset']
         self.env_id = meta['env_id']
         self.bvars = meta['bvars']
+        self.amap = self.build_action_map()
+
+    def build_action_map(self):
+        """build action map (what shield action corresponds to which allowed
+        policy actions?)"""
+        amap = [0] * len(self.id_to_actionset)
+        for i, acts in self.id_to_actionset.items():
+            amap[int(i)] = tuple(np.argwhere(acts).T[0])
+
+        return amap
+
+    def make_tree(self, minimize=True, verbose=False, **kwargs):
+        tree = DecisionTree.from_grid(
+            self.grid,
+            self.variables,
+            np.arange(len(self.id_to_actionset)),
+            self.granularity,
+            self.bounds.T,
+            bvars=self.bvars
+        )
+        if minimize:
+            tree, _ = minimize_tree(tree, verbose=verbose, **kwargs)
+
+        self.tree = tree
+
+    def get_signature(self, function_name='shield'):
+        params = ', '.join([f'double {v}' for v in self.variables])
+        return f'int {function_name}({params})'
+
+    def compile_so(self, so_path, c_path=None):
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            if c_path is None:
+                c_path, o_path = tmpdirname + '/s.c', tmpdirname + '/s.o'
+            else:
+                o_path = tmpdirname + '/s.o'
+
+            self.tree.export_to_c_code(signature=self.get_signature(), out_fp=c_path)
+
+            # make object
+            args = ('gcc', '-c', '-fPIC', c_path, '-o', o_path)
+            subprocess.run(args)
+
+            # make shared object
+            args = ('gcc', '-shared', '-o', so_path, o_path)
+            subprocess.run(args)
 
 
 def unpack_shield(path):
@@ -264,7 +311,7 @@ def confidence(sample, z=1.96):
     return z * (sample.std() / np.sqrt(len(sample)))
 
 
-def my_evaluate_policy(policy, env, n_eval_episodes=100, inspect=False):
+def my_evaluate_policy(policy, env, n_eval_episodes=100, inspect=False, callback=None):
     all_rews = []
     all_obs = []
     all_deaths = []
@@ -282,14 +329,10 @@ def my_evaluate_policy(policy, env, n_eval_episodes=100, inspect=False):
             ep_obs.append(nobs)
             obs = nobs
 
-            # if not env.unwrapped.is_safe(obs):
-            if terminated and len(ep_obs) < 400:
+            if terminated and not env.unwrapped.is_safe(obs):
                 ep_deaths += 1
-                env.unwrapped.p = 8 + np.random.uniform(0,2)
-                env.unwrapped.v = 0
-                # env.unwrapped.x1 = 0.35
-                # env.unwrapped.v = 15.0
-                terminated = False
+                if callback is not None:
+                    terminated = callback(env.unwrapped)
                 if inspect:
                     import ipdb; ipdb.set_trace()
 
@@ -298,11 +341,9 @@ def my_evaluate_policy(policy, env, n_eval_episodes=100, inspect=False):
         all_deaths.append(ep_deaths)
 
     rews = np.array(all_rews)
-    obs = all_obs
-    deaths = np.array(all_deaths)
     info = {
-        'observations': obs,
-        'deaths': deaths ,
+        'observations': all_obs,
+        'deaths': np.array(all_deaths) ,
         'rewards': rews
     }
     return rews.mean(), confidence(rews), info
@@ -337,3 +378,25 @@ def time_predict(tree, bounds, n=100_000):
     sample = np.random.uniform(*bounds, size=(n, dims))
     _, tm = time_it(lambda t, xs: len([t.predict(s) for s in xs]), tree, sample)
     return tm
+
+
+# callback functions for uppaal gym models
+
+def bb_callback(env):
+    env.p = 8 + np.random.uniform(0,2)
+    env.v = 0
+    terminated = False
+    return terminated
+
+
+def op_callback(env):
+    env.v = 10
+    terminated = False
+    return terminated
+
+
+def dc_callback(env):
+    env.x1 = 0.35
+    env.x2 = 15.0
+    terminated = False
+    return terminated
