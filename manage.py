@@ -4,13 +4,22 @@ import argparse
 from glob import glob
 
 from trees.commands import minimize, run_tests, convert, draw
-from experiments.commands import run_experiments, make_samples
+from experiments.commands import run_experiments, make_samples, controller_experiment
 
 
 def get_parser():
     parser = argparse.ArgumentParser(prog='stratetrees')
 
     subparsers = parser.add_subparsers(title='actions', dest='command')
+
+    parser_new = subparsers.add_parser(
+        'experiment',
+        help='New experiment parser'
+    )
+    parser_new.add_argument(
+        'MODEL_DIR',
+        help='The directory containing the model to run experiments on.'
+    )
 
     parser_exp = subparsers.add_parser(
         'run_experiments',
@@ -142,6 +151,10 @@ if __name__ == '__main__':
 
     elif args.command == 'draw':
         draw(args.STRATEGY_FILE, args.outfile, qtree=args.qtree)
+
+    elif args.command == 'experiment':
+        meta, results = controller_experiment(args.MODEL_DIR)
+        import ipdb; ipdb.set_trace()
 
     elif args.command == 'run_experiments':
 
