@@ -19,6 +19,24 @@ class State:
             ).T
         self.constraints = constraints
 
+    def bounded(self, low=None, high=None):
+        """
+        return the state as a numpy array, where entries are bounded by `low`
+        and `high`. That is, the output array `s` will promises that
+
+            `s[:,0] >= low` and `s[:,1] <= high`
+        """
+        state = self.constraints.copy().T
+        if low is not None:
+            mask = state[0] < low
+            state[0][mask] = low[mask]
+
+        if high is not None:
+            mask = state[1] > high
+            state[1][mask] = high[mask]
+
+        return state.T
+
     def min(self, var):
         if isinstance(var, str):
             var = self.var2id[var]
@@ -29,7 +47,7 @@ class State:
             var = self.var2id[var]
         return self.constraints[var,1]
 
-    def center(self, point=True):
+    def center(self, point=True, min_limit=-np.inf, max_limit=np.inf):
         """
         Returns the center point of the state box. None if one of the bounds
         are infinite. If `point=False`, returns a dict with variables as
@@ -38,9 +56,13 @@ class State:
         center = []
         vcenters = {}
         for v in self.variables:
-            vmin, vmax = self.min_max(v)
-            if vmin == -np.inf or vmax == np.inf:
-                return None
+            vmin, vmax = self.min_max(v, min_limit, max_limit)
+            try:
+                if vmin == -np.inf or vmax == np.inf:
+                    return None
+            except ValueError:
+                import ipdb; ipdb.set_trace()
+
 
             vcenter = vmin + ((vmax - vmin) / 2)
             vcenters[v] = vcenter
@@ -88,9 +110,16 @@ class State:
         """
         if isinstance(var, str):
             var = self.var2id[var]
+
+        if np.isscalar(min_limit):
+            min_limit = [min_limit for _ in self.variables]
+
+        if np.isscalar(max_limit):
+            max_limit = [max_limit for _ in self.variables]
+
         vbounds = self.constraints[var]
-        vmin = vbounds[0] if vbounds[0] > -np.inf else min_limit
-        vmax = vbounds[1] if vbounds[1] < np.inf else max_limit
+        vmin = vbounds[0] if vbounds[0] > -np.inf else min_limit[var]
+        vmax = vbounds[1] if vbounds[1] < np.inf else max_limit[var]
         return vmin, vmax
 
     def copy(self):
@@ -223,12 +252,16 @@ class Node:
         self.high._get_leaves(leaves=leaves)
 
     def get_for_region(self, min_state, max_state, actions, collect):
-        if min_state[self.var_id] < self.bound:
+        # we need to check numbers are not to close to avoid numerical errors
+
+        if (min_state[self.var_id] < self.bound and
+                not np.isclose(min_state[self.var_id], self.bound)):
             collect = self.low.get_for_region(
                 min_state, max_state, actions, collect
             )
 
-        if max_state[self.var_id] > self.bound:
+        if (max_state[self.var_id] > self.bound and
+                not np.isclose(max_state[self.var_id], self.bound)):
             collect = self.high.get_for_region(
                 min_state, max_state, actions, collect
             )
