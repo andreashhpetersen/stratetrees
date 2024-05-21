@@ -111,15 +111,16 @@ class State:
         if isinstance(var, str):
             var = self.var2id[var]
 
-        if np.isscalar(min_limit):
+        if not isinstance(min_limit, (list, np.ndarray)):
             min_limit = [min_limit for _ in self.variables]
 
-        if np.isscalar(max_limit):
+        if not isinstance(max_limit, (list, np.ndarray)):
             max_limit = [max_limit for _ in self.variables]
 
         vbounds = self.constraints[var]
         vmin = vbounds[0] if vbounds[0] > -np.inf else min_limit[var]
         vmax = vbounds[1] if vbounds[1] < np.inf else max_limit[var]
+
         return vmin, vmax
 
     def copy(self):
