@@ -28,6 +28,8 @@ class UppaalLoader:
             for action, tree in loc_trees['regressor'].items():
                 root = cls._build_tree(tree, variables, S)
                 root.set_state(State(variables))
+                if root.is_leaf:
+                    root.action = action
                 action_location_roots[action][location] = root
 
         actions = sorted(action_location_roots.keys())
